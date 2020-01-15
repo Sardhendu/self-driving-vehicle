@@ -20,15 +20,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     1. Convert the RGB image to gray scale.
     2. Use Canny-Edge detection to find all the edges in the image. Lines tend to have sharp edges.
     
-    <div id="image-table">
-    <table>
-	    <tr>
-    	    <td style="padding:5px">
-        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/preprocessing.png" width="400" height="200"><figcaption><center>Preprocessing Image</center></figcaption>
-      	    </td>
-        </tr>
-    </table>
-    </div>
+    [image3]: hhttps://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/preprocessing.png"
     
     3. Masking: The left and right though are parallel in the real world, tend to converge are the reach the center of 
     the image. Here we take a simple heuristic to mask the image where there is high probability of finding only the 

@@ -24,9 +24,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     <table>
 	    <tr>
     	    <td style="padding:5px">
-        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images
-        	    /preprocessing.png" width="400" height="400"><figcaption><center>Preprocessing 
-        	    Image</center></figcaption>
+        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/preprocessing.png" width="400" height="200"><figcaption><center>Preprocessing Image</center></figcaption>
       	    </td>
         </tr>
     </table>
@@ -42,8 +40,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     <table>
 	    <tr>
     	    <td style="padding:5px">
-        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images
-        	    /hough_lines.png" width="400" height="400"><figcaption><center>Hough Lines</center></figcaption>
+        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/image/hough_lines.png" width="300" height="300"><figcaption><center>Hough Lines</center></figcaption>
       	    </td>
         </tr>
     </table>
@@ -78,9 +75,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     <table>
 	    <tr>
     	    <td style="padding:5px">
-        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images
-        	    /lane_line_extrapolated.png" width="400" height="400"><figcaption><center>Liner Extrapolation of 
-        	    Hough Lines</center></figcaption>
+        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/lane_line_extrapolated.png" width="300" height="300"><figcaption><center>Liner Extrapolation of Hough Lines</center></figcaption>
       	    </td>
         </tr>
     </table>

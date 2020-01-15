@@ -22,11 +22,10 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     
     ![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/preprocessing.png)
     
-    3. Masking: The left and right though are parallel in the real world, tend to converge are the reach the center of 
-    the image. Here we take a simple heuristic to mask the image where there is high probability of finding only the 
-    lanes.
-    4. Hough Lines: Lane lines tend to be straight provided the Road is straight. So we use Hough transform lines to
-    find the lanes.
+    3. ***Masking***: The left and right though are parallel in the real world, tend to converge are the reach the center
+     of the image. Here we take a simple heuristic to mask the image where there is high probability of finding only the lanes.
+    4. ***Hough Lines***: Lane lines tend to be straight provided the Road is straight. So we use Hough transform 
+    lines to find the lanes.
     
     ![Hough-Lines](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/hough_lines.png)
     
@@ -40,19 +39,19 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
   lines
   we 
  have multiple **y** and **x** points, and so we can find **m** and **c**.
-    1. *Gather lines for each lane (left nad Right)*: Here we use a simple heuristic and say that line to the left of
-     the center belongs to left lane and line to the right of image center belongs to right lane.
-    2. *Filter lines for each lane*: Lines in left lanes would most likely have positive slope and right lanes are 
+    1. ***Gather lines for each lane (left nad Right)***: Here we use a simple heuristic and say that line to the 
+    left of the center belongs to left lane and line to the right of image center belongs to right lane.
+    2. ***Filter lines for each lane***: Lines in left lanes would most likely have positive slope and right lanes are 
     likely to have negative slope. Here we reject all hough lines that doesn't meet the slope criteria. Moreover, in 
     order to find robust slopes, we need to get rid of lines that have slope which can be considered as outlier. So 
     we simple add a low and high threshold for slope and reject every line that doesn't meet the threshold.
-    3. *Aggregative Lines and Slopes*: To fit a line, all we need is a point (x, y) and the slope (m). Then we 
+    3. ***Aggregative Lines and Slopes***: To fit a line, all we need is a point (x, y) and the slope (m). Then we 
     calculate the intercept and construct the line by extrapolating. A simple way to find the slope **m** and the 
     points **(x, y)** is to take the mean of all the slopes and all the points. However, outlying points can affect the 
     mean value, hence it is a good idea to take the median value.
-    4. *Fit* Once we have out slope and point in the line we simply calculate the intercept and generate **x** values
-     for every **y** value in the field of view.
-    5. *PolyFit* A more simple way to extrapolate points and fit a line is to use the **numpy.polyfit()** function, 
+    4. ***Fit***: Once we have out slope and point in the line we simply calculate the intercept and generate **x** 
+    values for every **y** value in the field of view.
+    5. ***PolyFit*** A more simple way to extrapolate points and fit a line is to use the **numpy.polyfit()** function, 
     which takes input points **(x, y)** that can be gathered from Step 2.
     
     ![Linear-extrapolation of Hough Points](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/lane_line_extrapolated.png)
@@ -73,9 +72,8 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
 The current pipeline using a very basic algorithm of line fit and only works for a particular use case. Below are 
 some of the use cases that the current pipeline fails to deliver a robust outcome.
  
-   * *Curved lines*: Since we fit a straight line equation our algorithm wold fail for sharp turns in the road. An easy
-    to tackle the problem would be to fit a curve line using 2nd order polynomials. 
-   * *Shadows and lighting* Edge detection suffers a lot under varying lighting conditions. In such a scenario one 
+   * ***Curved lines***: Since we fit a straight line equation our algorithm wold fail for sharp turns in the road. An easy to tackle the problem would be to fit a curve line using 2nd order polynomials. 
+   * ***Shadows and lighting*** Edge detection suffers a lot under varying lighting conditions. In such a scenario one 
    could explore edge detections on different color spaces such as the HLS (Hue, Lighting and Saturation)
    
    

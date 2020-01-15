@@ -28,7 +28,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     4. Hough Lines: Lane lines tend to be straight provided the Road is straight. So we use Hough transform lines to
     find the lanes.
     
-    ![Hough-Lines](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/image/hough_lines.png)
+    ![Hough-Lines](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/hough_lines.png)
     
     Challange: We can see that the hough lines are pretty good in finding lines but fail to extend it to the entire 
     view point. Having a full straight line is important for an algorithm to drive safely   

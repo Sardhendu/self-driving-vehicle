@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def subplots(nrows, ncols, figsize=(50, 10)):
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
+def subplots(nrows, ncols, figsize=(50, 10), fontsize=35, facecolor='w'):
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
     
     if ncols > 1:
         ax = ax.ravel()
@@ -19,5 +19,5 @@ def subplots(nrows, ncols, figsize=(50, 10)):
             
         for i, (img, img_name) in enumerate(zip(list_of_images, list_of_titles)):
             ax[i].imshow(img)
-            ax[i].title.set_text(img_name)
+            ax[i].set_title(img_name,  fontsize=fontsize)
     return _subplots

@@ -20,7 +20,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     1. Convert the RGB image to gray scale.
     2. Use Canny-Edge detection to find all the edges in the image. Lines tend to have sharp edges.
     
-    ![Self-Driving Car Simulator](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/preprocessing.png)
+    ![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/preprocessing.png)
     
     3. Masking: The left and right though are parallel in the real world, tend to converge are the reach the center of 
     the image. Here we take a simple heuristic to mask the image where there is high probability of finding only the 
@@ -28,15 +28,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     4. Hough Lines: Lane lines tend to be straight provided the Road is straight. So we use Hough transform lines to
     find the lanes.
     
-    <div id="image-table">
-    <table>
-	    <tr>
-    	    <td style="padding:5px">
-        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/image/hough_lines.png" width="300" height="300"><figcaption><center>Hough Lines</center></figcaption>
-      	    </td>
-        </tr>
-    </table>
-    </div>
+    ![Hough-Lines](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/image/hough_lines.png)
     
     Challange: We can see that the hough lines are pretty good in finding lines but fail to extend it to the entire 
     view point. Having a full straight line is important for an algorithm to drive safely   
@@ -63,15 +55,7 @@ Finding lane line is the very basic tool needed for self-driving car. This proje
     5. *PolyFit* A more simple way to extrapolate points and fit a line is to use the **numpy.polyfit()** function, 
     which takes input points **(x, y)** that can be gathered from Step 2.
     
-    <div id="image-table">
-    <table>
-	    <tr>
-    	    <td style="padding:5px">
-        	    <img src="https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/lane_line_extrapolated.png" width="300" height="300"><figcaption><center>Liner Extrapolation of Hough Lines</center></figcaption>
-      	    </td>
-        </tr>
-    </table>
-    </div>
+    ![Linear-extrapolation of Hough Points](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/lane_line_extrapolated.png)
     
  * **Postprocessing**   
     All the heavy lifting is already done in the **Preprocessing** and **Model Fit** stage. Postprocessing 

@@ -17,8 +17,8 @@ of the box technique employed.
 1. **Clone Repo**: git clone git@github.com:Sardhendu/self-driving-vehicle.git
 2. Install [*Pipenv*](https://pipenv-fork.readthedocs.io/en/latest/)
 3. cd self-driving-vehicle
-3. **Get Libraries** pipenv sync
-4. **Get Images** Download **test_images**, **test_videos**, **test_videos_output** from [Udacity's Repo](https://github.com/udacity/CarND-LaneLines-P1) and place it at **/self-driving-vehicle/src/lane_lines/data/** 
+3. **Install Libraries**: pipenv sync
+4. Download **test_images**, **test_videos**, **test_videos_output** from [Udacity's Repo](https://github.com/udacity/CarND-LaneLines-P1) and place it inside  **/self-driving-vehicle/src/lane_lines/data/** 
 5. A simple way to start is to run the Jupyter Notebook [P1.ipynb](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/P1.ipynb)
 6. Abstracted Methods can be found at [tools.py](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/tools.py)
 

@@ -14,7 +14,7 @@ of the box technique employed.
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/images/laneline_output.gif) 
 
 ## Install and Run:
-1. **Clone Repo**: git clone git@github.com:Sardhendu/self-driving-vehicle.git
+1. **Clone Repo**: git clone [git@github.com:Sardhendu/self-driving-vehicle.git]()
 2. Install [*Pipenv*](https://pipenv-fork.readthedocs.io/en/latest/)
 3. cd self-driving-vehicle
 3. **Install Libraries**: pipenv sync

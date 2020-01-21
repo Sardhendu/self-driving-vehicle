@@ -52,6 +52,8 @@ class PreprocessingPipeline:
                 "hls_colorspace", "ls_colorspace", "ls_gray", "gradient_x", "gradient_y", "gradient_absoute_threshold"
             ]
             
+        return x_abs_thresh_img
+    
     def plot(self):
         assert(len(self.plot_images) == len(self.plot_names))
         ncol = 3
@@ -64,15 +66,3 @@ class DetectLane:
     def __init__(self):
         pass
     
-
-src1_image_path = './data/test_images/straight_lines1.jpg'
-output_plot_path = './data/output_images/straight_lines1.png'
-
-src2_image_path = "./data/test_images/test4.jpg"
-output_plot_path = './data/output_images/test4.png'
-
-image = commons.read_image(src2_image_path)
-pp_pipeline = PreprocessingPipeline(image, save_path=output_plot_path)
-pp_pipeline.warp()
-pp_pipeline.preprocess()
-pp_pipeline.plot()

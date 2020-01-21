@@ -28,6 +28,30 @@ def subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
     return _subplots
 
 
+def basic_plot(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
+    figsize = tuple([max(figsize[0], ncols * 6), max(figsize[1], nrows * 4)])
+    print(figsize)
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
+    
+    if ncols > 1:
+        ax = ax.ravel()
+    else:
+        ax = [ax]
+    
+    def _subplots(list_of_vectors, list_of_titles=None):
+        if list_of_titles is not None:
+            assert (len(list_of_vectors) == len(list_of_titles))
+        else:
+            list_of_titles = [f"graph_{i}" for i in np.arange(len(list_of_vectors))]
+        
+        for i, (vec, img_name) in enumerate(zip(list_of_vectors, list_of_titles)):
+            ax[i].plot(vec)
+            ax[i].set_title(img_name, fontsize=fontsize)
+        return fig
+    
+    return _subplots
+
+
 def save_matplotlib(image_path, fig):
     image_dir = os.path.dirname(image_path)
     if not os.path.exists(image_dir):

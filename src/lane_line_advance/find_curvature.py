@@ -213,7 +213,7 @@ test_image_name = "test4"#"straight_lines1"  # test4
 
 input_image_path = f'./data/test_images/{test_image_name}.jpg'
 output_plot_path = f'./data/output_images/{test_image_name}.png'
-hist_output_path = f"./data/output_images/histogram/{test_image_name}.png"
+hist_output_path = f"./data/output_images/hist_{test_image_name}.png"
 curvature_bbox_output_path = f"./data/output_images/curvature_{test_image_name}.png"
 
 image = commons.read_image(input_image_path)

@@ -2,29 +2,11 @@ import cv2
 import numpy as np
 
 
-def birds_eye_view(img, src_points, dst_points):
-    """
-    :param img:
-    :param src_points: list(tuples)) or nd_array (4, 2)
-    :param dst_points:
-    :return:
-    """
-    h, w, _ = img.shape
-    src_points = np.array(src_points).astype(np.float32)
-    dst_points = np.array(dst_points).astype(np.float32)
-    
-    assert(src_points.shape[1] == 2 and src_points.shape[0] >= 4)
-    assert(dst_points.shape[1] == 2 and dst_points.shape[0] >= 4)
-    M = cv2.getPerspectiveTransform(src_points, dst_points)
-    warped_image = cv2.warpPerspective(img, M, (w, h), flags=cv2.INTER_NEAREST)
-    return warped_image
-
-
 def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     """
     At this point we should have a binary image (1, 0) with detected lane line. Here detections are annotated with 1
     This method is necessary to provide a starting point to find the curvature of the lane line
-    :param preprocessed_image:
+    :param preprocessed_bin_image:
     :param save_path:
     :return:
         left_lane_start_point_coordinates = (y1, x1)
@@ -33,8 +15,8 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     practise to apply a kernel to fill up these valleys
     # TODO: Remove Outliers (Bad Gradients)
     # TODO: How we we handle Bimodal Distribution for a particular lane
-    # TODO: Can we try weighted method (Something like a moving Average)
-    # TODO: Should we try sum of multiple neighboring columns instead of using just one.
+    # TODO: Can we try weighted method (Something like a moving Average) with sliding window
+    # TODO: Use a kernel to compute a weighted value of neighboring columns instead of using just one.
     """
     # preprocessed_image[preprocessed_image > 0] = 1
     assert(set(np.unique(preprocessed_bin_image)) == {0, 1}), (
@@ -206,20 +188,24 @@ class LaneCurvature:
             self.preprocessed_image_cp = np.array(self.preprocessed_image_cp).astype(np.uint8)
             commons.save_image(self.save_path, self.preprocessed_image_cp)
 
+
 from src import commons
-from src.lane_line_advance.main import PreprocessingPipeline
+from src.lane_line_advance.main import PreprocessingPipeline, PostprocessingPipeline
 
 test_image_name = "test4"#"straight_lines1"  # test4
 
 input_image_path = f'./data/test_images/{test_image_name}.jpg'
 output_plot_path = f'./data/output_images/{test_image_name}.png'
+output_plot_path2 = f'./data/output_images/postprocess_{test_image_name}.png'
 hist_output_path = f"./data/output_images/hist_{test_image_name}.png"
 curvature_bbox_output_path = f"./data/output_images/curvature_{test_image_name}.png"
 
 image = commons.read_image(input_image_path)
-pp_pipeline = PreprocessingPipeline(image, save_path=output_plot_path)
-pp_pipeline.warp()
-preprocessed_bin_image = pp_pipeline.preprocess()
+preprocess_pipeline = PreprocessingPipeline(image, save_path=output_plot_path)
+postprocess_pipeline = PostprocessingPipeline(image, save_path=output_plot_path2)
+
+preprocess_pipeline.warp()
+preprocessed_bin_image = preprocess_pipeline.preprocess()
 preprocessed_bin_image = preprocessed_bin_image.astype(np.int32)
 print('preprocessed_img: ', np.unique(preprocessed_bin_image))
 
@@ -238,7 +224,15 @@ obj_l_curv.find_lane_points()
 obj_l_curv.fit()
 y_new, left_x_new, right_x_new = obj_l_curv.predict()
 obj_l_curv.plot(y_new, left_x_new, y_new, right_x_new)
+postprocess_pipeline.unwarp()
+postprocess_pipeline.transform_lane_points(
+        left_lane_points=np.column_stack((left_x_new, y_new)), right_lane_points=np.column_stack((right_x_new, y_new))
+)
+postprocess_pipeline.plot()
 
 
-    
+
+
+
+
     

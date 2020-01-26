@@ -6,6 +6,11 @@ import imageio
 import matplotlib.pyplot as plt
 
 from typing import Tuple
+from moviepy.editor import VideoFileClip
+input_video_path = './data/project_video.mp4'
+output_video_path = './data/project_video_out.mp4'
+# clip2 = VideoFileClip('test_videos/solidYellowLeft.mp4').subclip(0,5)
+clip2 = VideoFileClip(input_video_path )
 
 
 class ImagePlots:
@@ -13,16 +18,32 @@ class ImagePlots:
         self.orig_img = image.copy()
         self.image = image.copy()
         
-    def polylines(self, points: np.array, color: Tuple[int, int, int] = (50, 255, 255)):
+    def polylines(self, points: np.array, color: Tuple[int, int, int] = (50, 255, 255), thickness: int = 4):
         assert (points.shape[1] == 2)
-        cv2.polylines(self.image, [points], False, color, thickness=4)
+        cv2.polylines(self.image, [points], False, color, thickness=thickness)
         
     def polymask(self, points: np.array, color: Tuple[int] = (50, 255, 255), mask_weight: float = 0.5):
         assert (points.shape[1] == 2)
         cv2.fillPoly(self.image, [points], color)
         cv2.addWeighted(self.orig_img, mask_weight, self.image, 1 - mask_weight, 0, self.image)
-    
         
+    def rectangle(self, bbox: list):
+        assert(len(bbox) == 4)
+        cv2.rectangle(
+                self.image, (bbox[1], bbox[0]), (bbox[3], bbox[2]), (255, 0, 0), 2
+        )
+
+
+def fetch_image_from_video(input_video_path, output_img_dir, time_list=[0.24, 0.243, 0.245, 0.248, 0.25]):
+    if not os.path.exists(output_img_dir):
+        os.makedirs(output_img_dir)
+    
+    clip = VideoFileClip(input_video_path)
+    for t in time_list:
+        imgpath = os.path.join(output_img_dir, '{}.jpg'.format(t))
+        clip.save_frame(imgpath, t)
+
+
 def subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
     figsize = tuple([max(figsize[0], ncols*6), max(figsize[1], nrows*4)])
     print(figsize)

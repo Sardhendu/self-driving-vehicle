@@ -4,6 +4,7 @@ import numpy as np
 from src import commons
 from src.lane_line_advance.preprocess import Preprocess
 
+
 class BasePipeline:
     def __init__(self, image):
         self.image = image
@@ -65,7 +66,7 @@ class PreprocessingPipeline(BasePipeline):
         assert (len(self.plot_images) == len(self.plot_names))
         ncol = 3
         nrows = int(np.ceil(len(self.plot_names) / ncol))
-        fig = commons.subplots(nrows=nrows, ncols=ncol)(self.plot_images, self.plot_names)
+        fig = commons.image_subplots(nrows=nrows, ncols=ncol)(self.plot_images, self.plot_names)
         commons.save_matplotlib(self.save_path, fig)
 
 
@@ -105,7 +106,7 @@ class PostprocessingPipeline(BasePipeline):
         
         return left_lane, right_lane
     
-    def draw_lane_mask(self, left_lane, right_lane):
+    def draw_lane_mask(self, left_lane, right_lane, left_lane_curvature_radius, right_lane_curvature_radius):
         if self.save_path:
             unwarped_image = cv2.warpPerspective(
                     self.obj_img_plots.image.copy(), self.M, (self.w, self.h), flags=cv2.INTER_NEAREST
@@ -123,11 +124,17 @@ class PostprocessingPipeline(BasePipeline):
                 color=(0, 255, 0),
                 mask_weight=0.5
         )
+        self.obj_img_plots.add_caption(
+                str((left_lane_curvature_radius/1000).round(3)), pos=(250, 250), color=(255, 0, 0)
+        )
+        self.obj_img_plots.add_caption(
+                str((right_lane_curvature_radius/1000).round(3)), pos=(950, 250), color=(255, 0, 0)
+        )
         return self.obj_img_plots.image
     
     def plot(self):
         assert (len(self.plot_images) == len(self.plot_names))
         ncol = 3
         nrows = int(np.ceil(len(self.plot_names) / ncol))
-        fig = commons.subplots(nrows=nrows, ncols=ncol)(self.plot_images, self.plot_names)
+        fig = commons.image_subplots(nrows=nrows, ncols=ncol)(self.plot_images, self.plot_names)
         commons.save_matplotlib(self.save_path, fig)

@@ -8,11 +8,23 @@ class ModelParams:
     right_lane_y_points = []
     right_lane_x_points = []
     
-    left_lane_curvature_radii = None
-    right_lane_curvature_radii = None
-    left_fit = None
-    right_fit = None
+    left_lane_curvature_radii = []
+    right_lane_curvature_radii = []
+    left_lane_curvature_radii_curr = None
+    right_lane_curvature_radii_curr = None
+    
+    left_fit_pxl_curr = None
+    right_fit_pxl_curr = None
+    left_fit_meter_curr = None
+    right_fit_meter_curr = None
+    
+    # Capture all the b0, b1 and b2 for left and right lane poly fit
+    left_fit_pxl_coefficients = []
+    right_fit_pxl_coefficients = []
 
+    ym_per_pix = 30 / 720  # meters per pixel in y dimension
+    xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
+    
 
 def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     """
@@ -41,7 +53,7 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     right_lane = frequency_histogram[len(frequency_histogram) // 2:]
     
     if save_path:
-        fig = commons.basic_plot(nrows=1, ncols=3, figsize=(50, 10))(
+        fig = commons.graph_subplots(nrows=1, ncols=3, figsize=(50, 10))(
                 [frequency_histogram, left_lane, right_lane],
                 ["frequency_histogram", "hist_left_lane", "hist_right_lane"]
         )
@@ -54,22 +66,35 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     
     
 class LaneCurvature:
-    def __init__(self, preprocessed_bin_image, left_lane_pos_yx, right_lane_pos_yx, window_size, margin, save_path):
+    def __init__(
+            self, preprocessed_bin_image, left_lane_pos_yx, right_lane_pos_yx, window_size, margin, save_dir, pipeline
+    ):
+        """
+        :param preprocessed_bin_image:
+        :param left_lane_pos_yx:
+        :param right_lane_pos_yx:
+        :param window_size:
+        :param margin:
+        :param save_dir:
+        :param pipeline:
+        """
         self.preprocessed_bin_image = preprocessed_bin_image
         self.h, self.w = preprocessed_bin_image.shape
         self.left_lane_pos_yx = left_lane_pos_yx
         self.right_lane_pos_yx = right_lane_pos_yx
         self.window_size = window_size
         self.margin = margin
-        self.save_path = save_path
+        self.save_dir = save_dir
+        self.pipeline = pipeline
         
-        if save_path:
+        if save_dir is not None or self.pipeline != "final":
             self.preprocessed_image_cp = np.dstack((
                 self.preprocessed_bin_image, self.preprocessed_bin_image, self.preprocessed_bin_image
             ))
             self.preprocessed_image_cp[self.preprocessed_bin_image == 1] = 255
 
-            self.obj_img_plots = commons.ImagePlots(self.preprocessed_image_cp)
+            self.preprocessed_img_plot = commons.ImagePlots(self.preprocessed_image_cp)
+            self.basic_plots = commons.graph_subplots()
     
     def store_curvature_points(self, left_box, right_box):
         # TODO: This process can be initiated by a new thread since this is just storage
@@ -150,10 +175,9 @@ class LaneCurvature:
             ll_y_mid_point = ll_y_mid_point - self.window_size[0]
             rl_y_mid_point = rl_y_mid_point - self.window_size[0]
             
-            if self.save_path:
-                print(left_box, right_box)
-                self.obj_img_plots.rectangle(left_box)
-                self.obj_img_plots.rectangle(right_box)
+            if self.save_dir or self.pipeline != "final":
+                self.preprocessed_img_plot.rectangle(left_box)
+                self.preprocessed_img_plot.rectangle(right_box)
                 
             cnt += 1
             
@@ -171,8 +195,8 @@ class LaneCurvature:
         # x_active_idx and y_active_idx because finding if arr_1 points are smaller/larger that arr_2 is expensive
         # operation when len(arr_1) != len(arr_2). In order to achive this using mask we may have to create a mesh grip
         # Seeing all option this option seems faster
-        x_left_pred_idx = ModelParams.left_fit[0] * y_active_idx ** 2 + ModelParams.left_fit[1] * y_active_idx + ModelParams.left_fit[2]
-        x_right_pred_idx = ModelParams.right_fit[0] * y_active_idx ** 2 + ModelParams.right_fit[1] * y_active_idx + ModelParams.right_fit[2]
+        x_left_pred_idx = ModelParams.left_fit_pxl_curr[0] * y_active_idx ** 2 + ModelParams.left_fit_pxl_curr[1] * y_active_idx + ModelParams.left_fit_pxl_curr[2]
+        x_right_pred_idx = ModelParams.right_fit_pxl_curr[0] * y_active_idx ** 2 + ModelParams.right_fit_pxl_curr[1] * y_active_idx + ModelParams.right_fit_pxl_curr[2]
         
         ll_inds = (
                 (x_active_idx > x_left_pred_idx - self.margin) & (x_active_idx < x_left_pred_idx + self.margin)
@@ -198,8 +222,13 @@ class LaneCurvature:
             self.find_lane_points_with_prior_lane_points()
             
     def fit(self, degree=2):
-        ModelParams.left_fit = np.polyfit(ModelParams.left_lane_y_points, ModelParams.left_lane_x_points, deg=degree)
-        ModelParams.right_fit = np.polyfit(ModelParams.right_lane_y_points, ModelParams.right_lane_x_points, deg=degree)
+        ModelParams.left_fit_pxl_curr = np.polyfit(ModelParams.left_lane_y_points, ModelParams.left_lane_x_points, deg=degree)
+        ModelParams.right_fit_pxl_curr = np.polyfit(ModelParams.right_lane_y_points, ModelParams.right_lane_x_points, deg=degree)
+
+        ModelParams.left_fit_pxl_coefficients.append(ModelParams.left_fit_pxl_curr)
+        ModelParams.right_fit_pxl_coefficients.append(ModelParams.right_fit_pxl_curr)
+        assert (len(ModelParams.left_lane_y_points) == len(ModelParams.left_lane_x_points))
+        assert (len(ModelParams.right_lane_y_points) == len(ModelParams.right_lane_x_points))
         
     def predict(self):
         """
@@ -208,8 +237,8 @@ class LaneCurvature:
         """
         y_new = np.linspace(0, self.preprocessed_bin_image.shape[0] - 1, self.preprocessed_bin_image.shape[0])
         try:
-            left_x_new = ModelParams.left_fit[0] * y_new ** 2 + ModelParams.left_fit[1] * y_new + ModelParams.left_fit[2]
-            right_x_new = ModelParams.right_fit[0] * y_new ** 2 + ModelParams.right_fit[1] * y_new + ModelParams.right_fit[2]
+            left_x_new = ModelParams.left_fit_pxl_curr[0] * y_new ** 2 + ModelParams.left_fit_pxl_curr[1] * y_new + ModelParams.left_fit_pxl_curr[2]
+            right_x_new = ModelParams.right_fit_pxl_curr[0] * y_new ** 2 + ModelParams.right_fit_pxl_curr[1] * y_new + ModelParams.right_fit_pxl_curr[2]
         except TypeError:
             # Avoids an error if `left` and `right_fit` are still none or incorrect
             print('The function failed to fit a line!')
@@ -219,34 +248,67 @@ class LaneCurvature:
         # Overwrite the predicted points as new search space
         ModelParams.left_lane_x_points = left_x_new
         ModelParams.left_lane_y_points = y_new
-        ModelParams.right_lane_y_points = right_x_new
+        ModelParams.right_lane_x_points = right_x_new
         ModelParams.right_lane_y_points = y_new
+        
+        assert (len(ModelParams.left_lane_y_points) == len(ModelParams.right_lane_y_points) == len(
+                ModelParams.left_lane_x_points) == len(ModelParams.left_lane_y_points))
         return y_new, left_x_new, right_x_new
     
-    def measure_radii(self):
+    def measure_radius_in_pxl(self):
         """
         This function computes the Radius of LaneCurvature in pixels
         :return:
         """
-        lb2, lb1, _ = ModelParams.left_fit
-        rb2, rb1, _ = ModelParams.right_fit
-        
-        # Take any y value
-        print('Fuckin height of image: ', self.h)
-        ModelParams.left_lane_curvature_radii = ((1 + (2 * lb2 * self.h + lb1) ** 2) ** 1.5) / np.absolute(
+        lb2, lb1, _ = ModelParams.left_fit_pxl_curr
+        rb2, rb1, _ = ModelParams.right_fit_pxl_curr
+        ModelParams.left_lane_curvature_radii_curr = ((1 + (2 * lb2 * self.h + lb1) ** 2) ** 1.5) / np.absolute(
             2 * lb2)
-        ModelParams.right_lane_curvature_radii = ((1 + (2 * rb2 * self.h + rb1) ** 2) ** 1.5) / np.absolute(
+        ModelParams.right_lane_curvature_radii_curr = ((1 + (2 * rb2 * self.h + rb1) ** 2) ** 1.5) / np.absolute(
             2 * rb2)
+        # Take any y value, here we take the max
+        ModelParams.left_lane_curvature_radii.append(ModelParams.left_lane_curvature_radii_curr)
+        ModelParams.right_lane_curvature_radii.append(ModelParams.right_lane_curvature_radii_curr)
+            
+    def measure_radius_in_meter(self):
+        """
+        Here we project the y_points and x_points of both the lanes from the warped pxl coordinate system to the real
+        world coordinate space with distance in pxl. Then we fit a polynomial and compute the radius of curvature.
         
+        It would not be wise to use the polyfit used on warped image pxl space and convert that to meters. Because
+        small turns in warped image can imply sharper turns in the real world.
+        :return:
+        """
+        ModelParams.left_fit_meter_curr = np.polyfit(
+                ModelParams.left_lane_y_points*ModelParams.ym_per_pix,
+                ModelParams.left_lane_x_points*ModelParams.xm_per_pix,
+                deg=2
+        )
+        
+        ModelParams.right_fit_meter_curr = np.polyfit(
+                ModelParams.right_lane_y_points*ModelParams.ym_per_pix,
+                ModelParams.right_lane_x_points*ModelParams.xm_per_pix,
+                deg=2
+        )
+        lb2, lb1, _ = ModelParams.left_fit_meter_curr
+        rb2, rb1, _ = ModelParams.right_fit_meter_curr
+
+        ModelParams.left_lane_curvature_radii_curr = ((1 + (2 * lb2 * self.h * ModelParams.ym_per_pix + lb1) ** 2) ** 1.5) / np.absolute(2 * lb2)
+        ModelParams.right_lane_curvature_radii_curr = ((1 + (2 * rb2 * self.h * ModelParams.ym_per_pix + rb1) ** 2) ** 1.5) / np.absolute(2 * rb2)
+        # Take any y value, here we take the max
+        ModelParams.left_lane_curvature_radii.append(ModelParams.left_lane_curvature_radii_curr)
+        ModelParams.right_lane_curvature_radii.append(ModelParams.right_lane_curvature_radii_curr)
+    
     def plot(self, left_y_new, left_x_new, right_y_new, right_x_new):
         draw_points = np.asarray([left_x_new, left_y_new]).T.astype(np.int32)
-        self.obj_img_plots.polylines(draw_points, (50, 255, 255))
+        self.preprocessed_img_plot.polylines(draw_points, (50, 255, 255))
         draw_points = np.asarray([right_x_new, right_y_new]).T.astype(np.int32)
-        self.obj_img_plots.polylines(draw_points, (50, 255, 255))
+        self.preprocessed_img_plot.polylines(draw_points, (50, 255, 255))
 
-        if self.save_path:
-            commons.save_image(self.save_path, self.obj_img_plots.image)
+        if self.save_dir:
+            commons.save_image(f"{self.save_dir}/curvature_windows.png", self.preprocessed_img_plot.image)
 
+        
 
 # from src import commons
 

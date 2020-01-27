@@ -7,10 +7,6 @@ import matplotlib.pyplot as plt
 
 from typing import Tuple
 from moviepy.editor import VideoFileClip
-input_video_path = './data/project_video.mp4'
-output_video_path = './data/project_video_out.mp4'
-# clip2 = VideoFileClip('test_videos/solidYellowLeft.mp4').subclip(0,5)
-clip2 = VideoFileClip(input_video_path )
 
 
 class ImagePlots:
@@ -32,7 +28,12 @@ class ImagePlots:
         cv2.rectangle(
                 self.image, (bbox[1], bbox[0]), (bbox[3], bbox[2]), (255, 0, 0), 2
         )
-
+        
+    def add_caption(self, caption: str, pos: Tuple[int, int], color: Tuple[int, int, int]):
+        cv2.putText(
+                self.image, caption, pos, cv2.FONT_HERSHEY_PLAIN, 2, color, 2
+        )
+        
 
 def fetch_image_from_video(input_video_path, output_img_dir, time_list=[0.24, 0.243, 0.245, 0.248, 0.25]):
     if not os.path.exists(output_img_dir):
@@ -44,7 +45,7 @@ def fetch_image_from_video(input_video_path, output_img_dir, time_list=[0.24, 0.
         clip.save_frame(imgpath, t)
 
 
-def subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
+def image_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
     figsize = tuple([max(figsize[0], ncols*6), max(figsize[1], nrows*4)])
     print(figsize)
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
@@ -67,7 +68,7 @@ def subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
     return _subplots
 
 
-def basic_plot(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
+def graph_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=35, ticks_fontsize=25, facecolor='w'):
     figsize = tuple([max(figsize[0], ncols * 6), max(figsize[1], nrows * 4)])
     print(figsize)
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
@@ -86,6 +87,9 @@ def basic_plot(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
         for i, (vec, img_name) in enumerate(zip(list_of_vectors, list_of_titles)):
             ax[i].plot(vec)
             ax[i].set_title(img_name, fontsize=fontsize)
+            for item in ([ax[i].title, ax[i].xaxis.label, ax[i].yaxis.label] +
+                         ax[i].get_xticklabels() + ax[i].get_yticklabels()):
+                item.set_fontsize(ticks_fontsize)
         return fig
     
     return _subplots

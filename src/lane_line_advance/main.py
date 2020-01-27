@@ -157,7 +157,6 @@ def warped_output_video_pipeline(image):
     return lane_curvature.preprocessed_img_plot.image
 
 
-
 def plot_curvature_radius_dist(save_path):
     fig = commons.graph_subplots(nrows=1, ncols=3, figsize=(50, 10))(
             [ModelParams.left_lane_curvature_radii, ModelParams.right_lane_curvature_radii],
@@ -167,19 +166,30 @@ def plot_curvature_radius_dist(save_path):
 
     
 from moviepy.editor import VideoFileClip
+setting = "warped"
 video_name = "challenge_video"
 input_video_path = f'./data/{video_name}.mp4'
-output_video_path = f'./data/{video_name}_warped_out.mp4'
+output_video_path = f'./data/{video_name}_{setting}_out.mp4'
 output_img_dir = f"./data/debug_images/{video_name}"
 
 
 # -------------------------------------------------------------------------------------------
+# Final Video Pipeline
+# -------------------------------------------------------------------------------------------
+if setting == "final":
+    clip2 = VideoFileClip(input_video_path).subclip(0, 10)
+    yellow_clip = clip2.fl_image(final_pipeline)
+    yellow_clip.write_videofile(output_video_path, audio=False)
+    plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
+
+# -------------------------------------------------------------------------------------------
 # Debug Video
 # -------------------------------------------------------------------------------------------
-# clip2 = VideoFileClip(input_video_path).subclip(0, 10)
-# yellow_clip = clip2.fl_image(warped_output_video_pipeline)
-# yellow_clip.write_videofile(output_video_path, audio=False)
-# plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
+if setting == "warped":
+    clip2 = VideoFileClip(input_video_path).subclip(0, 5)
+    yellow_clip = clip2.fl_image(warped_output_video_pipeline)
+    yellow_clip.write_videofile(output_video_path, audio=False)
+    plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
 
 # -------------------------------------------------------------------------------------------
 # Debug Each Frame
@@ -188,7 +198,8 @@ output_img_dir = f"./data/debug_images/{video_name}"
 #         input_video_path, output_img_dir, time_list=[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 # )
 
-test_image_name = "0"
-input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
-output_img_dir = f'{output_img_dir}/{test_image_name}'
-debug_pipeline(input_image_path, output_img_dir)
+if setting == "debug":
+    test_image_name = "1.5"
+    input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
+    output_img_dir = f'{output_img_dir}/{test_image_name}'
+    debug_pipeline(input_image_path, output_img_dir)

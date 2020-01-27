@@ -25,6 +25,9 @@ class ModelParams:
     ym_per_pix = 30 / 720  # meters per pixel in y dimension
     xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
     
+    # This is a small hack to give more weight to pixels with high y value.
+    y_axis_weights = (np.arange(720)/720).reshape(-1, 1)
+    
 
 def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     """
@@ -47,7 +50,7 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
         f'The preprocessed image should be binary {0, 1} but contains values {set(np.unique(preprocessed_bin_image))}'
     )
     # Sum all the values in column axis
-    frequency_histogram = np.sum(preprocessed_bin_image, axis=0)
+    frequency_histogram = np.sum(preprocessed_bin_image*ModelParams.y_axis_weights, axis=0)
     # Divide the Frequency histogram into two parts to find starting points for Left Lane and Right Lane
     left_lane = frequency_histogram[0: len(frequency_histogram) // 2]
     right_lane = frequency_histogram[len(frequency_histogram) // 2:]

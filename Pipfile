@@ -8,7 +8,7 @@ verify_ssl = true
 [packages]
 pyyaml = "*"
 progressbar = "*"
-tensorflow = "==1.14.0"
+tensorflow = "==1.15.2"
 jupyter = "*"
 matplotlib = "*"
 opencv-python = "*"

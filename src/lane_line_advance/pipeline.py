@@ -59,9 +59,8 @@ class PreprocessingPipeline(BasePipeline):
         binary_r = self.threshold(r, (150, 255))
         binary_s = self.threshold(s, (15, 150))
 
-
         # Get logical OR between R and S Channel
-        rs_active_pxl = np.logical_or(binary_r, binary_s)#binary_r + binary_s
+        rs_active_pxl = np.logical_and(binary_r, binary_s)#binary_r + binary_s
         rs_active_pxl[rs_active_pxl > 0] = 1
 
         # Get Gradients on RBG->BLUR->Gray color space and Apply Absolute Gradient thresholding

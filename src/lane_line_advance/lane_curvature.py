@@ -30,16 +30,25 @@ class ModelParams:
     # -------------------------------------------------------------------------------------------
     # We are starting the sliding window technique from the lower part of the image. Also Lane Line gradient are
     # most active in the lower part of the image. This is a small hack to give more weight to  pixels at the lower
-    # part of the image. We just multiple this vector with the preprcessed warped binary image along y axis.
+    # part of the image. We just multiple this vector with the preprocessed warped binary image along y axis.
     y_axis_weights = (np.arange(720)/720).reshape(-1, 1)
     
-    # Lane lines edges in the warped image are broad mostly at the lower region and they narrow as they move up in the
-    # image. Here we define a kernel of certain size. The idea is innstead of sum each y column of the image we make
+    # Assumption: The camera is centered on the car. Lane lines edges in the warped image are broad mostly at the lower
+    # region and they narrow as they move up in the image. Here we define a kernel of certain size. The idea is
+    # instead of sum each y column of the image we make
     # the weighted sum inside the kernel
-    kernel_weights = np.append(
-        (np.arange(10)/10), (np.arange(10)/10)[::-1]
-    )
-    
+    hist_weight_matrix = np.tile(np.concatenate((
+        np.linspace(1, 2, 160),
+        np.linspace(2, 3, 160),
+        np.linspace(3, 2, 160),
+        np.linspace(2, 1, 160),
+        np.linspace(1, 2, 160),
+        np.linspace(2, 3, 160),
+        np.linspace(3, 2, 160),
+        np.linspace(2, 1, 160)
+    )).reshape(-1, 1), 720).T * np.tile(np.linspace(1, 7, 720).reshape(-1, 1), 1280)
+    hist_weight_matrix /= np.sum(hist_weight_matrix)
+
     # Smooth curves
     # TODO: Implement moving average
     num_frames = 10
@@ -53,12 +62,12 @@ class ModelParams:
     assert(np.sum(moving_average_weigths) == 1)
 
 
-def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
+def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_dir=None):
     """
     At this point we should have a binary image (1, 0) with detected lane line. Here detections are annotated with 1
     This method is necessary to provide a starting point to find the curvature of the lane line
     :param preprocessed_bin_image:
-    :param save_path:
+    :param save_dir:
     :return:
         left_lane_start_point_coordinates = (y1, x1)
         right_lane_start_point_coordinates = (y2, x2)
@@ -73,19 +82,22 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     assert(set(np.unique(preprocessed_bin_image)) == {0, 1}), (
         f'The preprocessed image should be binary {0, 1} but contains values {set(np.unique(preprocessed_bin_image))}'
     )
-    print(ModelParams.kernel_weights)
     # Sum all the values in column axis
-    frequency_histogram = np.sum(preprocessed_bin_image*ModelParams.y_axis_weights, axis=0)
+    frequency_histogram = np.sum(preprocessed_bin_image*ModelParams.hist_weight_matrix, axis=0)
     # Divide the Frequency histogram into two parts to find starting points for Left Lane and Right Lane
     left_lane = frequency_histogram[0: len(frequency_histogram) // 2]
     right_lane = frequency_histogram[len(frequency_histogram) // 2:]
     
-    if save_path:
-        fig = commons.graph_subplots(nrows=1, ncols=3, figsize=(50, 10))(
+    if save_dir:
+        fig = commons.graph_subplots(nrows=1, ncols=4, figsize=(50, 10))(
                 [frequency_histogram, left_lane, right_lane],
                 ["frequency_histogram", "hist_left_lane", "hist_right_lane"]
         )
-        commons.save_matplotlib(save_path, fig)
+        fig2 = commons.image_subplots(nrows=1, ncols=1, figsize=(6, 6))(
+                [ModelParams.hist_weight_matrix], ["histogram_weight_matrix"]
+        )
+        commons.save_matplotlib(f"{save_dir}/histogram_dist.png", fig)
+        commons.save_matplotlib(f"{save_dir}/histogram_weights.png", fig2)
     
     left_lane_start_index = np.argmax(left_lane)
     right_lane_start_index = len(frequency_histogram) // 2 + np.argmax(right_lane)
@@ -286,8 +298,8 @@ class LaneCurvature:
         return y_new, left_x_new, right_x_new
     
     def average_n_lanes(self, left_x_new, right_x_new):
-        print('RUNNING ===========> ', ModelParams.running_index)
-        print(np.sum(left_x_new))
+        # print('RUNNING ===========> ', ModelParams.running_index)
+        # print(np.sum(left_x_new))
 
         ModelParams.left_lane_n_polynomial_matrix[:, :-1] = ModelParams.left_lane_n_polynomial_matrix[:, 1:]
         ModelParams.left_lane_n_polynomial_matrix[:, -1:] = left_x_new.reshape(-1, 1)
@@ -295,14 +307,14 @@ class LaneCurvature:
         ModelParams.right_lane_n_polynomial_matrix[:, :-1] = ModelParams.right_lane_n_polynomial_matrix[:, 1:]
         ModelParams.right_lane_n_polynomial_matrix[:, -1:] = right_x_new.reshape(-1, 1)
         
-        print(np.sum(ModelParams.left_lane_n_polynomial_matrix, axis=0))
+        # print(np.sum(ModelParams.left_lane_n_polynomial_matrix, axis=0))
         if ModelParams.running_index >= 9:
-            print( ModelParams.left_lane_n_polynomial_matrix.shape, ModelParams.moving_average_weigths.shape)
+            # print( ModelParams.left_lane_n_polynomial_matrix.shape, ModelParams.moving_average_weigths.shape)
             
             left_x_new = np.sum(ModelParams.left_lane_n_polynomial_matrix * ModelParams.moving_average_weigths, axis=1)
             right_x_new = np.sum(ModelParams.right_lane_n_polynomial_matrix * ModelParams.moving_average_weigths,
                                  axis=1)
-            print(left_x_new.shape)
+            # print(left_x_new.shape)
             # print('ModelParams.left_lane_n_polynomial_matrix: \n', ModelParams.left_lane_n_polynomial_matrix)
 
         ModelParams.running_index += 1

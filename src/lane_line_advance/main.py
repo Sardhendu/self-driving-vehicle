@@ -19,7 +19,7 @@ def debug_pipeline(input_image_path, output_img_dir):
     # Get histogram distribution to determine start point for sliding window
     # -------------------------------------------------------------------------------------
     left_lane_pos_yx, right_lane_pos_yx = fetch_start_position_with_hist_dist(
-            preprocessed_bin_image.copy(), save_path=f"{output_img_dir}/histogram_dist.png"
+            preprocessed_bin_image.copy(), save_dir=output_img_dir
     )
     
     # -------------------------------------------------------------------------------------
@@ -65,6 +65,7 @@ def debug_pipeline(input_image_path, output_img_dir):
 
 def final_pipeline(image):
     print('\n\n#--------------------------------------\n# Frame Initiate\n#--------------------------------------')
+    print(image.shape)
     preprocess_pipeline = PreprocessingPipeline(image)
     postprocess_pipeline = PostprocessingPipeline(image)
     
@@ -166,8 +167,8 @@ def plot_curvature_radius_dist(save_path):
 
     
 from moviepy.editor import VideoFileClip
-setting = "final"
-video_name = "project_video"
+setting = "debug"
+video_name = "challenge_video"
 input_video_path = f'./data/{video_name}.mp4'
 output_video_path = f'./data/{video_name}_{setting}_out.mp4'
 output_img_dir = f"./data/debug_images/{video_name}"
@@ -186,7 +187,7 @@ if setting == "final":
 # Debug Video
 # -------------------------------------------------------------------------------------------
 if setting == "warped":
-    clip2 = VideoFileClip(input_video_path).subclip(0, 5)
+    clip2 = VideoFileClip(input_video_path)#.subclip(0, 5)
     yellow_clip = clip2.fl_image(warped_output_video_pipeline)
     yellow_clip.write_videofile(output_video_path, audio=False)
     plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
@@ -199,10 +200,10 @@ if setting == "warped":
 # )
 
 if setting == "debug":
-    test_image_name = "test5"  #"0"
+    test_image_name = "0"  #"0"
     
-    input_image_path = f'{test_img_dir}/{test_image_name}.jpg'
-    # input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
+    # input_image_path = f'{test_img_dir}/{test_image_name}.jpg'
+    input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
     
     output_img_dir = f'{output_img_dir}/{test_image_name}'
     debug_pipeline(input_image_path, output_img_dir)

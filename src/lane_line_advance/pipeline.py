@@ -42,25 +42,122 @@ class PreprocessingPipeline(BasePipeline):
         if self.save_path:
             self.plot_images += [self.warped_image]
             self.plot_names += ["warped_image"]
+            
+    def threshold(self, channel, thresh=(15, 50)):
+        binary = np.zeros_like(channel)
+        binary[(channel > thresh[0]) & (channel <= thresh[1])] = 1
+        return binary
     
     def preprocess(self):
+        r, g, b = [np.squeeze(i, axis=2) for i in np.dsplit(self.warped_image, 3)]
         obj_pp = Preprocess(image=self.warped_image)
         hls_img = obj_pp.apply_colorspace(cv2.COLOR_RGB2HLS)
+
         h, l, s = [np.squeeze(i, axis=2) for i in np.dsplit(hls_img, 3)]
+
+        # Capture R and S channel that are most effective
+        binary_r = self.threshold(r, (150, 255))
+        binary_s = self.threshold(s, (15, 150))
+
+
+        # Get logical OR between R and S Channel
+        rs_active_pxl = np.logical_or(binary_r, binary_s)#binary_r + binary_s
+        rs_active_pxl[rs_active_pxl > 0] = 1
+
+        # Get Gradients on RBG->BLUR->Gray color space and Apply Absolute Gradient thresholding
         ls_img = np.dstack([l, s, np.zeros(h.shape)]).astype(np.uint8)
-        
         obj_pp.reset_image(ls_img)
         ls_gray = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
+
         gx, gy = obj_pp.apply_gradients(kernel_size=3)
         x_abs_thresh_img = obj_pp.apply_absolute_thresh(axis="x", threshold=(15, 150))
-        
+
+        # Perform Logical AND between absolute_gradients and RS active channels
+        preprocessed_img = np.logical_and(x_abs_thresh_img, rs_active_pxl)
+
         if self.save_path is not None:
-            self.plot_images += [hls_img, ls_img, ls_gray, gx, gy, x_abs_thresh_img]
-            self.plot_names += [
-                "hls_colorspace", "ls_colorspace", "ls_gray", "gradient_x", "gradient_y", "gradient_absoute_threshold"
+            binary_g = self.threshold(g, (150, 255))
+            binary_b = self.threshold(b, (15, 50))
+            binary_h = self.threshold(h, (10, 50))
+            binary_l = self.threshold(l, (150, 255))
+
+            obj_pp.reset_image(self.warped_image.copy())
+            obj_pp.apply_blurr(kernel=3)
+            gray_img = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
+
+            self.plot_images += [
+                r, g, b,
+                binary_r, binary_g, binary_b,
+                h, l, s,
+                binary_h, binary_l, binary_s,
+                rs_active_pxl, gray_img, ls_gray,
+                gx, x_abs_thresh_img, preprocessed_img
             ]
+            self.plot_names += [
+                "red", "green", "blue",
+                "binary_r", "binary_g", "binary_b",
+                "hue", "lightning", "saturation",
+                "binary_h", "binary_l", "binary_s",
+                "r_or_s_colorspace", "gray_colorsapce", "ls_gray_colorspace",
+                "ls_gray_gradient_y", "ls_gray_gradient_y_abs_thres", "preprocessed_img"
+            ]
+
+        return preprocessed_img
+
+    def preprocess(self):
+        r, g, b = [np.squeeze(i, axis=2) for i in np.dsplit(self.warped_image, 3)]
+        obj_pp = Preprocess(image=self.warped_image)
+        hls_img = obj_pp.apply_colorspace(cv2.COLOR_RGB2HLS)
+    
+        h, l, s = [np.squeeze(i, axis=2) for i in np.dsplit(hls_img, 3)]
+    
+        # Capture R and S channel that are most effective
+        binary_r = self.threshold(r, (150, 255))
+        binary_s = self.threshold(s, (15, 150))
+    
+        # Get logical OR between R and S Channel
+        rs_active_pxl = np.logical_and(binary_r, binary_s)  # binary_r + binary_s
+        rs_active_pxl[rs_active_pxl > 0] = 1
+    
+        # Get Gradients on RBG->BLUR->Gray color space and Apply Absolute Gradient thresholding
+        ls_img = np.dstack([l, s, np.zeros(h.shape)]).astype(np.uint8)
+        obj_pp.reset_image(s)
+        # ls_gray = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
+    
+        gx, gy = obj_pp.apply_gradients(kernel_size=3)
+        x_abs_thresh_img = obj_pp.apply_absolute_thresh(axis="x", threshold=(15, 150))
+    
+        # Perform Logical AND between absolute_gradients and RS active channels
+        preprocessed_img = np.logical_and(x_abs_thresh_img, rs_active_pxl)
+    
+        if self.save_path is not None:
+            binary_g = self.threshold(g, (150, 255))
+            binary_b = self.threshold(b, (15, 50))
+            binary_h = self.threshold(h, (10, 50))
+            binary_l = self.threshold(l, (150, 255))
         
-        return x_abs_thresh_img
+            obj_pp.reset_image(self.warped_image.copy())
+            obj_pp.apply_blurr(kernel=3)
+            gray_img = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
+        
+            self.plot_images += [
+                r, g, b,
+                binary_r, binary_g, binary_b,
+                h, l, s,
+                binary_h, binary_l, binary_s,
+                rs_active_pxl, gray_img,#, ls_gray,
+                gx, x_abs_thresh_img, preprocessed_img
+            ]
+            self.plot_names += [
+                "red", "green", "blue",
+                "binary_r", "binary_g", "binary_b",
+                "hue", "lightning", "saturation",
+                "binary_h", "binary_l", "binary_s",
+                "r_or_s_colorspace", "gray_colorsapce",#, "ls_gray_colorspace",
+                "ls_gray_gradient_y", "ls_gray_gradient_y_abs_thres", "preprocessed_img"
+            ]
+    
+        return preprocessed_img
     
     def plot(self):
         assert (len(self.plot_images) == len(self.plot_names))

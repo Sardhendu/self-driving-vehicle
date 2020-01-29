@@ -25,9 +25,33 @@ class ModelParams:
     ym_per_pix = 30 / 720  # meters per pixel in y dimension
     xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
     
-    # This is a small hack to give more weight to pixels with high y value.
+    # -------------------------------------------------------------------------------------------
+    # Some Awesome Hacks
+    # -------------------------------------------------------------------------------------------
+    # We are starting the sliding window technique from the lower part of the image. Also Lane Line gradient are
+    # most active in the lower part of the image. This is a small hack to give more weight to  pixels at the lower
+    # part of the image. We just multiple this vector with the preprcessed warped binary image along y axis.
     y_axis_weights = (np.arange(720)/720).reshape(-1, 1)
     
+    # Lane lines edges in the warped image are broad mostly at the lower region and they narrow as they move up in the
+    # image. Here we define a kernel of certain size. The idea is innstead of sum each y column of the image we make
+    # the weighted sum inside the kernel
+    kernel_weights = np.append(
+        (np.arange(10)/10), (np.arange(10)/10)[::-1]
+    )
+    
+    # Smooth curves
+    # TODO: Implement moving average
+    num_frames = 10
+    moving_average_weigths = (np.arange(num_frames)/np.sum(np.arange(num_frames))).reshape(1, -1)
+    left_lane_n_polynomial_matrix = np.zeros((720, 10))  # Here 720 is the counts of polynomial points
+    right_lane_n_polynomial_matrix = np.zeros((720, 10))
+    running_index = 0
+    print(moving_average_weigths)
+    print(sum(moving_average_weigths))
+    # print()
+    assert(np.sum(moving_average_weigths) == 1)
+
 
 def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     """
@@ -49,6 +73,7 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_path=None):
     assert(set(np.unique(preprocessed_bin_image)) == {0, 1}), (
         f'The preprocessed image should be binary {0, 1} but contains values {set(np.unique(preprocessed_bin_image))}'
     )
+    print(ModelParams.kernel_weights)
     # Sum all the values in column axis
     frequency_histogram = np.sum(preprocessed_bin_image*ModelParams.y_axis_weights, axis=0)
     # Divide the Frequency histogram into two parts to find starting points for Left Lane and Right Lane
@@ -161,7 +186,7 @@ class LaneCurvature:
 
             left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
             right_box_vals = self.preprocessed_bin_image[right_box[0]:right_box[2], right_box[1]:right_box[3]]
-
+            
             _, ll_non_zero_x_idx = np.where(left_box_vals == 1)
             _, rl_non_zero_x_idx = np.where(right_box_vals == 1)
 
@@ -256,7 +281,33 @@ class LaneCurvature:
         
         assert (len(ModelParams.left_lane_y_points) == len(ModelParams.right_lane_y_points) == len(
                 ModelParams.left_lane_x_points) == len(ModelParams.left_lane_y_points))
+
+        left_x_new, right_x_new = self.average_n_lanes(left_x_new, right_x_new)
         return y_new, left_x_new, right_x_new
+    
+    def average_n_lanes(self, left_x_new, right_x_new):
+        print('RUNNING ===========> ', ModelParams.running_index)
+        print(np.sum(left_x_new))
+
+        ModelParams.left_lane_n_polynomial_matrix[:, :-1] = ModelParams.left_lane_n_polynomial_matrix[:, 1:]
+        ModelParams.left_lane_n_polynomial_matrix[:, -1:] = left_x_new.reshape(-1, 1)
+
+        ModelParams.right_lane_n_polynomial_matrix[:, :-1] = ModelParams.right_lane_n_polynomial_matrix[:, 1:]
+        ModelParams.right_lane_n_polynomial_matrix[:, -1:] = right_x_new.reshape(-1, 1)
+        
+        print(np.sum(ModelParams.left_lane_n_polynomial_matrix, axis=0))
+        if ModelParams.running_index >= 9:
+            print( ModelParams.left_lane_n_polynomial_matrix.shape, ModelParams.moving_average_weigths.shape)
+            
+            left_x_new = np.sum(ModelParams.left_lane_n_polynomial_matrix * ModelParams.moving_average_weigths, axis=1)
+            right_x_new = np.sum(ModelParams.right_lane_n_polynomial_matrix * ModelParams.moving_average_weigths,
+                                 axis=1)
+            print(left_x_new.shape)
+            # print('ModelParams.left_lane_n_polynomial_matrix: \n', ModelParams.left_lane_n_polynomial_matrix)
+
+        ModelParams.running_index += 1
+
+        return left_x_new, right_x_new
     
     def measure_radius_in_pxl(self):
         """

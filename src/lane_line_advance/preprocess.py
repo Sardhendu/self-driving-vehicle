@@ -13,6 +13,10 @@ class Preprocess():
     def reset_image(self, image):
         self.processed_image = image
         
+    def apply_blurr(self, kernel: int):
+        self.processed_image = cv2.blur(self.processed_image, (kernel, kernel))
+        return self.processed_image
+    
     def apply_colorspace(self, color_space: cv2):
         self.processed_image = cv2.cvtColor(self.processed_image, color_space)
         return self.processed_image
@@ -20,9 +24,9 @@ class Preprocess():
     def apply_gradients(self, kernel_size):
         self.gradient_x = cv2.Sobel(self.processed_image, cv2.CV_64F, 1, 0, ksize=kernel_size)
         self.gradient_y = cv2.Sobel(self.processed_image, cv2.CV_64F, 0, 1, ksize=kernel_size)
-        return self.gradient_x, self.gradient_x
+        return self.gradient_x, self.gradient_y
 
-    def apply_absolute_thresh(self, axis, threshold=(50, 150)):
+    def apply_absolute_thresh(self, axis, threshold=(100, 150)):
         if axis == "y":
             gradient = self.gradient_y
         elif axis == "x":
@@ -34,7 +38,7 @@ class Preprocess():
         abs_value = np.uint8(np.abs(gradient) / np.max(gradient) * 255)
         abs_mask = np.zeros(gradient.shape)
         abs_mask[(abs_value >= threshold[0]) & (abs_value <= threshold[1])] = 1
-        return abs_mask
+        return abs_mask.astype(np.int32)
 
     def apply_magnitude_thresh(self, threshold=(20, 150)):
         gradient_magnitude = pow(pow(self.gradient_y, 2) + pow(self.gradient_x, 2), 0.5)

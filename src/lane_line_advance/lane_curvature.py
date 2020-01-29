@@ -3,6 +3,8 @@ from src import commons
 
 
 class ModelParams:
+    window_size = (70, 130)
+    search_loops = 12
     left_lane_y_points = []
     left_lane_x_points = []
     right_lane_y_points = []
@@ -28,11 +30,6 @@ class ModelParams:
     # -------------------------------------------------------------------------------------------
     # Some Awesome Hacks
     # -------------------------------------------------------------------------------------------
-    # We are starting the sliding window technique from the lower part of the image. Also Lane Line gradient are
-    # most active in the lower part of the image. This is a small hack to give more weight to  pixels at the lower
-    # part of the image. We just multiple this vector with the preprocessed warped binary image along y axis.
-    y_axis_weights = (np.arange(720)/720).reshape(-1, 1)
-    
     # Assumption: The camera is centered on the car. Lane lines edges in the warped image are broad mostly at the lower
     # region and they narrow as they move up in the image. Here we define a kernel of certain size. The idea is
     # instead of sum each y column of the image we make
@@ -107,13 +104,12 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_dir=None):
     
 class LaneCurvature:
     def __init__(
-            self, preprocessed_bin_image, left_lane_pos_yx, right_lane_pos_yx, window_size, margin, save_dir, pipeline
+            self, preprocessed_bin_image, left_lane_pos_yx, right_lane_pos_yx, margin, save_dir, pipeline
     ):
         """
         :param preprocessed_bin_image:
         :param left_lane_pos_yx:
         :param right_lane_pos_yx:
-        :param window_size:
         :param margin:
         :param save_dir:
         :param pipeline:
@@ -122,7 +118,6 @@ class LaneCurvature:
         self.h, self.w = preprocessed_bin_image.shape
         self.left_lane_pos_yx = left_lane_pos_yx
         self.right_lane_pos_yx = right_lane_pos_yx
-        self.window_size = window_size
         self.margin = margin
         self.save_dir = save_dir
         self.pipeline = pipeline
@@ -162,12 +157,12 @@ class LaneCurvature:
         :return:
         """
         left_box = [
-            ll_mid_point[0] - self.window_size[0] // 2, ll_mid_point[1] - self.window_size[1] // 2,
-            ll_mid_point[0] + self.window_size[0] // 2, ll_mid_point[1] + self.window_size[1] // 2,
+            ll_mid_point[0] - ModelParams.window_size[0] // 2, ll_mid_point[1] - ModelParams.window_size[1] // 2,
+            ll_mid_point[0] + ModelParams.window_size[0] // 2, ll_mid_point[1] + ModelParams.window_size[1] // 2,
         ]
         right_box = [
-            rl_mid_point[0] - self.window_size[0] // 2, rl_mid_point[1] - self.window_size[1] // 2,
-            rl_mid_point[0] + self.window_size[0] // 2, rl_mid_point[1] + self.window_size[1] // 2,
+            rl_mid_point[0] - ModelParams.window_size[0] // 2, rl_mid_point[1] - ModelParams.window_size[1] // 2,
+            rl_mid_point[0] + ModelParams.window_size[0] // 2, rl_mid_point[1] + ModelParams.window_size[1] // 2,
         ]
 
         return left_box, right_box
@@ -179,21 +174,21 @@ class LaneCurvature:
         """
         # TODO: When there are no activated pixels for a box, then it is a good idea to to take weighted average of
         #  the last 2-3 boxes
-        ll_y_mid_point = self.left_lane_pos_yx[0] - (self.window_size[0]//2)
+        ll_y_mid_point = self.left_lane_pos_yx[0] - (ModelParams.window_size[0]//2)
         ll_x_mid_point = self.left_lane_pos_yx[1]
     
-        rl_y_mid_point = self.right_lane_pos_yx[0] - (self.window_size[0] // 2)
+        rl_y_mid_point = self.right_lane_pos_yx[0] - (ModelParams.window_size[0] // 2)
         rl_x_mid_point = self.right_lane_pos_yx[1]
         
         cnt = 0
-        while cnt <= 9:
+        while cnt <= ModelParams.search_loops:
             left_box = [
-                ll_y_mid_point - self.window_size[0] // 2, ll_x_mid_point - self.window_size[1] // 2,
-                ll_y_mid_point + self.window_size[0] // 2, ll_x_mid_point + self.window_size[1] // 2,
+                ll_y_mid_point - ModelParams.window_size[0] // 2, ll_x_mid_point - ModelParams.window_size[1] // 2,
+                ll_y_mid_point + ModelParams.window_size[0] // 2, ll_x_mid_point + ModelParams.window_size[1] // 2,
             ]
             right_box = [
-                rl_y_mid_point - self.window_size[0] // 2, rl_x_mid_point - self.window_size[1] // 2,
-                rl_y_mid_point + self.window_size[0] // 2, rl_x_mid_point + self.window_size[1] // 2,
+                rl_y_mid_point - ModelParams.window_size[0] // 2, rl_x_mid_point - ModelParams.window_size[1] // 2,
+                rl_y_mid_point + ModelParams.window_size[0] // 2, rl_x_mid_point + ModelParams.window_size[1] // 2,
             ]
 
             left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
@@ -212,8 +207,8 @@ class LaneCurvature:
             )
             self.store_curvature_points(left_box, right_box)
             
-            ll_y_mid_point = ll_y_mid_point - self.window_size[0]
-            rl_y_mid_point = rl_y_mid_point - self.window_size[0]
+            ll_y_mid_point = ll_y_mid_point - ModelParams.window_size[0]
+            rl_y_mid_point = rl_y_mid_point - ModelParams.window_size[0]
             
             if self.save_dir or self.pipeline != "final":
                 self.preprocessed_img_plot.rectangle(left_box)

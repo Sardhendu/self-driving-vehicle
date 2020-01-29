@@ -30,14 +30,6 @@ import numpy as np
 
 a = np.tile(np.linspace(1, 7, 720).reshape(-1, 1), 1280)
 
-# b = np.linspace(1, 2, 160)      # 0-200
-# c = np.linspace(2, 3, 160)      # 200-400
-# d = np.linspace(3, 2, 160)      # 400-600
-# e = np.linspace(2, 1, 160)      # 600-700
-# f = np.linspace(1, 2, 160)      # 700-800
-# g = np.linspace(2, 3, 160)      # 800-1000
-# h = np.linspace(3, 2, 160)      # 1000-1200
-# i = np.linspace(2, 1, 160)
 
 ll = np.tile(np.concatenate((
     np.linspace(1, 2, 160),

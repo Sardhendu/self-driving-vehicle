@@ -111,17 +111,17 @@ class PreprocessingPipeline(BasePipeline):
         h, l, s = [np.squeeze(i, axis=2) for i in np.dsplit(hls_img, 3)]
     
         # Capture R and S channel that are most effective
-        binary_r = self.threshold(r, (150, 255))
+        binary_r = self.threshold(r, (180, 255))
         binary_s = self.threshold(s, (15, 150))
     
         # Get logical OR between R and S Channel
-        rs_active_pxl = np.logical_and(binary_r, binary_s)  # binary_r + binary_s
+        rs_active_pxl = np.logical_or(binary_r, binary_s)  # binary_r + binary_s
         rs_active_pxl[rs_active_pxl > 0] = 1
     
         # Get Gradients on RBG->BLUR->Gray color space and Apply Absolute Gradient thresholding
-        ls_img = np.dstack([l, s, np.zeros(h.shape)]).astype(np.uint8)
-        obj_pp.reset_image(s)
-        # ls_gray = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
+        ls_img = np.dstack([binary_r*255, binary_s*255, np.zeros(h.shape)]).astype(np.uint8)
+        obj_pp.reset_image(ls_img)
+        ls_gray = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
     
         gx, gy = obj_pp.apply_gradients(kernel_size=3)
         x_abs_thresh_img = obj_pp.apply_absolute_thresh(axis="x", threshold=(15, 150))
@@ -144,7 +144,7 @@ class PreprocessingPipeline(BasePipeline):
                 binary_r, binary_g, binary_b,
                 h, l, s,
                 binary_h, binary_l, binary_s,
-                rs_active_pxl, gray_img,#, ls_gray,
+                rs_active_pxl, gray_img, ls_gray,
                 gx, x_abs_thresh_img, preprocessed_img
             ]
             self.plot_names += [
@@ -152,7 +152,7 @@ class PreprocessingPipeline(BasePipeline):
                 "binary_r", "binary_g", "binary_b",
                 "hue", "lightning", "saturation",
                 "binary_h", "binary_l", "binary_s",
-                "r_or_s_colorspace", "gray_colorsapce",#, "ls_gray_colorspace",
+                "r_or_s_colorspace", "gray_colorsapce", "ls_gray_colorspace",
                 "ls_gray_gradient_y", "ls_gray_gradient_y_abs_thres", "preprocessed_img"
             ]
     

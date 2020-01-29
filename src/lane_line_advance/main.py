@@ -29,7 +29,6 @@ def debug_pipeline(input_image_path, output_img_dir):
             preprocessed_bin_image=preprocessed_bin_image,
             left_lane_pos_yx=left_lane_pos_yx,
             right_lane_pos_yx=right_lane_pos_yx,
-            window_size=(70, 130),
             margin=100,
             save_dir=output_img_dir,
             pipeline="debug"
@@ -77,7 +76,7 @@ def final_pipeline(image):
     # Get histogram distribution to determine start point for sliding window
     # -------------------------------------------------------------------------------------
     left_lane_pos_yx, right_lane_pos_yx = fetch_start_position_with_hist_dist(
-            preprocessed_bin_image.copy(), save_path=None
+            preprocessed_bin_image.copy(), save_dir=None
     )
     # print(f'\n[Histogram] left_lane_pos_yx = {len(left_lane_pos_yx)}, right_lane_pos_yx = {len(right_lane_pos_yx)}')
     
@@ -88,7 +87,6 @@ def final_pipeline(image):
             preprocessed_bin_image=preprocessed_bin_image,
             left_lane_pos_yx=left_lane_pos_yx,
             right_lane_pos_yx=right_lane_pos_yx,
-            window_size=(70, 130),
             margin=100,
             save_dir=None,
             pipeline="final"
@@ -132,7 +130,7 @@ def warped_output_video_pipeline(image):
     # Get histogram distribution to determine start point for sliding window
     # -------------------------------------------------------------------------------------
     left_lane_pos_yx, right_lane_pos_yx = fetch_start_position_with_hist_dist(
-            preprocessed_bin_image.copy(), save_path=None
+            preprocessed_bin_image.copy(), save_dir=None
     )
     # print(f'\n[Histogram] left_lane_pos_yx = {len(left_lane_pos_yx)}, right_lane_pos_yx = {len(right_lane_pos_yx)}')
     
@@ -143,7 +141,6 @@ def warped_output_video_pipeline(image):
             preprocessed_bin_image=preprocessed_bin_image,
             left_lane_pos_yx=left_lane_pos_yx,
             right_lane_pos_yx=right_lane_pos_yx,
-            window_size=(70, 130),
             margin=100,
             save_dir=None,
             pipeline="preprocess"
@@ -167,8 +164,8 @@ def plot_curvature_radius_dist(save_path):
 
     
 from moviepy.editor import VideoFileClip
-setting = "debug"
-video_name = "challenge_video"
+setting = "warped"
+video_name = "project_video"
 input_video_path = f'./data/{video_name}.mp4'
 output_video_path = f'./data/{video_name}_{setting}_out.mp4'
 output_img_dir = f"./data/debug_images/{video_name}"
@@ -187,7 +184,7 @@ if setting == "final":
 # Debug Video
 # -------------------------------------------------------------------------------------------
 if setting == "warped":
-    clip2 = VideoFileClip(input_video_path)#.subclip(0, 5)
+    clip2 = VideoFileClip(input_video_path).subclip(0, 5)
     yellow_clip = clip2.fl_image(warped_output_video_pipeline)
     yellow_clip.write_videofile(output_video_path, audio=False)
     plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
@@ -207,3 +204,9 @@ if setting == "debug":
     
     output_img_dir = f'{output_img_dir}/{test_image_name}'
     debug_pipeline(input_image_path, output_img_dir)
+
+
+
+# TODO: When there are no pixels available in a window, increase the window size and recompute. Do this 3 times
+#  increasing the aspect ration by 10% each time
+# TODO: Find a way to start window search if poly line fit is not good. But how do you know that poly lines are not good

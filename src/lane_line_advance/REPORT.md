@@ -1,4 +1,5 @@
 # Finding Lane Lines on the Road
+--------------
 
 Goal: This project is aimed to find lane lines and segmentation the lane.
 
@@ -13,8 +14,9 @@ long view can
  
  
 ## Partly Robust yet simple Algorithm (Tools Required):
+--------------------
 
-####Camera Calibration (Taking care of Distorted images):
+#### Camera Calibration (Taking care of Distorted images):
 Cameras with lenses have curvy edges that tends to distort the image on the edges. These distortion can hinder proper
  conversion of 2D image points to the 3D real world surface. There are mainly two types of distortions that the cameras are more susceptible to,
 
@@ -25,7 +27,7 @@ In-order to correct for radial distortion we need to at-least learn 3 parameters
 for tangential distortion we need to learn two parameters (p1, p2). We learn these parameter using a set of 
 Chessboard images and apply it to all the frame of the lane line video. This takes care of the distorted edges
 
-####Perspective Transform (Warping the image for better prediction)
+#### Perspective Transform (Warping the image for better prediction):
 Lane lines in real world are parallel, but they tends to meet as we go further in the image. Fitting a polynomial 
 curve to lane lines in this case can would not result in a very good estimate, additionally it would be more prone to
  errors and noise in the image. Changing the perspective to birds-eye-view would make the lane lines approximately 
@@ -36,7 +38,7 @@ curve to lane lines in this case can would not result in a very good estimate, a
  Step 1: Take an approximate view (trapizium) that contains both the lane lines.
  Step 2: Use prespective transform to change the view (trapizium) to the birds-eye perspective
  
-####Color Spaces Threholding
+#### Color Spaces Threholding:
 Color are a very good indicator of a lane line provided the lane lines are visible. Lane lines are mostly while or 
 yellow is color. 
 
@@ -48,12 +50,12 @@ and does descent with the white lane lines.
 
 *Approach*: We use a simple thresholding heuristic on both R and S channels to get most out of the visible lane lines.
 
-####Gradients
+#### Gradients:
 Gradients are the best way to find lines given the image is preprocessed pretty well. Also, gradient in the x 
 direction see, to be more effective because lane lines tend to go straight We apply *SobelX* to determine gradients 
 on the image preprocessed with above techniques.
 
-####Estimating lane line region to fit a better polynomial
+#### Estimating lane line region to fit a better polynomial:
 Gradient are noisy when taking into account the surrounding. It is important to find an approximate region where we 
 are more certain of find the lane. Despite the noise, we can assume that the gradients would be more accumulated in 
 the lane line region. So how do we find them? 
@@ -66,7 +68,7 @@ the x-value of the peak points in both the half. Say image_size = 720x720, half_
  points for half_1=(720,160) and half_2=(720, 540). Then we consider that our left lane originates from (720,160) and
   right lane originates from (720, 540).
   
-####Finding Lane Region
+#### Finding Lane Region
 We use a sliding window technique. Here we fit a window at the origin and slide it through the y-axis where the 
  gradient are accumulated more.
 
@@ -77,7 +79,7 @@ lines.
 
 Now we simply take a buffer around the fitted polynomial and consider it our lane line.
 
-**Unwarp the image and iterate**
+#### Unwarp the image and iterate:
 Now that we have our lane line is warped image, we convert them back to the actual image space by using perspective 
 transform and plot the segmentation mask on the estimated lane boundary.
 
@@ -87,7 +89,8 @@ consecutive frames. Therefore, after finding the polynomial in the first frame, 
 around the polynomial and fit the new polynomial using the points in that buffer region.
 
 
-## A more Robust way (Minor improvements on the above techniques) 
+## A more Robust way (Minor improvements on the above techniques)
+------------- 
   
 
     

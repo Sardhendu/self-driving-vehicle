@@ -1,4 +1,5 @@
-# Finding Lane Lines on the Road
+# Lane Line Detection [Detailed Report](https://github
+.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/REPORT.md)
 
 Goal: This project is aimed to find Lane Lines on the road.
 

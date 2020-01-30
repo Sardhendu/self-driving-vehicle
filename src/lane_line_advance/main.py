@@ -210,3 +210,4 @@ if setting == "debug":
 # TODO: When there are no pixels available in a window, increase the window size and recompute. Do this 3 times
 #  increasing the aspect ration by 10% each time
 # TODO: Find a way to start window search if poly line fit is not good. But how do you know that poly lines are not good
+# TODO: Add

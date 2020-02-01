@@ -46,8 +46,6 @@ far trees. The Red channel or the L channel is pretty good at filtering them. We
 on both R and S channels to get most out of the visible lane lines and use gradients on LS channels to get rid of 
 some noise.
 
-
-
 #### Perspective Transform (Warping the image for better prediction):
 Lane lines in real world are parallel, but they tends to meet as we go further in the image. Fitting a polynomial 
 curve to lane lines in this case can would not result in a very good estimate, additionally it would be more prone to
@@ -59,14 +57,12 @@ curve to lane lines in this case can would not result in a very good estimate, a
  Step 1: Take an approximate view (trapizium) that contains both the lane lines.
  Step 2: Use prespective transform to change the view (trapizium) to the birds-eye perspective
  
-
-
 #### Estimating lane line region to fit a better polynomial:
 Gradient are noisy when taking into account the surrounding. It is important to find an approximate region where we 
 are more certain of find the lane. Despite the noise, we can assume that the gradients would be more accumulated in 
 the lane line region. So how do we find them? 
 
-#### Histogram Distribution (Finding where both the lane originate from)
+##### *Histogram Distribution (Finding where both the lane originate from)*
 Assuming lane lines are approximately 
 parallel to 
 y-axis, we can sum the values along y-axis and plot a histogram. We then divide the histogram into two half and take 
@@ -74,9 +70,13 @@ the x-value of the peak points in both the half. Say image_size = 720x720, half_
  points for half_1=(720,160) and half_2=(720, 540). Then we consider that our left lane originates from (720,160) and
   right lane originates from (720, 540).
   
-#### Finding Lane Region
-We use a sliding window technique. Here we fit a window at the origin and slide it through the y-axis where the 
- gradient are accumulated more.
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_dist.png)
+
+
+##### *Finding Lane Region*
+We use a sliding window technique. Here we fit a window at the origin and slide it through the y-axis where the gradient are accumulated more.
+
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/curvature_windows.png)
 
 **Fitting a Polynomial** 
 At this point we have the lane points i.e the points under the windows. Under the assumption that our sliding window 

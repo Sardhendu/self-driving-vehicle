@@ -49,11 +49,13 @@ class ModelParams:
     # Smooth curves
     # TODO: Implement moving average
     num_frames = 10
-    moving_average_weigths = (np.arange(num_frames)/np.sum(np.arange(num_frames))).reshape(1, -1)
+    frame_weights = np.array([3, 3, 3, 3, 4, 4, 4, 4, 5, 5], dtype=float)
+    moving_average_weigths = (np.array(frame_weights)/np.sum(frame_weights)).reshape(1, -1)
     left_lane_n_polynomial_matrix = np.zeros((720, 10))  # Here 720 is the counts of polynomial points
     right_lane_n_polynomial_matrix = np.zeros((720, 10))
     running_index = 0
-    
+    assert(num_frames == len(frame_weights))
+    print(np.sum(moving_average_weigths))
     assert(np.sum(moving_average_weigths) == 1)
     
     # Sanity Check Parameters

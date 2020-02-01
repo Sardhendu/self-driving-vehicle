@@ -248,32 +248,8 @@ class LaneCurvature:
         assert (len(CurvatureParams.left_lane_y_points) == len(CurvatureParams.right_lane_y_points) == len(
                 CurvatureParams.left_lane_x_points) == len(CurvatureParams.left_lane_y_points))
 
-        left_x_new, right_x_new = self.average_n_lanes(left_x_new, right_x_new)
+        left_x_new, right_x_new = CurvatureTools.average_n_lanes(left_x_new, right_x_new)
         return y_new, left_x_new, right_x_new
-    
-    def average_n_lanes(self, left_x_new, right_x_new):
-        # print('RUNNING ===========> ', CurvatureParams.running_index)
-        # print(np.sum(left_x_new))
-
-        CurvatureParams.left_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.left_lane_n_polynomial_matrix[:, 1:]
-        CurvatureParams.left_lane_n_polynomial_matrix[:, -1:] = left_x_new.reshape(-1, 1)
-
-        CurvatureParams.right_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.right_lane_n_polynomial_matrix[:, 1:]
-        CurvatureParams.right_lane_n_polynomial_matrix[:, -1:] = right_x_new.reshape(-1, 1)
-        
-        # print(np.sum(CurvatureParams.left_lane_n_polynomial_matrix, axis=0))
-        if CurvatureParams.running_index >= 9:
-            # print( CurvatureParams.left_lane_n_polynomial_matrix.shape, CurvatureParams.moving_average_weigths.shape)
-            
-            left_x_new = np.sum(CurvatureParams.left_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths, axis=1)
-            right_x_new = np.sum(CurvatureParams.right_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths,
-                                 axis=1)
-            # print(left_x_new.shape)
-            # print('CurvatureParams.left_lane_n_polynomial_matrix: \n', CurvatureParams.left_lane_n_polynomial_matrix)
-
-        CurvatureParams.running_index += 1
-
-        return left_x_new, right_x_new
     
     def measure_radius_in_pxl(self):
         """
@@ -329,18 +305,63 @@ class LaneCurvature:
             commons.save_image(f"{self.save_dir}/curvature_windows.png", self.preprocessed_img_plot.image)
 
 
-def sanity_checks():
-    pass
-
-    # TODO Take points in polynomial they should converge as the lane move upwards in the image
-        # When the lane diverges a lot then use sliding window technique
-        # When doing sliding window
+class CurvatureTools:
+    @staticmethod
+    def average_n_lanes(left_x_new, right_x_new):
+        # print('RUNNING ===========> ', CurvatureParams.running_index)
+        # print(np.sum(left_x_new))
     
+        CurvatureParams.left_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.left_lane_n_polynomial_matrix[:, 1:]
+        CurvatureParams.left_lane_n_polynomial_matrix[:, -1:] = left_x_new.reshape(-1, 1)
+    
+        CurvatureParams.right_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.right_lane_n_polynomial_matrix[:, 1:]
+        CurvatureParams.right_lane_n_polynomial_matrix[:, -1:] = right_x_new.reshape(-1, 1)
+    
+        # print(np.sum(CurvatureParams.left_lane_n_polynomial_matrix, axis=0))
+        if CurvatureParams.running_index >= 9:
+            # print( CurvatureParams.left_lane_n_polynomial_matrix.shape, CurvatureParams.moving_average_weigths.shape)
+        
+            left_x_new = np.sum(CurvatureParams.left_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths,
+                                axis=1)
+            right_x_new = np.sum(
+                CurvatureParams.right_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths,
+                axis=1)
+            # print(left_x_new.shape)
+            # print('CurvatureParams.left_lane_n_polynomial_matrix: \n', CurvatureParams.left_lane_n_polynomial_matrix)
+    
+        CurvatureParams.running_index += 1
+    
+        return left_x_new, right_x_new
+
+    @staticmethod
+    def get_variance_of_curvature_change(curr_left_lane_poly, curr_right_lane_poly):
+        curr_left_lane_poly_x = curr_left_lane_poly[:, 1]
+        curr_right_lane_poly_x = curr_right_lane_poly[:, 1]
+        prev_left_lane_poly_x = CurvatureParams.left_lane_n_polynomial_matrix[::, -2]
+        prev_right_lane_poly_x = CurvatureParams.right_lane_n_polynomial_matrix[::, -2]
+    
+        prev_left_lane_poly_x = (prev_left_lane_poly_x - np.mean(prev_left_lane_poly_x)) / np.std(prev_left_lane_poly_x)
+        prev_right_lane_poly_x = (prev_right_lane_poly_x - np.mean(prev_right_lane_poly_x)) / np.std(prev_right_lane_poly_x)
+    
+        curr_left_lane_poly_x = (curr_left_lane_poly_x - np.mean(curr_left_lane_poly_x)) / np.std(curr_left_lane_poly_x)
+        curr_right_lane_poly_x = (curr_right_lane_poly_x - np.mean(curr_right_lane_poly_x)) / np.std(curr_right_lane_poly_x)
+        
+        left_lane_variance = np.var(curr_left_lane_poly_x - prev_left_lane_poly_x)
+        right_lane_variance = np.var(curr_right_lane_poly_x - prev_right_lane_poly_x)
+        
+        CurvatureParams.left_line_curr_poly_variance += [left_lane_variance]
+        CurvatureParams.right_line_curr_poly_variance += [right_lane_variance]
+        return left_lane_variance, right_lane_variance
+    
+
+
 
 """
 1. Find colorspace and gradients Dynamically change
 2.
 """
-
+# TODO Take points in polynomial they should converge as the lane move upwards in the image
+# When the lane diverges a lot then use sliding window technique
+# When doing sliding window
 
     

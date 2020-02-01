@@ -69,9 +69,8 @@ def image_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w')
     return _subplots
 
 
-def graph_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=35, ticks_fontsize=25, facecolor='w'):
+def graph_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, ticks_fontsize=15, facecolor='w'):
     figsize = tuple([max(figsize[0], ncols * 6), max(figsize[1], nrows * 4)])
-    print(figsize)
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
     
     if ncols > 1:

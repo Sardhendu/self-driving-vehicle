@@ -91,3 +91,11 @@ class CurvatureParams:
     # Sanity Check Parameters
     ll_margin_with_no_points = 0
     rl_margin_with_no_points = 0
+    
+    # Capture the variance of the current line at (t) wrt to previous line (t-1)
+    # Since line at (t-1) is actually the weighted average of the previous (t-9)
+    # we are actually calculating a weighted variance
+    left_line_curr_poly_variance = []
+    right_line_curr_poly_variance = []
+    max_variance = 0.1
+    

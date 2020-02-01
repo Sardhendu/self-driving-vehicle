@@ -1,3 +1,7 @@
+
+import os
+from moviepy.editor import VideoFileClip
+
 from src import commons
 from src.lane_line_advance.calibrate_camera import undistort
 from src.lane_line_advance.params import CurvatureParams, CameraParams
@@ -10,7 +14,7 @@ def debug_pipeline(input_image_path, output_img_dir):
             img=image, camera_matrix=CameraParams.camera_matrix,
             distortion_coefficients=CameraParams.distortion_coefficients
     )
-    preprocessed_bin_image = preprocessing_pipeline(image, threshold_index=1, save_dir=output_img_dir)
+    preprocessed_bin_image = preprocessing_pipeline(image, threshold_index=0, save_dir=output_img_dir)
     
     # -------------------------------------------------------------------------------------
     # Create Lane Curvature with 2nd degree polynomial
@@ -67,21 +71,31 @@ def warped_output_video_pipeline(image):
     return output
 
 
-def plot_curvature_radius_dist(save_path):
+def final_plots(save_dir):
+    print(CurvatureParams.left_lane_curvature_radii)
     fig = commons.graph_subplots(nrows=1, ncols=3, figsize=(50, 10))(
             [CurvatureParams.left_lane_curvature_radii, CurvatureParams.right_lane_curvature_radii],
             ["Left Lane (curvature radius)", "Right Lane (curvature radius)"]
     )
-    commons.save_matplotlib(save_path, fig)
-
+    commons.save_matplotlib(f'{save_dir}/radius_of_curvature.png', fig)
     
-from moviepy.editor import VideoFileClip
-setting = "final"
+    fig = commons.graph_subplots(nrows=1, ncols=2, figsize=(15, 6))(
+            [CurvatureParams.left_line_curr_poly_variance, CurvatureParams.right_line_curr_poly_variance],
+            ["left_lane_variance_curvature_change", "right_lane_curvature_change"]
+    )
+    commons.save_matplotlib(f'{save_dir}/change_in_curvature.png', fig)
+
+
+setting = "warped"
 video_name = "project_video"
 input_video_path = f'./data/{video_name}.mp4'
-output_video_path = f'./data/{video_name}_{setting}_out.mp4'
+output_video_path = f'./data/{video_name}'
 output_img_dir = f"./data/debug_images/{video_name}"
 test_img_dir = f"./data/test_images/"
+
+os.makedirs(output_video_path, exist_ok=True)
+os.makedirs(output_img_dir, exist_ok=True)
+os.makedirs(test_img_dir, exist_ok=True)
 
 # -------------------------------------------------------------------------------------------
 # Final Video Pipeline
@@ -89,17 +103,17 @@ test_img_dir = f"./data/test_images/"
 if setting == "final":
     clip2 = VideoFileClip(input_video_path)#.subclip(0, 10)
     yellow_clip = clip2.fl_image(final_pipeline)
-    yellow_clip.write_videofile(output_video_path, audio=False)
-    plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
+    yellow_clip.write_videofile(f'{output_video_path}/{setting}_out.mp4', audio=False)
+    final_plots(output_video_path)
 
 # -------------------------------------------------------------------------------------------
 # Debug Video
 # -------------------------------------------------------------------------------------------
 if setting == "warped":
-    clip2 = VideoFileClip(input_video_path)#.subclip(0, 10)
+    clip2 = VideoFileClip(input_video_path)#.subclip(0, 3)
     yellow_clip = clip2.fl_image(warped_output_video_pipeline)
-    yellow_clip.write_videofile(output_video_path, audio=False)
-    plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
+    yellow_clip.write_videofile(f'{output_video_path}/{setting}_out.mp4', audio=False)
+    final_plots(output_video_path)
 
 # -------------------------------------------------------------------------------------------
 # Debug Each Frame

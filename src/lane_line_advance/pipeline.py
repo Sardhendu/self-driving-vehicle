@@ -3,6 +3,7 @@ import numpy as np
 
 from src import commons
 from src.lane_line_advance.preprocess import Preprocess
+from src.lane_line_advance.lane_curvature import get_variance_of_curvature_change
 from src.lane_line_advance.lane_curvature import LaneCurvature, fetch_start_position_with_hist_dist
 from src.lane_line_advance.params import PipelineParams, CurvatureParams
     
@@ -207,11 +208,18 @@ def lane_curvature_pipeline(preprocessed_bin_image, save_dir, mode):
     lane_curvature.find_lane_points()
     lane_curvature.fit()
     y_new, left_x_new, right_x_new = lane_curvature.predict()
+    
+    if mode != "debug":
+        left_lane_variance, right_lane_variance = get_variance_of_curvature_change(
+                np.column_stack((y_new, left_x_new)), np.column_stack((y_new, right_x_new))
+        )
+        
     if mode == "warped":
         print(f'\n[Lane Curvature] '
               f'y_new = {len(y_new)}, left_x_new = {len(left_x_new)}, right_x_new = {len(right_x_new)}')
         lane_curvature.plot(y_new, left_x_new, y_new, right_x_new)
         return lane_curvature.preprocessed_img_plot.image
+    
     lane_curvature.measure_radius_in_meter()
     return left_x_new, right_x_new, y_new
     

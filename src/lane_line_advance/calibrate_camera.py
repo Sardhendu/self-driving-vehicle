@@ -65,7 +65,7 @@ def fetch_object_and_image_points(
                 cv2.drawChessboardCorners(img, (x_corners_cnt, y_corners_cnt), image_points, is_valid_corner)
                 collect_images_for_plot.append(img)
     if plot:
-        fig = cm.subplots(nrows=2, ncols=2, figsize=(10, 10))(collect_images_for_plot[0:4], None)
+        fig = cm.image_subplots(nrows=2, ncols=2, figsize=(10, 10))(collect_images_for_plot[0:4], None)
         cm.save_matplotlib(image_corner_detection_path, fig)
         
     if dump:
@@ -149,6 +149,8 @@ if __name__ == "__main__":
             cm.read_image(distorted_image_paths[0]).shape, object_points_list, image_points_list
     )
     
+    print("camera_matrix: \n", camera_matrix)
+    print("distortion_coefficients: \n", distortion_coefficients)
     undistorted_images = [undistort(
             cm.read_image(img),
             camera_matrix,
@@ -156,7 +158,7 @@ if __name__ == "__main__":
         for img in distorted_image_paths[0:2]
     ]
     
-    fig = cm.subplots(nrows=2, ncols=2, figsize=(10, 10), facecolor='w')(
+    fig = cm.image_subplots(nrows=2, ncols=2, figsize=(10, 10), facecolor='w')(
             list(itertools.chain(*[*zip(
                     [cm.read_image(path) for path in distorted_image_paths[0:2]], undistorted_images
             )]))

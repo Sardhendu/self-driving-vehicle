@@ -3,42 +3,28 @@ import numpy as np
 
 from src import commons
 from src.lane_line_advance.preprocess import Preprocess
+from src.lane_line_advance.lane_curvature import LaneCurvature, fetch_start_position_with_hist_dist
+from src.lane_line_advance.params import PipelineParams, CurvatureParams
+    
 
-
-class BasePipeline:
-    def __init__(self, image):
-        self.image = image
-        
-        self.warped_image = None
-        self.h, self.w, _ = self.image.shape
-        
-        self.src_points = [(500, 450), (0, 700), (780, 450), (1280, 700)]
-        # self.src_points = [(500, 450), (0, 700), (750, 450), (1250, 700)]
-        self.dst_points = [(0, 0), (0, self.h - 1), (self.w - 1, 0), (self.w - 1, self.h - 1)]
-
-
-class PreprocessingPipeline(BasePipeline):
-    def __init__(self, image, save_dir=None):
-        super().__init__(image)
+class PreprocessBuilder:
+    def __init__(self, save_dir=None):
         self.save_dir = save_dir
-        if save_dir is not None:
-            self.orig_img = self.image.copy()
-            self.plot_images = [image]
-            self.plot_names = ["orig_image"]
+        self.plot_images = []
+        self.plot_names = []
     
     def warp(self, image):
         if self.save_dir:
-            img_copy = self.image.copy()
+            img_copy = image.copy()
             lineThickness = 2
-            cv2.line(img_copy, self.src_points[0], self.src_points[1], (0, 255, 0), lineThickness)
-            cv2.line(img_copy, self.src_points[2], self.src_points[3], (0, 255, 0), lineThickness)
+            cv2.line(img_copy, PipelineParams.src_points[0], PipelineParams.src_points[1], (0, 255, 0), lineThickness)
+            cv2.line(img_copy, PipelineParams.src_points[2], PipelineParams.src_points[3], (0, 255, 0), lineThickness)
             self.plot_images += [img_copy]
             self.plot_names += ["warp_region"]
         
-        M = cv2.getPerspectiveTransform(
-                np.array(self.src_points).astype(np.float32), np.array(self.dst_points).astype(np.float32)
+        image = cv2.warpPerspective(
+                image.copy(), PipelineParams.M, (PipelineParams.width, PipelineParams.height), flags=cv2.INTER_NEAREST
         )
-        image = cv2.warpPerspective(image.copy(), M, (self.w, self.h), flags=cv2.INTER_NEAREST)
         
         if self.save_dir:
             self.plot_images += [image]
@@ -52,7 +38,7 @@ class PreprocessingPipeline(BasePipeline):
         binary[(channel > thresh[0]) & (channel <= thresh[1])] = 1
         return binary
     
-    def preprocess(self, image):
+    def preprocess(self, image, threshold_index):
         r, g, b = [np.squeeze(i, axis=2) for i in np.dsplit(image, 3)]
         obj_pp = Preprocess(image=image.copy())
         hls = obj_pp.apply_colorspace(cv2.COLOR_RGB2HLS)
@@ -60,8 +46,8 @@ class PreprocessingPipeline(BasePipeline):
         h, l, s = [np.squeeze(i, axis=2) for i in np.dsplit(hls, 3)]
         
         # Capture R and S channel that are most effective
-        binary_r = self.threshold(r, (150, 255))
-        binary_s = self.threshold(s, (100, 255))  # More that 15 is difficult
+        binary_r = self.threshold(r, PipelineParams.red_threshold[threshold_index])
+        binary_s = self.threshold(s, PipelineParams.saturation_threshold[threshold_index])  # More that 15 is difficult
         print(np.sum(binary_s))
         
         # Get logical OR between R and S Channel
@@ -75,14 +61,15 @@ class PreprocessingPipeline(BasePipeline):
         ls = np.dstack([l, s, r]).astype(np.uint8)
         obj_pp.reset_image(ls)
         out_gray = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
-       
-        # obj_pp.reset_image(l)
         gx, gy = obj_pp.apply_gradients(kernel_size=3)
-        x_abs_thresh_img = obj_pp.apply_absolute_thresh(axis="x", threshold=(15, 100))
+        x_abs_thresh_img = obj_pp.apply_absolute_thresh(
+                axis="x", threshold=PipelineParams.gradient_threshold[threshold_index]
+        )
         
         # Perform Logical AND between absolute_gradients and RS active channels
         preprocessed_img = np.logical_and(x_abs_thresh_img, r_and_s).astype(np.uint8)
         
+        # Only used while debugging
         if self.save_dir is not None:
             binary_g = self.threshold(g, (150, 255))
             binary_b = self.threshold(b, (15, 50))
@@ -96,9 +83,9 @@ class PreprocessingPipeline(BasePipeline):
             obj_pp.reset_image(hls.copy())
             obj_pp.apply_blurr(kernel=3)
             hls2gray = obj_pp.apply_colorspace(cv2.COLOR_RGB2GRAY)
-            
+
             self.plot_images += [
-                hls, rgb2gray, hls2gray,
+                image.copy(), hls, rgb2gray, hls2gray,
                 r, g,
                 binary_r, binary_g, binary_b,
                 h, l, s,
@@ -107,7 +94,7 @@ class PreprocessingPipeline(BasePipeline):
                 gx, x_abs_thresh_img, preprocessed_img
             ]
             self.plot_names += [
-                "hls", "rgb2gray", "hls2gray",
+                "orig_image", "hls", "rgb2gray", "hls2gray",
                 "red", "green",
                 "binary_r", "binary_g", "binary_b",
                 "hue", "lightning", "saturation",
@@ -129,24 +116,16 @@ class PreprocessingPipeline(BasePipeline):
         fig = commons.image_subplots(nrows=nrows, ncols=ncol)(self.plot_images, self.plot_names)
         commons.save_matplotlib(save_path, fig)
 
-
-class PostprocessingPipeline(BasePipeline):
-    def __init__(self, image, save_path=None):
-        super().__init__(image)
-        self.M = None
+    
+class PostprocessingBuilder:
+    def __init__(self, image, save_dir=None):
+        self.image = image
         self.obj_img_plots = commons.ImagePlots(image)
         
-        self.save_path = save_path
-        if save_path is not None:
+        self.save_dir = save_dir
+        if save_dir is not None:
             self.plot_images = [image]
             self.plot_names = ["orig_image"]
-    
-    def unwarp(self):
-        src_points = self.dst_points
-        dst_points = self.src_points
-        self.M = cv2.getPerspectiveTransform(
-                np.array(src_points).astype(np.float32), np.array(dst_points).astype(np.float32)
-        )
     
     def transform_lane_points(self, left_lane_points: np.array, right_lane_points: np.array):
         cnt_left_lane_pnts = len(left_lane_points)
@@ -156,7 +135,7 @@ class PostprocessingPipeline(BasePipeline):
             np.vstack((left_lane_points, right_lane_points)), ones
         ))
         
-        transformed_points = np.dot(self.M, input_points.T).T
+        transformed_points = np.dot(PipelineParams.M_inv, input_points.T).T
         dividor = transformed_points[:, -1].reshape(-1, 1)
         transformed_points = transformed_points[:, 0:2]
         transformed_points /= dividor
@@ -167,9 +146,10 @@ class PostprocessingPipeline(BasePipeline):
         return left_lane, right_lane
     
     def draw_lane_mask(self, left_lane, right_lane, left_lane_curvature_radius, right_lane_curvature_radius):
-        if self.save_path:
+        if self.save_dir:
             unwarped_image = cv2.warpPerspective(
-                    self.obj_img_plots.image.copy(), self.M, (self.w, self.h), flags=cv2.INTER_NEAREST
+                    self.obj_img_plots.image.copy(), PipelineParams.M_inv,
+                    (PipelineParams.width, PipelineParams.height), flags=cv2.INTER_NEAREST
             )
             self.obj_img_plots.polymask(
                     points=np.vstack((left_lane, right_lane[::-1])),
@@ -197,5 +177,64 @@ class PostprocessingPipeline(BasePipeline):
         ncol = 3
         nrows = int(np.ceil(len(self.plot_names) / ncol))
         fig = commons.image_subplots(nrows=nrows, ncols=ncol)(self.plot_images, self.plot_names)
-        commons.save_matplotlib(self.save_path, fig)
+        commons.save_matplotlib(f'{self.save_dir}/postprocess.png', fig)
 
+
+def preprocessing_pipeline(image, threshold_index, save_dir=None):
+    preprocess_pipeline = PreprocessBuilder(save_dir)
+    preprocessed_img = preprocess_pipeline.preprocess(image, threshold_index)
+    preprocessed_bin_image = preprocess_pipeline.warp(preprocessed_img)
+    preprocessed_bin_image = preprocessed_bin_image.astype(np.int32)
+    return preprocessed_bin_image
+
+
+def lane_curvature_pipeline(preprocessed_bin_image, save_dir, mode):
+    # -------------------------------------------------------------------------------------
+    # Get histogram distribution to determine start point for sliding window
+    # -------------------------------------------------------------------------------------
+    left_lane_pos_yx, right_lane_pos_yx = fetch_start_position_with_hist_dist(
+            preprocessed_bin_image.copy(), save_dir=save_dir
+    )
+    
+    lane_curvature = LaneCurvature(
+            preprocessed_bin_image=preprocessed_bin_image,
+            left_lane_pos_yx=left_lane_pos_yx,
+            right_lane_pos_yx=right_lane_pos_yx,
+            margin=100,
+            save_dir=save_dir,
+            pipeline=mode
+    )
+    lane_curvature.find_lane_points()
+    lane_curvature.fit()
+    y_new, left_x_new, right_x_new = lane_curvature.predict()
+    if mode == "warped":
+        print(f'\n[Lane Curvature] '
+              f'y_new = {len(y_new)}, left_x_new = {len(left_x_new)}, right_x_new = {len(right_x_new)}')
+        lane_curvature.plot(y_new, left_x_new, y_new, right_x_new)
+        return lane_curvature.preprocessed_img_plot.image
+    lane_curvature.measure_radius_in_meter()
+    return left_x_new, right_x_new, y_new
+    
+    
+def postprocessing_pipeline(image, left_x_new, right_x_new, y_new, save_dir, mode):
+    postprocess_pipeline = PostprocessingBuilder(image, save_dir=save_dir)
+    left_lane_points, right_lane_points = postprocess_pipeline.transform_lane_points(
+            left_lane_points=np.column_stack((left_x_new, y_new)),
+            right_lane_points=np.column_stack((right_x_new, y_new))
+    )
+    
+    if mode == "debug":
+        print(
+                f'\n[Lane Detection] '
+                f'left_lane = {len(left_lane_points)}, right_lane = {len(right_lane_points)}'
+        )
+        
+    out_image = postprocess_pipeline.draw_lane_mask(
+            left_lane_points, right_lane_points,
+            CurvatureParams.left_lane_curvature_radii_curr,
+            CurvatureParams.right_lane_curvature_radii_curr
+    )
+    if mode == "debug":
+        postprocess_pipeline.plot()
+        
+    return out_image

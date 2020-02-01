@@ -5,7 +5,7 @@ import numpy as np
 import imageio
 import matplotlib.pyplot as plt
 
-from typing import Tuple
+from typing import Tuple, List
 from moviepy.editor import VideoFileClip
 
 
@@ -23,16 +23,17 @@ class ImagePlots:
         cv2.fillPoly(self.image, [points], color)
         cv2.addWeighted(self.orig_img, mask_weight, self.image, 1 - mask_weight, 0, self.image)
         
-    def rectangle(self, bbox: list):
+    def rectangle(self, bbox: List, color: Tuple = None):
+        color = (255, 0, 0) if color is None else color
         assert(len(bbox) == 4)
-        cv2.rectangle(
-                self.image, (bbox[1], bbox[0]), (bbox[3], bbox[2]), (255, 0, 0), 2
-        )
+        cv2.rectangle(self.image, (bbox[1], bbox[0]), (bbox[3], bbox[2]), color, 2)
+        
+    def point(self, point: List[int], color: Tuple = None):
+        color = (0, 0, 255) if color is None else color
+        cv2.circle(self.image, tuple(point), 3, color, 3)
         
     def add_caption(self, caption: str, pos: Tuple[int, int], color: Tuple[int, int, int]):
-        cv2.putText(
-                self.image, caption, pos, cv2.FONT_HERSHEY_PLAIN, 2, color, 2
-        )
+        cv2.putText(self.image, caption, pos, cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
         
 
 def fetch_image_from_video(input_video_path, output_img_dir, time_list=[0.24, 0.243, 0.245, 0.248, 0.25]):

@@ -3,8 +3,8 @@ from src import commons
 
 
 class ModelParams:
-    window_size = (70, 130)
-    search_loops = 12
+    window_size_yx = (70, 130)
+    search_loops = np.floor(720/window_size_yx[0])
     left_lane_y_points = []
     left_lane_x_points = []
     right_lane_y_points = []
@@ -43,7 +43,7 @@ class ModelParams:
         np.linspace(2, 3, 160),
         np.linspace(3, 2, 160),
         np.linspace(2, 1, 160)
-    )).reshape(-1, 1), 720).T * np.tile(np.linspace(1, 7, 720).reshape(-1, 1), 1280)
+    )).reshape(-1, 1), 720).T * np.tile(np.linspace(1, 5, 720).reshape(-1, 1), 1280)
     hist_weight_matrix /= np.sum(hist_weight_matrix)
 
     # Smooth curves
@@ -53,10 +53,12 @@ class ModelParams:
     left_lane_n_polynomial_matrix = np.zeros((720, 10))  # Here 720 is the counts of polynomial points
     right_lane_n_polynomial_matrix = np.zeros((720, 10))
     running_index = 0
-    print(moving_average_weigths)
-    print(sum(moving_average_weigths))
-    # print()
+    
     assert(np.sum(moving_average_weigths) == 1)
+    
+    # Sanity Check Parameters
+    ll_margin_with_no_points = 0
+    rl_margin_with_no_points = 0
 
 
 def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_dir=None):
@@ -86,7 +88,7 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_dir=None):
     right_lane = frequency_histogram[len(frequency_histogram) // 2:]
     
     if save_dir:
-        fig = commons.graph_subplots(nrows=1, ncols=4, figsize=(50, 10))(
+        fig = commons.graph_subplots(nrows=1, ncols=3, figsize=(50, 10))(
                 [frequency_histogram, left_lane, right_lane],
                 ["frequency_histogram", "hist_left_lane", "hist_right_lane"]
         )
@@ -98,7 +100,7 @@ def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_dir=None):
     
     left_lane_start_index = np.argmax(left_lane)
     right_lane_start_index = len(frequency_histogram) // 2 + np.argmax(right_lane)
-    # print(left_lane_start_index, right_lane_start_index)
+    print('Left lane right lane start: ', left_lane_start_index, right_lane_start_index)
     return (preprocessed_bin_image.shape[0], left_lane_start_index), (preprocessed_bin_image.shape[0], right_lane_start_index)
     
     
@@ -130,7 +132,9 @@ class LaneCurvature:
 
             self.preprocessed_img_plot = commons.ImagePlots(self.preprocessed_image_cp)
             self.basic_plots = commons.graph_subplots()
-    
+
+            self.dummy_plot = np.zeros(self.preprocessed_image_cp.shape)
+            
     def store_curvature_points(self, left_box, right_box):
         # TODO: This process can be initiated by a new thread since this is just storage
         left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
@@ -157,12 +161,12 @@ class LaneCurvature:
         :return:
         """
         left_box = [
-            ll_mid_point[0] - ModelParams.window_size[0] // 2, ll_mid_point[1] - ModelParams.window_size[1] // 2,
-            ll_mid_point[0] + ModelParams.window_size[0] // 2, ll_mid_point[1] + ModelParams.window_size[1] // 2,
+            ll_mid_point[0] - ModelParams.window_size_yx[0] // 2, ll_mid_point[1] - ModelParams.window_size_yx[1] // 2,
+            ll_mid_point[0] + ModelParams.window_size_yx[0] // 2, ll_mid_point[1] + ModelParams.window_size_yx[1] // 2,
         ]
         right_box = [
-            rl_mid_point[0] - ModelParams.window_size[0] // 2, rl_mid_point[1] - ModelParams.window_size[1] // 2,
-            rl_mid_point[0] + ModelParams.window_size[0] // 2, rl_mid_point[1] + ModelParams.window_size[1] // 2,
+            rl_mid_point[0] - ModelParams.window_size_yx[0] // 2, rl_mid_point[1] - ModelParams.window_size_yx[1] // 2,
+            rl_mid_point[0] + ModelParams.window_size_yx[0] // 2, rl_mid_point[1] + ModelParams.window_size_yx[1] // 2,
         ]
 
         return left_box, right_box
@@ -174,23 +178,27 @@ class LaneCurvature:
         """
         # TODO: When there are no activated pixels for a box, then it is a good idea to to take weighted average of
         #  the last 2-3 boxes
-        ll_y_mid_point = self.left_lane_pos_yx[0] - (ModelParams.window_size[0]//2)
+        ll_y_mid_point = self.left_lane_pos_yx[0] - (ModelParams.window_size_yx[0] // 2)
         ll_x_mid_point = self.left_lane_pos_yx[1]
     
-        rl_y_mid_point = self.right_lane_pos_yx[0] - (ModelParams.window_size[0] // 2)
+        rl_y_mid_point = self.right_lane_pos_yx[0] - (ModelParams.window_size_yx[0] // 2)
         rl_x_mid_point = self.right_lane_pos_yx[1]
-        
         cnt = 0
-        while cnt <= ModelParams.search_loops:
-            left_box = [
-                ll_y_mid_point - ModelParams.window_size[0] // 2, ll_x_mid_point - ModelParams.window_size[1] // 2,
-                ll_y_mid_point + ModelParams.window_size[0] // 2, ll_x_mid_point + ModelParams.window_size[1] // 2,
-            ]
-            right_box = [
-                rl_y_mid_point - ModelParams.window_size[0] // 2, rl_x_mid_point - ModelParams.window_size[1] // 2,
-                rl_y_mid_point + ModelParams.window_size[0] // 2, rl_x_mid_point + ModelParams.window_size[1] // 2,
-            ]
 
+        left_box = [
+            ll_y_mid_point - ModelParams.window_size_yx[0] // 2, ll_x_mid_point - ModelParams.window_size_yx[1] // 2,
+            ll_y_mid_point + ModelParams.window_size_yx[0] // 2, ll_x_mid_point + ModelParams.window_size_yx[1] // 2,
+        ]
+        right_box = [
+            rl_y_mid_point - ModelParams.window_size_yx[0] // 2, rl_x_mid_point - ModelParams.window_size_yx[1] // 2,
+            rl_y_mid_point + ModelParams.window_size_yx[0] // 2, rl_x_mid_point + ModelParams.window_size_yx[1] // 2,
+        ]
+        
+        if self.save_dir:
+            self.preprocessed_img_plot.rectangle(left_box, color=(0, 255, 0))
+            self.preprocessed_img_plot.rectangle(right_box, color=(0, 255, 0))
+            
+        while cnt <= ModelParams.search_loops:
             left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
             right_box_vals = self.preprocessed_bin_image[right_box[0]:right_box[2], right_box[1]:right_box[3]]
             
@@ -202,20 +210,22 @@ class LaneCurvature:
                 ll_x_mid_point = np.int(np.mean(ll_non_zero_x_idx)) + left_box[1]
             if len(rl_non_zero_x_idx) > 0:
                 rl_x_mid_point = np.int(np.mean(rl_non_zero_x_idx)) + right_box[1]
+            
             left_box, right_box = self.shift_boxes(
                     ll_mid_point=[ll_y_mid_point, ll_x_mid_point], rl_mid_point=[rl_y_mid_point, rl_x_mid_point]
             )
             self.store_curvature_points(left_box, right_box)
             
-            ll_y_mid_point = ll_y_mid_point - ModelParams.window_size[0]
-            rl_y_mid_point = rl_y_mid_point - ModelParams.window_size[0]
-            
             if self.save_dir or self.pipeline != "final":
-                self.preprocessed_img_plot.rectangle(left_box)
-                self.preprocessed_img_plot.rectangle(right_box)
+                self.preprocessed_img_plot.rectangle(left_box, color=(255, 0, 0))
+                self.preprocessed_img_plot.rectangle(right_box, color=(255, 0, 0))
+                self.preprocessed_img_plot.point([ll_x_mid_point, ll_y_mid_point])
+                self.preprocessed_img_plot.point([rl_x_mid_point, rl_y_mid_point])
                 
+            ll_y_mid_point = ll_y_mid_point - ModelParams.window_size_yx[0]
+            rl_y_mid_point = rl_y_mid_point - ModelParams.window_size_yx[0]
             cnt += 1
-            
+
     def find_lane_points_with_prior_lane_points(self):
         """
         Lanes don't change abruptly, hence it is a good idea to use the previous detected lane lines with an extended
@@ -240,10 +250,17 @@ class LaneCurvature:
                 (x_active_idx > x_right_pred_idx - self.margin) & (x_active_idx < x_right_pred_idx + self.margin)
         )
         
-        ModelParams.left_lane_y_points = y_active_idx[ll_inds]
-        ModelParams.left_lane_x_points = x_active_idx[ll_inds]
-        ModelParams.right_lane_y_points = y_active_idx[rr_inds]
-        ModelParams.right_lane_x_points = x_active_idx[rr_inds]
+        if sum(ll_inds) > 0:
+            ModelParams.left_lane_y_points = y_active_idx[ll_inds]
+            ModelParams.left_lane_x_points = x_active_idx[ll_inds]
+        else:
+            print('[WARNING WARNING] ==================> NO (Left Lane XY-points) FOUND')
+
+        if sum(rr_inds) > 0:
+            ModelParams.right_lane_y_points = y_active_idx[rr_inds]
+            ModelParams.right_lane_x_points = x_active_idx[rr_inds]
+        else:
+            print('[WARNING WARNING] ==================> NO (Right Lane XY-points) FOUND')
 
     def find_lane_points(self):
         if (
@@ -369,51 +386,19 @@ class LaneCurvature:
         if self.save_dir:
             commons.save_image(f"{self.save_dir}/curvature_windows.png", self.preprocessed_img_plot.image)
 
-        
 
-# from src import commons
+def sanity_checks():
+    pass
 
-#
-# test_image_name = "test4"#"straight_lines1"  # test4
-#
-# input_image_path = f'./data/test_images/{test_image_name}.jpg'
-# output_plot_path = f'./data/output_images/{test_image_name}.png'
-# output_plot_path2 = f'./data/output_images/postprocess_{test_image_name}.png'
-# hist_output_path = f"./data/output_images/hist_{test_image_name}.png"
-# curvature_bbox_output_path = f"./data/output_images/curvature_{test_image_name}.png"
-#
-# image = commons.read_image(input_image_path)
-# preprocess_pipeline = PreprocessingPipeline(image, save_path=output_plot_path)
-# postprocess_pipeline = PostprocessingPipeline(image, save_path=output_plot_path2)
-#
-# preprocess_pipeline.warp()
-# preprocessed_bin_image = preprocess_pipeline.preprocess()
-# preprocessed_bin_image = preprocessed_bin_image.astype(np.int32)
-# print('preprocessed_img: ', np.unique(preprocessed_bin_image))
-#
-# left_lane_pos_yx, right_lane_pos_yx = fetch_start_position_with_hist_dist(
-#         preprocessed_bin_image.copy(), save_path=hist_output_path
-# )
-#
-# obj_l_curv = LaneCurvature(
-#     preprocessed_bin_image=preprocessed_bin_image,
-#     left_lane_pos_yx=left_lane_pos_yx,
-#     right_lane_pos_yx=right_lane_pos_yx,
-#     window_size=(70, 130),
-#     save_path=curvature_bbox_output_path
-# )
-# obj_l_curv.find_lane_points()
-# obj_l_curv.fit()
-# y_new, left_x_new, right_x_new = obj_l_curv.predict()
-# obj_l_curv.plot(y_new, left_x_new, y_new, right_x_new)
-# postprocess_pipeline.unwarp()
-# postprocess_pipeline.transform_lane_points(
-#         left_lane_points=np.column_stack((left_x_new, y_new)), right_lane_points=np.column_stack((right_x_new, y_new))
-# )
-# postprocess_pipeline.plot()
+    # TODO Take points in polynomial they should converge as the lane move upwards in the image
+        # When the lane diverges a lot then use sliding window technique
+        # When doing sliding window
+    
 
-
-
+"""
+1. Find colorspace and gradients Dynamically change
+2.
+"""
 
 
     

@@ -7,13 +7,11 @@ from src.lane_line_advance.lane_curvature import LaneCurvature, fetch_start_posi
 
 def debug_pipeline(input_image_path, output_img_dir):
     image = commons.read_image(input_image_path)
-    preprocess_pipeline = PreprocessingPipeline(image, save_path=f'{output_img_dir}/preprocess.png')
-    postprocess_pipeline = PostprocessingPipeline(image, save_path=f'{output_img_dir}/postprocess.png')
+    preprocess_pipeline = PreprocessingPipeline(image, save_dir=output_img_dir)
     
-    preprocess_pipeline.warp()
-    preprocessed_bin_image = preprocess_pipeline.preprocess()
+    preprocessed_img = preprocess_pipeline.preprocess(image)
+    preprocessed_bin_image = preprocess_pipeline.warp(preprocessed_img)
     preprocessed_bin_image = preprocessed_bin_image.astype(np.int32)
-    preprocess_pipeline.plot()
     
     # -------------------------------------------------------------------------------------
     # Get histogram distribution to determine start point for sliding window
@@ -21,7 +19,7 @@ def debug_pipeline(input_image_path, output_img_dir):
     left_lane_pos_yx, right_lane_pos_yx = fetch_start_position_with_hist_dist(
             preprocessed_bin_image.copy(), save_dir=output_img_dir
     )
-    
+
     # -------------------------------------------------------------------------------------
     # Create Lane Curvature with 2nd degree polynomial
     # -------------------------------------------------------------------------------------
@@ -40,16 +38,18 @@ def debug_pipeline(input_image_path, output_img_dir):
           f'y_new = {len(y_new)}, left_x_new = {len(left_x_new)}, right_x_new = {len(right_x_new)}')
     lane_curvature.plot(y_new, left_x_new, y_new, right_x_new)
     lane_curvature.measure_radius_in_meter()
+
     # -------------------------------------------------------------------------------------
     # Un-warp (Project curvature points into the original image space)
     # -------------------------------------------------------------------------------------
+    postprocess_pipeline = PostprocessingPipeline(image, save_path=f'{output_img_dir}/postprocess.png')
     postprocess_pipeline.unwarp()
     print('[Mtrix] postprocess_pipeline: \n', postprocess_pipeline.M)
     left_lane_points, right_lane_points = postprocess_pipeline.transform_lane_points(
             left_lane_points=np.column_stack((left_x_new, y_new)),
             right_lane_points=np.column_stack((right_x_new, y_new))
     )
-    
+
     print(
             f'\n[Lane Detection] '
             f'left_lane = {len(left_lane_points)}, right_lane = {len(right_lane_points)}'
@@ -67,9 +67,9 @@ def final_pipeline(image):
     print(image.shape)
     preprocess_pipeline = PreprocessingPipeline(image)
     postprocess_pipeline = PostprocessingPipeline(image)
-    
-    preprocess_pipeline.warp()
-    preprocessed_bin_image = preprocess_pipeline.preprocess()
+
+    preprocessed_img = preprocess_pipeline.preprocess(image)
+    preprocessed_bin_image = preprocess_pipeline.warp(preprocessed_img)
     preprocessed_bin_image = preprocessed_bin_image.astype(np.int32)
     
     # -------------------------------------------------------------------------------------
@@ -121,9 +121,9 @@ def warped_output_video_pipeline(image):
     print('\n\n#--------------------------------------\n# Frame Initiate\n#--------------------------------------')
     preprocess_pipeline = PreprocessingPipeline(image)
     # postprocess_pipeline = PostprocessingPipeline(image)
-    
-    preprocess_pipeline.warp()
-    preprocessed_bin_image = preprocess_pipeline.preprocess()
+
+    preprocessed_img = preprocess_pipeline.preprocess(image)
+    preprocessed_bin_image = preprocess_pipeline.warp(preprocessed_img)
     preprocessed_bin_image = preprocessed_bin_image.astype(np.int32)
     
     # -------------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ def plot_curvature_radius_dist(save_path):
 
     
 from moviepy.editor import VideoFileClip
-setting = "warped"
+setting = "final"
 video_name = "project_video"
 input_video_path = f'./data/{video_name}.mp4'
 output_video_path = f'./data/{video_name}_{setting}_out.mp4'
@@ -175,7 +175,7 @@ test_img_dir = f"./data/test_images/"
 # Final Video Pipeline
 # -------------------------------------------------------------------------------------------
 if setting == "final":
-    clip2 = VideoFileClip(input_video_path)#.subclip(0, 5)
+    clip2 = VideoFileClip(input_video_path)#.subclip(0, 10)
     yellow_clip = clip2.fl_image(final_pipeline)
     yellow_clip.write_videofile(output_video_path, audio=False)
     plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
@@ -184,7 +184,7 @@ if setting == "final":
 # Debug Video
 # -------------------------------------------------------------------------------------------
 if setting == "warped":
-    clip2 = VideoFileClip(input_video_path).subclip(0, 5)
+    clip2 = VideoFileClip(input_video_path)#.subclip(0, 10)
     yellow_clip = clip2.fl_image(warped_output_video_pipeline)
     yellow_clip.write_videofile(output_video_path, audio=False)
     plot_curvature_radius_dist(f"./data/{video_name}_radius_curv.png")
@@ -192,18 +192,20 @@ if setting == "warped":
 # -------------------------------------------------------------------------------------------
 # Debug Each Frame
 # -------------------------------------------------------------------------------------------
-# commons.fetch_image_from_video(
-#         input_video_path, output_img_dir, time_list=[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
-# )
+commons.fetch_image_from_video(
+        input_video_path, output_img_dir, time_list=[25.1]
+)
 
-if setting == "debug":
-    test_image_name = "0"  #"0"
-    
-    # input_image_path = f'{test_img_dir}/{test_image_name}.jpg'
-    input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
-    
-    output_img_dir = f'{output_img_dir}/{test_image_name}'
-    debug_pipeline(input_image_path, output_img_dir)
+# time_list=[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
+
+# if setting == "debug":
+#     test_image_name = "test4"# "# "bridge_shadow" #"0"  #"0"
+#
+#     input_image_path = f'{test_img_dir}/{test_image_name}.jpg'
+#     # input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
+#
+#     output_img_dir = f'{output_img_dir}/{test_image_name}'
+#     debug_pipeline(input_image_path, output_img_dir)
 
 
 

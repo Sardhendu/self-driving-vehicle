@@ -26,6 +26,27 @@ Cameras with lenses have curvy edges that tends to distort the image on the edge
 In-order to correct for radial distortion we need to at-least learn 3 parameters (k1, k2, k3), and to correct 
 for tangential distortion we need to learn two parameters (p1, p2). We learn these parameter using a set of 
 Chessboard images and apply it to all the frame of the lane line video. This takes care of the distorted edges
+ 
+#### Gradients and Color Spaces Threholding:
+Color are a very good indicator of a lane line provided the lane lines are visible. Lane lines are mostly while or 
+yellow is color. 
+
+*RGB*: The Red and Green spectrum of the RGB color space does a pretty good job in finding the while lane 
+lines but more often fails in identifying yellow light.
+
+*HLS*: The S "saturation" spectrum of the HLS color space does a very good job in identifying the yellow lane line 
+and does descent with the white lane lines.
+
+*Gradients*: Gradients are the best way to find lines given the image is preprocessed pretty well. Also, gradient in the x 
+direction see, to be more effective because lane lines tend to go straight We apply *SobelX* to determine gradients 
+on the image preprocessed with above techniques.
+
+*Approach*: S channel picks up the lane but also has relateively high value for nearby lane objects such as cars or 
+far trees. The Red channel or the L channel is pretty good at filtering them. We use a simple thresholding heuristic 
+on both R and S channels to get most out of the visible lane lines and use gradients on LS channels to get rid of 
+some noise.
+
+
 
 #### Perspective Transform (Warping the image for better prediction):
 Lane lines in real world are parallel, but they tends to meet as we go further in the image. Fitting a polynomial 
@@ -38,22 +59,7 @@ curve to lane lines in this case can would not result in a very good estimate, a
  Step 1: Take an approximate view (trapizium) that contains both the lane lines.
  Step 2: Use prespective transform to change the view (trapizium) to the birds-eye perspective
  
-#### Color Spaces Threholding:
-Color are a very good indicator of a lane line provided the lane lines are visible. Lane lines are mostly while or 
-yellow is color. 
 
-*RGB*: The Red and Green spectrum of the RGB color space does a pretty good job in finding the while lane 
-lines but more often fails in identifying yellow light.
-
-*HLS*: The S "saturation" spectrum of the HLS color space does a very good job in identifying the yellow lane line 
-and does descent with the white lane lines.
-
-*Approach*: We use a simple thresholding heuristic on both R and S channels to get most out of the visible lane lines.
-
-#### Gradients:
-Gradients are the best way to find lines given the image is preprocessed pretty well. Also, gradient in the x 
-direction see, to be more effective because lane lines tend to go straight We apply *SobelX* to determine gradients 
-on the image preprocessed with above techniques.
 
 #### Estimating lane line region to fit a better polynomial:
 Gradient are noisy when taking into account the surrounding. It is important to find an approximate region where we 

@@ -33,11 +33,12 @@ class Preprocess():
             gradient = self.gradient_x
         else:
             raise ValueError('Only x and y axis permitted')
-            
-        print(f'absolute min={np.min(gradient)}, absolute max={np.max(gradient)}')
-        abs_value = np.uint8(np.abs(gradient) / np.max(gradient) * 255)
-        abs_mask = np.zeros(gradient.shape)
-        abs_mask[(abs_value >= threshold[0]) & (abs_value <= threshold[1])] = 1
+
+        abs_sobelx = np.absolute(gradient)
+        print(f'absolute min={np.min(abs_sobelx)}, absolute max={np.max(abs_sobelx)}')
+        scaled_value = np.uint8(255 * abs_sobelx / np.max(abs_sobelx))
+        abs_mask = np.zeros_like(scaled_value)
+        abs_mask[(scaled_value >= threshold[0]) & (scaled_value <= threshold[1])] = 1
         return abs_mask.astype(np.int32)
 
     def apply_magnitude_thresh(self, threshold=(20, 150)):

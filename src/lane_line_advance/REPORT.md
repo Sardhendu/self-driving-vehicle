@@ -46,6 +46,8 @@ far trees. The Red channel or the L channel is pretty good at filtering them. We
 on both R and S channels to get most out of the visible lane lines and use gradients on LS channels to get rid of 
 some noise.
 
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/preprocessed_image.png)
+
 #### Perspective Transform (Warping the image for better prediction):
 Lane lines in real world are parallel, but they tends to meet as we go further in the image. Fitting a polynomial 
 curve to lane lines in this case can would not result in a very good estimate, additionally it would be more prone to
@@ -56,6 +58,8 @@ curve to lane lines in this case can would not result in a very good estimate, a
  
  Step 1: Take an approximate view (trapizium) that contains both the lane lines.
  Step 2: Use prespective transform to change the view (trapizium) to the birds-eye perspective
+ 
+ ![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/perspective_transform.png)
  
 #### Estimating lane line region to fit a better polynomial:
 Gradient are noisy when taking into account the surrounding. It is important to find an approximate region where we 
@@ -72,11 +76,8 @@ the x-value of the peak points in both the half. Say image_size = 720x720, half_
   
 ![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_dist.png)
 
-
 ##### *Finding Lane Region*
 We use a sliding window technique. Here we fit a window at the origin and slide it through the y-axis where the gradient are accumulated more.
-
-![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/curvature_windows.png)
 
 **Fitting a Polynomial** 
 At this point we have the lane points i.e the points under the windows. Under the assumption that our sliding window 
@@ -84,6 +85,9 @@ technique is a good approximation, we take all the points and fit a 2nd order po
 lines.
 
 Now we simply take a buffer around the fitted polynomial and consider it our lane line.
+
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/curvature_windows.png)
+
 
 #### Unwarp the image and iterate:
 Now that we have our lane line is warped image, we convert them back to the actual image space by using perspective 
@@ -93,6 +97,8 @@ transform and plot the segmentation mask on the estimated lane boundary.
 step **Estimating lane line region to fit a better polynomial**. Because lane line do not change a lot for several 
 consecutive frames. Therefore, after finding the polynomial in the first frame, we can simply use a buffer region 
 around the polynomial and fit the new polynomial using the points in that buffer region.
+
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/postprocess.png)
 
 
 ## A more Robust way (Minor improvements on the above techniques)

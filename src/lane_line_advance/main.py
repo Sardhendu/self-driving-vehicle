@@ -164,7 +164,7 @@ def plot_curvature_radius_dist(save_path):
 
     
 from moviepy.editor import VideoFileClip
-setting = "final"
+setting = "debug"
 video_name = "project_video"
 input_video_path = f'./data/{video_name}.mp4'
 output_video_path = f'./data/{video_name}_{setting}_out.mp4'
@@ -199,10 +199,10 @@ if setting == "warped":
 # time_list=[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 
 if setting == "debug":
-    test_image_name = "25.1"# "# "bridge_shadow" #"0"  #"0"
+    test_image_name = "test4"# "25.1"# "# "bridge_shadow" #"0"  #"0"
 
-    # input_image_path = f'{test_img_dir}/{test_image_name}.jpg'
-    input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
+    input_image_path = f'{test_img_dir}/{test_image_name}.jpg'
+    # input_image_path = f'{output_img_dir}/{test_image_name}.jpg'
 
     output_img_dir = f'{output_img_dir}/{test_image_name}'
     debug_pipeline(input_image_path, output_img_dir)

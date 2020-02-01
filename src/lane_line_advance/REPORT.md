@@ -59,7 +59,7 @@ curve to lane lines in this case can would not result in a very good estimate, a
  Step 1: Take an approximate view (trapizium) that contains both the lane lines.
  Step 2: Use prespective transform to change the view (trapizium) to the birds-eye perspective
  
- ![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/perspective_transform.png)
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/perspective_transform.png)
  
 #### Estimating lane line region to fit a better polynomial:
 Gradient are noisy when taking into account the surrounding. It is important to find an approximate region where we 
@@ -104,9 +104,26 @@ around the polynomial and fit the new polynomial using the points in that buffer
 ## A more Robust way (Minor improvements on the above techniques)
 ------------- 
   
+#### Finding Histogram Distribution:
+For many cases just summing the y axis values of the binary-warped preprocessed image may return good estimation of 
+the location where we should start the sliding window technique, but this is not always true (In challanging 
+scenarios where the bottom of the image has high gradients across the entire x axis this approach would fail). Here 
+we employ a simple weighting criteria. We have a prior knowledge of roughly where the lanes should originate. 
+Therefore, here we create a weight matrix based on our prior knowledge and multiply it to our binary-warped 
+preprocessed image. After, that we take the sum across y axis. 
 
+Below is an image of such matrix, THey yellow the region the more weight that region has  
     
+![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_weights.png)
    
-   
-   
+#### Lane Smoothing (Moving average) and lane swapping:
+
+*Lane Smoothing*: THe lane can fluctuate from frame to frame. But in the real-world case this may not be true. The 
+fluctuation of lane lines are primarily because of bad gradients or bad pre-processing. In this case we apply a 
+simple heuristic to average or perform weighted average of n-t consequtive frames. 
+
+*Lane Swaping*: Sometimes shadows and excessive lighting can prohibit the proprocessing algorithm to find lanes or 
+rather find very few points (which can diverge a lot from the actual lane line). In 
+such a case we simply return the lane from the previous frame. If the patter appears repeatedly for many frames, we 
+perform dynamic preprocessing 
       

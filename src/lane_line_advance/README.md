@@ -11,8 +11,10 @@ This project implements advanced computer vision techniques to detect lane lines
   * Pipeline to run the algorithm on videos.
   * Improvements on the basic tools to let to a more robust algorithm.
 
-### 75 frames output video
+### Output Video sneak peek
  
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/output.gif)
+
 
 ## Install and Run:
 1. **Clone Repo**: git clone [git@github.com:Sardhendu/self-driving-vehicle.git]()

@@ -35,7 +35,7 @@ class Preprocess():
             raise ValueError('Only x and y axis permitted')
 
         abs_sobelx = np.absolute(gradient)
-        print(f'absolute min={np.min(abs_sobelx)}, absolute max={np.max(abs_sobelx)}')
+        # print(f'absolute min={np.min(abs_sobelx)}, absolute max={np.max(abs_sobelx)}')
         scaled_value = np.uint8(255 * abs_sobelx / np.max(abs_sobelx))
         abs_mask = np.zeros_like(scaled_value)
         abs_mask[(scaled_value >= threshold[0]) & (scaled_value <= threshold[1])] = 1
@@ -43,7 +43,7 @@ class Preprocess():
 
     def apply_magnitude_thresh(self, threshold=(20, 150)):
         gradient_magnitude = pow(pow(self.gradient_y, 2) + pow(self.gradient_x, 2), 0.5)
-        print(f'magnitude min={np.min(gradient_magnitude)}, magnitude max={np.max(gradient_magnitude)}')
+        # print(f'magnitude min={np.min(gradient_magnitude)}, magnitude max={np.max(gradient_magnitude)}')
         scaled_magnitude = np.uint8(np.abs(gradient_magnitude) / np.max(gradient_magnitude) * 255)
         magnitude_mask = np.zeros(self.processed_image.shape)
         magnitude_mask[(scaled_magnitude >= threshold[0]) & (scaled_magnitude <= threshold[1])] = 1
@@ -52,7 +52,7 @@ class Preprocess():
     def apply_orientation_thresh(self, threshold=(0.7, 1.3)):
         gradient_x, gradient_y = np.abs(self.gradient_x), np.abs(self.gradient_y)
         gradient_orientation = np.arctan2(gradient_y, gradient_x)
-        print(f'orientation min={np.min(gradient_orientation)}, orientation max={np.max(gradient_orientation)}')
+        # print(f'orientation min={np.min(gradient_orientation)}, orientation max={np.max(gradient_orientation)}')
         orientation_mask = np.zeros(gradient_x.shape).astype(np.int32)
         orientation_mask[(gradient_orientation >= threshold[0]) & (gradient_orientation <= threshold[1])] = 1
         return orientation_mask

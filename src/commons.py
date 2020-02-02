@@ -48,7 +48,6 @@ def fetch_image_from_video(input_video_path, output_img_dir, time_list=[0.24, 0.
 
 def image_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
     figsize = tuple([max(figsize[0], ncols*6), max(figsize[1], nrows*4)])
-    print(figsize)
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
     
     if ncols > 1:
@@ -130,3 +129,20 @@ def write_pickle(save_path, data_dict: dict):
     with open(save_path, 'wb') as f:
         pickle.dump(data_dict, f)
 
+
+def write_gif(video_path, subclip_from, subclip_to, resize, save_path):
+    clip = (VideoFileClip(video_path)
+            .subclip(subclip_from, subclip_to)
+            # .speedx(0.5)
+            .resize(resize))
+    clip.write_gif(save_path)
+    
+    
+if __name__ == "__main__":
+    write_gif(
+            video_path="/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video/final_out.mp4",
+            subclip_from=(38),
+            subclip_to=(42),
+            resize=0.5,
+            # speedx=1.15,
+            save_path="/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video/a.gif")

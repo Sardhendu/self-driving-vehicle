@@ -9,3 +9,5 @@ Project 2: Advance Lane Lines Detection [*Link*](https://github.com/Sardhendu/se
 -----------
 
 Using advance computer vision techniques to detect lane lines in a curvy road road  
+
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines_advance/images/output.gif)

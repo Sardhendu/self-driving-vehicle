@@ -48,7 +48,6 @@ class PreprocessBuilder:
         # Capture R and S channel that are most effective
         binary_r = self.threshold(r, PipelineParams.red_threshold[threshold_index])
         binary_s = self.threshold(s, PipelineParams.saturation_threshold[threshold_index])  # More that 15 is difficult
-        print(np.sum(binary_s))
         
         # Get logical OR between R and S Channel
         r_or_s = np.logical_or(binary_r, binary_s)  # binary_r + binary_s
@@ -107,7 +106,6 @@ class PreprocessBuilder:
             self.plot_names = []
 
             color_binary = np.dstack((np.zeros_like(x_abs_thresh_img), x_abs_thresh_img, binary_s)) * 255
-            cv2.imwrite("11.png",color_binary)
         return preprocessed_img
     
     def plot(self, ncol, save_path):
@@ -204,7 +202,7 @@ def lane_curvature_pipeline(preprocessed_bin_image, save_dir, mode):
             save_dir=save_dir,
             pipeline=mode
     )
-    lane_curvature.find_lane_points()
+    lane_curvature.find_lane_points(mode)
     lane_curvature.fit()
     y_new, left_x_new, right_x_new = lane_curvature.predict()
         

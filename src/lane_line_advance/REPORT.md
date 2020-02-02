@@ -116,7 +116,7 @@ Below is an image of such matrix, THey yellow the region the more weight that re
     
 ![Histogram-weights](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_weights.png)
    
-#### Lane Smoothing (Moving average):
+#### Lane Smoothing (Weighted average):
 
 *Lane Smoothing*: THe lane can fluctuate from frame to frame. But in the real-world case this may not be true. The 
 fluctuation of lane lines are primarily because of bad gradients or bad pre-processing. In this case we apply a 
@@ -125,7 +125,7 @@ simple heuristic to average or perform weighted average of n-t consequtive frame
 #### Curvature Change (Scoring the lane line):
 Consecutive frames do not change instantly. We can benefit from this fact. There are two ways we can
  
-*Measuring Variance in curvature change* A simple idea is to measure the variance or the change in the curvature for 
+*Measuring Variance in curvatures*: A simple idea is to measure the variance or the change in the curvature for 
 consequtive frames. We measure this for both the lane.
 
 Sometimes if there are not enough detected lane points then the polynomial fit can overfit or in some case underfit 

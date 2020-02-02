@@ -77,15 +77,13 @@ class CurvatureParams:
     hist_weight_matrix /= np.sum(hist_weight_matrix)
     
     # Smooth curves
-    # TODO: Implement moving average
     num_frames = 10
-    frame_weights = np.array([2, 2, 3, 3, 4, 4, 5, 5, 6, 7], dtype=float)
+    frame_weights = np.array([1, 2, 3, 4, 4, 5, 5, 6, 6, 10], dtype=float)
     moving_average_weigths = (np.array(frame_weights) / np.sum(frame_weights)).reshape(1, -1)
     left_lane_n_polynomial_matrix = np.zeros((720, 10))  # Here 720 is the counts of polynomial points
     right_lane_n_polynomial_matrix = np.zeros((720, 10))
     running_index = 0
     assert (num_frames == len(frame_weights))
-    print(np.sum(moving_average_weigths))
     assert (np.sum(moving_average_weigths) >= 0.9)
     
     # Sanity Check Parameters
@@ -97,5 +95,5 @@ class CurvatureParams:
     # we are actually calculating a weighted variance
     left_line_curr_poly_variance = []
     right_line_curr_poly_variance = []
-    max_variance = 0.1
+    allowed_variance = 0.2
     

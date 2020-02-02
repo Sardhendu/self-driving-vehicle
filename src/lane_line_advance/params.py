@@ -79,7 +79,7 @@ class CurvatureParams:
     # Smooth curves
     # TODO: Implement moving average
     num_frames = 10
-    frame_weights = np.array([3, 3, 3, 3, 4, 4, 4, 5, 5, 5], dtype=float)
+    frame_weights = np.array([2, 2, 3, 3, 4, 4, 5, 5, 6, 7], dtype=float)
     moving_average_weigths = (np.array(frame_weights) / np.sum(frame_weights)).reshape(1, -1)
     left_lane_n_polynomial_matrix = np.zeros((720, 10))  # Here 720 is the counts of polynomial points
     right_lane_n_polynomial_matrix = np.zeros((720, 10))

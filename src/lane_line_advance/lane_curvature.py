@@ -1,6 +1,6 @@
 import numpy as np
 from src import commons
-from src.lane_line_advance.params import CurvatureParams
+from src.lane_line_advance.params import CurvatureParams, PipelineParams
 
 
 def fetch_start_position_with_hist_dist(preprocessed_bin_image, save_dir=None):
@@ -76,25 +76,7 @@ class LaneCurvature:
             self.basic_plots = commons.graph_subplots()
 
             self.dummy_plot = np.zeros(self.preprocessed_image_cp.shape)
-            
-    def store_curvature_points(self, left_box, right_box):
-        # TODO: This process can be initiated by a new thread since this is just storage
-        left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
-        right_box_vals = self.preprocessed_bin_image[right_box[0]:right_box[2], right_box[1]:right_box[3]]
-        
-        ll_non_zero_y_idx, ll_non_zero_x_idx = np.where(left_box_vals == 1)
-        rl_non_zero_y_idx, rl_non_zero_x_idx = np.where(right_box_vals == 1)
-
-        CurvatureParams.left_lane_y_points += list(ll_non_zero_y_idx + left_box[0])
-        CurvatureParams.left_lane_x_points += list(ll_non_zero_x_idx + left_box[1])
-        CurvatureParams.right_lane_y_points += list(rl_non_zero_y_idx + right_box[0])
-        CurvatureParams.right_lane_x_points += list(rl_non_zero_x_idx + right_box[1])
-        print(f'\n[Curvature Points]\n'
-              f'left_lane_y_points = {len(CurvatureParams.left_lane_y_points)}, '
-              f'left_lane_x_points = {len(CurvatureParams.left_lane_x_points)}, '
-              f'right_lane_y_points = {len(CurvatureParams.right_lane_y_points)} '
-              f'right_lane_x_points = {len(CurvatureParams.right_lane_x_points)}')
-        
+    
     def shift_boxes(self, ll_mid_point, rl_mid_point):
         """
         This function adjust the initial rectangular box based on the density of points.
@@ -113,7 +95,7 @@ class LaneCurvature:
 
         return left_box, right_box
         
-    def find_lane_points_with_sliding_window(self):
+    def find_lane_points_with_sliding_window(self, which_lane):
         """
         Finds lane points using sliding window technique
         :return:
@@ -135,11 +117,15 @@ class LaneCurvature:
             rl_y_mid_point - CurvatureParams.window_size_yx[0] // 2, rl_x_mid_point - CurvatureParams.window_size_yx[1] // 2,
             rl_y_mid_point + CurvatureParams.window_size_yx[0] // 2, rl_x_mid_point + CurvatureParams.window_size_yx[1] // 2,
         ]
-        
+
         if self.save_dir:
             self.preprocessed_img_plot.rectangle(left_box, color=(0, 255, 0))
             self.preprocessed_img_plot.rectangle(right_box, color=(0, 255, 0))
-            
+
+        left_lane_y_points = []
+        left_lane_x_points = []
+        right_lane_y_points = []
+        right_lane_x_points = []
         while cnt <= CurvatureParams.search_loops:
             left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
             right_box_vals = self.preprocessed_bin_image[right_box[0]:right_box[2], right_box[1]:right_box[3]]
@@ -156,7 +142,25 @@ class LaneCurvature:
             left_box, right_box = self.shift_boxes(
                     ll_mid_point=[ll_y_mid_point, ll_x_mid_point], rl_mid_point=[rl_y_mid_point, rl_x_mid_point]
             )
-            self.store_curvature_points(left_box, right_box)
+
+            # --------------------------------------------------------------------------------------------
+            # Get points inside the Rectangle Bboxes
+            # --------------------------------------------------------------------------------------------
+            left_box_vals = self.preprocessed_bin_image[left_box[0]:left_box[2], left_box[1]:left_box[3]]
+            right_box_vals = self.preprocessed_bin_image[right_box[0]:right_box[2], right_box[1]:right_box[3]]
+
+            ll_non_zero_y_idx, ll_non_zero_x_idx = np.where(left_box_vals == 1)
+            rl_non_zero_y_idx, rl_non_zero_x_idx = np.where(right_box_vals == 1)
+
+            left_lane_y_points += list(ll_non_zero_y_idx + left_box[0])
+            left_lane_x_points += list(ll_non_zero_x_idx + left_box[1])
+            right_lane_y_points += list(rl_non_zero_y_idx + right_box[0])
+            right_lane_x_points += list(rl_non_zero_x_idx + right_box[1])
+            print(f'\n[Curvature Points]\n'
+                  f'left_lane_y_points = {len(left_lane_y_points)}, '
+                  f'left_lane_x_points = {len(left_lane_x_points)}, '
+                  f'right_lane_y_points = {len(right_lane_y_points)} '
+                  f'right_lane_x_points = {len(right_lane_x_points)}')
             
             if self.save_dir or self.pipeline != "final":
                 self.preprocessed_img_plot.rectangle(left_box, color=(255, 0, 0))
@@ -167,6 +171,12 @@ class LaneCurvature:
             ll_y_mid_point = ll_y_mid_point - CurvatureParams.window_size_yx[0]
             rl_y_mid_point = rl_y_mid_point - CurvatureParams.window_size_yx[0]
             cnt += 1
+
+        if which_lane == "left" or which_lane == "both":
+            CurvatureTools.set_curr_left_lane_points(left_x_new=left_lane_x_points, left_y_new=left_lane_y_points)
+            
+        if which_lane == "right" or which_lane == "both":
+            CurvatureTools.set_curr_right_lane_points(right_x_new=right_lane_x_points, right_y_new=right_lane_y_points)
 
     def find_lane_points_with_prior_lane_points(self):
         """
@@ -193,26 +203,32 @@ class LaneCurvature:
         )
         
         if sum(ll_inds) > 0:
-            CurvatureParams.left_lane_y_points = y_active_idx[ll_inds]
-            CurvatureParams.left_lane_x_points = x_active_idx[ll_inds]
+            CurvatureTools.set_curr_left_lane_points(left_x_new=x_active_idx[ll_inds], left_y_new=y_active_idx[ll_inds])
         else:
-            print('[WARNING WARNING] ==================> NO (Left Lane XY-points) FOUND')
+            print('WARNING WARNING ==================> NO (Left Lane XY-points) FOUND')
 
         if sum(rr_inds) > 0:
-            CurvatureParams.right_lane_y_points = y_active_idx[rr_inds]
-            CurvatureParams.right_lane_x_points = x_active_idx[rr_inds]
+            CurvatureTools.set_curr_right_lane_points(right_x_new=x_active_idx[rr_inds], right_y_new=y_active_idx[rr_inds])
         else:
-            print('[WARNING WARNING] ==================> NO (Right Lane XY-points) FOUND')
+            print('WARNING WARNING ==================> NO (Right Lane XY-points) FOUND')
 
     def find_lane_points(self):
         if (
-                len(CurvatureParams.left_lane_y_points) == 0 or
-                len(CurvatureParams.left_lane_x_points) == 0 or
-                len(CurvatureParams.right_lane_y_points) == 0 or
+                # len(CurvatureParams.left_lane_y_points) == 0 and
+                len(CurvatureParams.left_lane_x_points) == 0 and
+                # len(CurvatureParams.right_lane_y_points) == 0 and
                 len(CurvatureParams.right_lane_x_points) == 0
         ):
-            self.find_lane_points_with_sliding_window()
+            print('Sliding Window Left-Right ===========>')
+            self.find_lane_points_with_sliding_window(which_lane="both")
+        elif len(CurvatureParams.left_lane_x_points) == 0:
+            print('Sliding Window Left ===========>')
+            self.find_lane_points_with_sliding_window(which_lane="left")
+        elif len(CurvatureParams.right_lane_x_points) == 0:
+            print('Sliding Window Right ===========>')
+            self.find_lane_points_with_sliding_window(which_lane="right")
         else:
+            print('Margin Search ===========>')
             self.find_lane_points_with_prior_lane_points()
             
     def fit(self, degree=2):
@@ -239,16 +255,54 @@ class LaneCurvature:
             left_x_new = 1 * y_new ** 2 + 1 * y_new
             right_x_new = 1 * y_new ** 2 + 1 * y_new
 
-        # Overwrite the predicted points as new search space
-        CurvatureParams.left_lane_x_points = left_x_new
-        CurvatureParams.left_lane_y_points = y_new
-        CurvatureParams.right_lane_x_points = right_x_new
-        CurvatureParams.right_lane_y_points = y_new
+        # Sometimes the predictions can go way off that the actual values
+        left_x_new, right_x_new = CurvatureTools.bound_predictions(left_x_new, right_x_new)
+
+        # ---------------------------------------------------------------------------------------------------------
+        # Check lines with variance of curvature
+        print('\n# '
+              '---------------------------------------------------------------------------------------------------------')
+        # print('right_x_new: \n', right_x_new)
+        print('Variance Check Before: ', np.sum(left_x_new), np.sum(right_x_new))
+        left_x_new, right_x_new = CurvatureTools.check_lines_with_variance_of_curvature_change(
+                left_x_new, right_x_new, allowed_variance=0.2
+        )
+        print('Variance Check After: ', np.sum(left_x_new), np.sum(right_x_new))
+        print('Variance Check For Curvature matrix: ', np.sum(CurvatureParams.right_lane_n_polynomial_matrix[::, -1]))
+        print('Variance Check For Curvature matrix: ', np.sum(CurvatureParams.right_lane_n_polynomial_matrix[::, -2]))
+        print('Variance Check For Curvature matrix: ', np.sum(CurvatureParams.right_lane_n_polynomial_matrix))
+        CurvatureTools.set_curr_left_lane_points(left_x_new=left_x_new, left_y_new=y_new)
+        CurvatureTools.set_curr_right_lane_points(right_x_new=right_x_new, right_y_new=y_new)
+        # CurvatureTools.set_curr_lane_points_on_polynomial_matrix(left_x_new=left_x_new, right_x_new=right_x_new)
+        # print('right_x_new:\n', right_x_new)
+        
+        # ---------------------------------------------------------------------------------------------------------
+        # Average N-Lane lines
+        # ---------------------------------------------------------------------------------------------------------
+        """
+        Step 1: We shift the polynomial matrix [:, 1:n] to [:, 0:n-1]
+        Step 2: We set the new left, right lane points at [:, nth] y position
+        Step 3: We compute the nth weighted average for both left and right Lane lines
+        Step 4: We reset the left, right lane points at [:, nth] y position with the new averages lane lines
+        """
+        print('Weighted Average Check Before: ', np.sum(left_x_new), np.sum(right_x_new))
+        CurvatureTools.shift_polynomial_matrix()
+        CurvatureTools.set_curr_lane_points_on_polynomial_matrix(left_x_new=left_x_new, right_x_new=right_x_new)
+        left_x_new, right_x_new = CurvatureTools.average_n_lanes(left_x_new, right_x_new)
+        CurvatureTools.set_curr_lane_points_on_polynomial_matrix(left_x_new=left_x_new, right_x_new=right_x_new)
+        CurvatureTools.set_curr_left_lane_points(left_x_new=left_x_new, left_y_new=y_new)
+        CurvatureTools.set_curr_right_lane_points(right_x_new=right_x_new, right_y_new=y_new)
+        print('Weighted Average Check Before: ', np.sum(left_x_new), np.sum(right_x_new))
         
         assert (len(CurvatureParams.left_lane_y_points) == len(CurvatureParams.right_lane_y_points) == len(
-                CurvatureParams.left_lane_x_points) == len(CurvatureParams.left_lane_y_points))
+                CurvatureParams.left_lane_x_points) == len(CurvatureParams.left_lane_y_points)), (
+            f'len(CurvatureParams.left_lane_y_points)={len(CurvatureParams.left_lane_y_points)}, '
+            f'len(CurvatureParams.right_lane_y_points)={len(CurvatureParams.right_lane_y_points)}, '
+            f'len(CurvatureParams.left_lane_x_points)={len(CurvatureParams.left_lane_x_points)}, '
+            f'len(CurvatureParams.left_lane_y_points)={len(CurvatureParams.left_lane_y_points)}'
+        )
 
-        left_x_new, right_x_new = CurvatureTools.average_n_lanes(left_x_new, right_x_new)
+        CurvatureParams.running_index += 1
         return y_new, left_x_new, right_x_new
     
     def measure_radius_in_pxl(self):
@@ -265,7 +319,7 @@ class LaneCurvature:
         # Take any y value, here we take the max
         CurvatureParams.left_lane_curvature_radii.append(CurvatureParams.left_lane_curvature_radii_curr)
         CurvatureParams.right_lane_curvature_radii.append(CurvatureParams.right_lane_curvature_radii_curr)
-            
+        
     def measure_radius_in_meter(self):
         """
         Here we project the y_points and x_points of both the lanes from the warped pxl coordinate system to the real
@@ -294,7 +348,7 @@ class LaneCurvature:
         # Take any y value, here we take the max
         CurvatureParams.left_lane_curvature_radii.append(CurvatureParams.left_lane_curvature_radii_curr)
         CurvatureParams.right_lane_curvature_radii.append(CurvatureParams.right_lane_curvature_radii_curr)
-    
+        
     def plot(self, left_y_new, left_x_new, right_y_new, right_x_new):
         draw_points = np.asarray([left_x_new, left_y_new]).T.astype(np.int32)
         self.preprocessed_img_plot.polylines(draw_points, (50, 255, 255))
@@ -307,53 +361,126 @@ class LaneCurvature:
 
 class CurvatureTools:
     @staticmethod
+    def bound_predictions(left_x_new, right_x_new):
+        return (
+            np.minimum(
+                    np.maximum(
+                            left_x_new,
+                            np.tile(PipelineParams.src_points[1][0], len(left_x_new))),
+                    PipelineParams.src_points[3][0]
+            ),
+            np.maximum(
+                    np.minimum(
+                            right_x_new,
+                            np.tile(PipelineParams.src_points[3][0], len(right_x_new))),
+                    PipelineParams.src_points[1][0]
+            )
+        )
+    
+    @staticmethod
     def average_n_lanes(left_x_new, right_x_new):
-        # print('RUNNING ===========> ', CurvatureParams.running_index)
-        # print(np.sum(left_x_new))
-    
-        CurvatureParams.left_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.left_lane_n_polynomial_matrix[:, 1:]
-        CurvatureParams.left_lane_n_polynomial_matrix[:, -1:] = left_x_new.reshape(-1, 1)
-    
-        CurvatureParams.right_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.right_lane_n_polynomial_matrix[:, 1:]
-        CurvatureParams.right_lane_n_polynomial_matrix[:, -1:] = right_x_new.reshape(-1, 1)
-    
+        """
+        :param left_x_new:
+        :param right_x_new:
+        :return:
+        """
         # print(np.sum(CurvatureParams.left_lane_n_polynomial_matrix, axis=0))
         if CurvatureParams.running_index >= 9:
             # print( CurvatureParams.left_lane_n_polynomial_matrix.shape, CurvatureParams.moving_average_weigths.shape)
         
-            left_x_new = np.sum(CurvatureParams.left_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths,
-                                axis=1)
+            left_x_new = np.sum(
+                    CurvatureParams.left_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths, axis=1
+            )
             right_x_new = np.sum(
-                CurvatureParams.right_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths,
-                axis=1)
+                    CurvatureParams.right_lane_n_polynomial_matrix * CurvatureParams.moving_average_weigths, axis=1
+            )
             # print(left_x_new.shape)
             # print('CurvatureParams.left_lane_n_polynomial_matrix: \n', CurvatureParams.left_lane_n_polynomial_matrix)
-    
-        CurvatureParams.running_index += 1
     
         return left_x_new, right_x_new
 
     @staticmethod
-    def get_variance_of_curvature_change(curr_left_lane_poly, curr_right_lane_poly):
-        curr_left_lane_poly_x = curr_left_lane_poly[:, 1]
-        curr_right_lane_poly_x = curr_right_lane_poly[:, 1]
-        prev_left_lane_poly_x = CurvatureParams.left_lane_n_polynomial_matrix[::, -2]
-        prev_right_lane_poly_x = CurvatureParams.right_lane_n_polynomial_matrix[::, -2]
-    
-        prev_left_lane_poly_x = (prev_left_lane_poly_x - np.mean(prev_left_lane_poly_x)) / np.std(prev_left_lane_poly_x)
-        prev_right_lane_poly_x = (prev_right_lane_poly_x - np.mean(prev_right_lane_poly_x)) / np.std(prev_right_lane_poly_x)
-    
-        curr_left_lane_poly_x = (curr_left_lane_poly_x - np.mean(curr_left_lane_poly_x)) / np.std(curr_left_lane_poly_x)
-        curr_right_lane_poly_x = (curr_right_lane_poly_x - np.mean(curr_right_lane_poly_x)) / np.std(curr_right_lane_poly_x)
+    def check_lines_with_variance_of_curvature_change(left_x_new, right_x_new, allowed_variance=0.2):
         
-        left_lane_variance = np.var(curr_left_lane_poly_x - prev_left_lane_poly_x)
-        right_lane_variance = np.var(curr_right_lane_poly_x - prev_right_lane_poly_x)
-        
-        CurvatureParams.left_line_curr_poly_variance += [left_lane_variance]
-        CurvatureParams.right_line_curr_poly_variance += [right_lane_variance]
-        return left_lane_variance, right_lane_variance
-    
+        if CurvatureParams.running_index > 0:
+            prev_left_lane_poly_x = CurvatureParams.left_lane_n_polynomial_matrix[::, -1]
+            prev_right_lane_poly_x = CurvatureParams.right_lane_n_polynomial_matrix[::, -1]
+            
+            if np.std(prev_left_lane_poly_x) == 0:
+                print('prev_left_lane_poly_x: ', np.std(prev_left_lane_poly_x))
+                # print(1/0)
+                
+            if np.std(prev_right_lane_poly_x) == 0:
+                print('prev_right_lane_poly_x: ', np.std(prev_right_lane_poly_x))
+                # print(1/0)
+            prev_left_lane_poly_x = (prev_left_lane_poly_x - np.mean(prev_left_lane_poly_x)) / (np.std(
+                    prev_left_lane_poly_x))
+            prev_right_lane_poly_x = (prev_right_lane_poly_x - np.mean(prev_right_lane_poly_x)) / (np.std(
+                    prev_right_lane_poly_x))
 
+            curr_left_lane_poly_x = (left_x_new - np.mean(left_x_new)) / np.std(left_x_new)
+            curr_right_lane_poly_x = (right_x_new - np.mean(right_x_new)) / np.std(right_x_new)
+            
+            left_lane_variance = np.var(curr_left_lane_poly_x - prev_left_lane_poly_x)
+            right_lane_variance = np.var(curr_right_lane_poly_x - prev_right_lane_poly_x)
+            
+            CurvatureParams.left_line_curr_poly_variance += [left_lane_variance]
+            CurvatureParams.right_line_curr_poly_variance += [right_lane_variance]
+            
+            print('-----------------------: ', left_lane_variance, right_lane_variance, type(left_lane_variance), type(right_lane_variance))
+            
+            if np.isnan(left_lane_variance):
+                print('yeysyeysyeysyeysyeysyeye')
+            if np.isnan(right_lane_variance):
+                print('laksdlkdlksldlsdklaskldkadlaskl')
+            if left_lane_variance > allowed_variance:
+                print('YUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUPYUP')
+                left_x_new = CurvatureParams.left_lane_n_polynomial_matrix[::, -1]
+                
+            if right_lane_variance > allowed_variance:
+                print('popopopopopopopopopopoppopopoppopopoopoppopooppopopooppo')
+                right_x_new = CurvatureParams.right_lane_n_polynomial_matrix[::, -1]
+        return left_x_new, right_x_new
+
+    @staticmethod
+    def set_curr_left_lane_points(left_x_new, left_y_new):
+        # Overwrite the predicted points as new search space
+        CurvatureParams.left_lane_x_points = left_x_new
+        CurvatureParams.left_lane_y_points = left_y_new
+    
+        print(f'\n[Frame Curvature Points]\n'
+              f'left_lane_y_points = {len(CurvatureParams.left_lane_y_points)}, '
+              f'left_lane_x_points = {len(CurvatureParams.left_lane_x_points)} ')
+
+    @staticmethod
+    def set_curr_right_lane_points(right_x_new, right_y_new):
+        CurvatureParams.right_lane_x_points = right_x_new
+        CurvatureParams.right_lane_y_points = right_y_new
+    
+        print(f'\n[Frame Curvature Points]\n'
+              f'right_lane_y_points = {len(CurvatureParams.right_lane_y_points)}, '
+              f'right_lane_x_points = {len(CurvatureParams.right_lane_x_points)} ')
+        
+    @staticmethod
+    def set_curr_lane_points_on_polynomial_matrix(left_x_new, right_x_new):
+        """
+        Here we assign the new left_right lane points to [:, nth] column position
+        :param left_x_new:
+        :param right_x_new:
+        :return:
+        """
+        CurvatureParams.left_lane_n_polynomial_matrix[:, -1:] = left_x_new.reshape(-1, 1)
+        CurvatureParams.right_lane_n_polynomial_matrix[:, -1:] = right_x_new.reshape(-1, 1)
+        
+    @staticmethod
+    def shift_polynomial_matrix():
+        """
+        Here we shift the lane points [:, 1:n] to [:, 0:n-1]
+        :return:
+        """
+        CurvatureParams.left_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.left_lane_n_polynomial_matrix[:, 1:]
+        CurvatureParams.right_lane_n_polynomial_matrix[:, :-1] = CurvatureParams.right_lane_n_polynomial_matrix[:, 1:]
+        
 
 
 """

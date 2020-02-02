@@ -59,7 +59,7 @@ curve to lane lines in this case can would not result in a very good estimate, a
  Step 1: Take an approximate view (trapizium) that contains both the lane lines.
  Step 2: Use prespective transform to change the view (trapizium) to the birds-eye perspective
  
-![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/perspective_transform.png)
+![Perspective-Transform](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/perspective_transform.png)
  
 #### Estimating lane line region to fit a better polynomial:
 Gradient are noisy when taking into account the surrounding. It is important to find an approximate region where we 
@@ -74,7 +74,7 @@ the x-value of the peak points in both the half. Say image_size = 720x720, half_
  points for half_1=(720,160) and half_2=(720, 540). Then we consider that our left lane originates from (720,160) and
   right lane originates from (720, 540).
   
-![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_dist.png)
+![Histogram-Distribution](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_dist.png)
 
 ##### *Finding Lane Region*
 We use a sliding window technique. Here we fit a window at the origin and slide it through the y-axis where the gradient are accumulated more.
@@ -86,7 +86,7 @@ lines.
 
 Now we simply take a buffer around the fitted polynomial and consider it our lane line.
 
-![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/curvature_windows.png)
+![Curvature-windows](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/curvature_windows.png)
 
 
 #### Unwarp the image and iterate:
@@ -98,13 +98,13 @@ step **Estimating lane line region to fit a better polynomial**. Because lane li
 consecutive frames. Therefore, after finding the polynomial in the first frame, we can simply use a buffer region 
 around the polynomial and fit the new polynomial using the points in that buffer region.
 
-![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/postprocess.png)
+![Postprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/postprocess.png)
 
 
 ## A more Robust way (Minor improvements on the above techniques)
 ------------- 
   
-#### Finding Histogram Distribution:
+#### Histogram Weight Matrix:
 For many cases just summing the y axis values of the binary-warped preprocessed image may return good estimation of 
 the location where we should start the sliding window technique, but this is not always true (In challanging 
 scenarios where the bottom of the image has high gradients across the entire x axis this approach would fail). Here 
@@ -114,16 +114,31 @@ preprocessed image. After, that we take the sum across y axis.
 
 Below is an image of such matrix, THey yellow the region the more weight that region has  
     
-![Preprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_weights.png)
+![Histogram-weights](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/histogram_weights.png)
    
-#### Lane Smoothing (Moving average) and lane swapping:
+#### Lane Smoothing (Moving average):
 
 *Lane Smoothing*: THe lane can fluctuate from frame to frame. But in the real-world case this may not be true. The 
 fluctuation of lane lines are primarily because of bad gradients or bad pre-processing. In this case we apply a 
 simple heuristic to average or perform weighted average of n-t consequtive frames. 
 
-*Lane Swaping*: Sometimes shadows and excessive lighting can prohibit the proprocessing algorithm to find lanes or 
-rather find very few points (which can diverge a lot from the actual lane line). In 
-such a case we simply return the lane from the previous frame. If the patter appears repeatedly for many frames, we 
-perform dynamic preprocessing 
+#### Curvature Change (Scoring the lane line):
+Consecutive frames do not change instantly. We can benefit from this fact. There are two ways we can
+ 
+*Measuring Variance in curvature change* A simple idea is to measure the variance or the change in the curvature for 
+consequtive frames. We measure this for both the lane.
+
+Sometimes if there are not enough detected lane points then the polynomial fit can overfit or in some case underfit 
+the actual curve. If the curve is a very bad fit lane smoothing would not be able to generalize it, additionally this
+ fit may attribute add variance to polynomials in future frame through Lane smoothing technique. Hence it is 
+ important to not include such polynomials in out prediction results.
+ 
+ The best way to handle this is to give a "uality score" measure as variance. If the variance of say 
+ right_lane polynomial at "t" is > threshold(0.2) then we simply reject the current polynomial prediction and take 
+ the polynomial prediction from frame "t-1". Below is one such example     
       
+![Histogram-weights](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/change_in_curvature.png)
+
+In the above graph we see that the right lane has a big spike where the variance of the frame suddenly increased
+ to about 4.0. This says that the gradient detection for that frame was very poor and the poly fit algorithm overfit 
+ the data points.

@@ -14,7 +14,7 @@ def debug_pipeline(input_image_path, output_img_dir):
             img=image, camera_matrix=CameraParams.camera_matrix,
             distortion_coefficients=CameraParams.distortion_coefficients
     )
-    preprocessed_bin_image = preprocessing_pipeline(image, threshold_index=0, save_dir=output_img_dir)
+    preprocessed_bin_image = preprocessing_pipeline(image, threshold_index=1, save_dir=output_img_dir)
     
     # -------------------------------------------------------------------------------------
     # Create Lane Curvature with 2nd degree polynomial
@@ -73,7 +73,7 @@ def warped_output_video_pipeline(image):
 
 def final_plots(save_dir):
     print(CurvatureParams.left_lane_curvature_radii)
-    fig = commons.graph_subplots(nrows=1, ncols=3, figsize=(50, 10))(
+    fig = commons.graph_subplots(nrows=1, ncols=2, figsize=(50, 10))(
             [CurvatureParams.left_lane_curvature_radii, CurvatureParams.right_lane_curvature_radii],
             ["Left Lane (curvature radius)", "Right Lane (curvature radius)"]
     )

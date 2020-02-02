@@ -32,8 +32,8 @@ class ImagePlots:
         color = (0, 0, 255) if color is None else color
         cv2.circle(self.image, tuple(point), 3, color, 3)
         
-    def add_caption(self, caption: str, pos: Tuple[int, int], color: Tuple[int, int, int]):
-        cv2.putText(self.image, caption, pos, cv2.FONT_HERSHEY_PLAIN, 2, color, 2)
+    def add_caption(self, caption: str, pos: Tuple[int, int], color: Tuple[int, int, int], thickness: int = 2):
+        cv2.putText(self.image, caption, pos, cv2.FONT_HERSHEY_PLAIN, 2, color, thickness=thickness)
         
 
 def fetch_image_from_video(input_video_path, output_img_dir, time_list=[0.24, 0.243, 0.245, 0.248, 0.25]):
@@ -139,10 +139,11 @@ def write_gif(video_path, subclip_from, subclip_to, resize, save_path):
     
     
 if __name__ == "__main__":
+    out_dir = "/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video"
     write_gif(
             video_path="/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video/final_out.mp4",
-            subclip_from=(38),
-            subclip_to=(42),
+            subclip_from=(35),
+            subclip_to=(43),
             resize=0.5,
             # speedx=1.15,
-            save_path="/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video/a.gif")
+            save_path=f"{out_dir}/sneak_peak.gif")

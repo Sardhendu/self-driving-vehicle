@@ -118,6 +118,7 @@ class PreprocessBuilder:
 class PostprocessingBuilder:
     def __init__(self, image, save_dir=None):
         self.image = image
+        self.h, self.w, _ = image.shape
         self.obj_img_plots = commons.ImagePlots(image)
         
         self.save_dir = save_dir
@@ -134,16 +135,21 @@ class PostprocessingBuilder:
         ))
         
         transformed_points = np.dot(PipelineParams.M_inv, input_points.T).T
-        dividor = transformed_points[:, -1].reshape(-1, 1)
+        divisor = transformed_points[:, -1].reshape(-1, 1)
         transformed_points = transformed_points[:, 0:2]
-        transformed_points /= dividor
+        transformed_points /= divisor
         transformed_points = transformed_points.astype(np.int32)
         left_lane = transformed_points[0:cnt_left_lane_pnts]
         right_lane = transformed_points[cnt_left_lane_pnts:]
-        
+        # print('1111111111')
+        # print(left_lane)
+        # print(right_lane)
         return left_lane, right_lane
     
-    def draw_lane_mask(self, left_lane, right_lane, left_lane_curvature_radius, right_lane_curvature_radius):
+    def draw_final_result(
+            self, left_lane, right_lane, left_lane_curvature_radius,
+            right_lane_curvature_radius, vehicle_postion_wrt_image_ceter
+    ):
         if self.save_dir:
             unwarped_image = cv2.warpPerspective(
                     self.obj_img_plots.image.copy(), PipelineParams.M_inv,
@@ -160,14 +166,25 @@ class PostprocessingBuilder:
         self.obj_img_plots.polymask(
                 points=np.vstack((left_lane, right_lane[::-1])),
                 color=(0, 255, 0),
-                mask_weight=0.5
+                mask_weight=0.7
         )
         self.obj_img_plots.add_caption(
-                str((left_lane_curvature_radius / 1000).round(3)), pos=(250, 250), color=(255, 0, 0)
+                f"Left Lane Curvature (meter) = {str(left_lane_curvature_radius.round())}",
+                pos=(50, 50), color=(255, 255, 255), thickness=2
         )
         self.obj_img_plots.add_caption(
-                str((right_lane_curvature_radius / 1000).round(3)), pos=(950, 250), color=(255, 0, 0)
+                f"Right Lane Curvature (meter) = {str(right_lane_curvature_radius.round(0))}",
+                pos=(50, 100), color=(255, 255, 255)
         )
+        
+        direction = "right" if vehicle_postion_wrt_image_ceter < 0 else "left"
+        
+        self.obj_img_plots.add_caption(
+                f"Vehicle is {np.abs(vehicle_postion_wrt_image_ceter).round(2)} (meter) "
+                f"towards the {direction} ",
+                pos=(50, 150), color=(255, 255, 255)
+        )
+        
         return self.obj_img_plots.image
     
     def plot(self):
@@ -214,6 +231,7 @@ def lane_curvature_pipeline(preprocessed_bin_image, save_dir, mode):
             return lane_curvature.preprocessed_img_plot.image
     
     lane_curvature.measure_radius_in_meter()
+    lane_curvature.get_vehicle_position_wrt_to_center()
     return left_x_new, right_x_new, y_new
     
     
@@ -223,6 +241,7 @@ def postprocessing_pipeline(image, left_x_new, right_x_new, y_new, save_dir, mod
             left_lane_points=np.column_stack((left_x_new, y_new)),
             right_lane_points=np.column_stack((right_x_new, y_new))
     )
+    # postprocess_pipeline.get_vehicle_position_wrt_to_center()
     
     if mode == "debug":
         print(
@@ -230,10 +249,11 @@ def postprocessing_pipeline(image, left_x_new, right_x_new, y_new, save_dir, mod
                 f'left_lane = {len(left_lane_points)}, right_lane = {len(right_lane_points)}'
         )
         
-    out_image = postprocess_pipeline.draw_lane_mask(
+    out_image = postprocess_pipeline.draw_final_result(
             left_lane_points, right_lane_points,
             CurvatureParams.left_lane_curvature_radii_curr,
-            CurvatureParams.right_lane_curvature_radii_curr
+            CurvatureParams.right_lane_curvature_radii_curr,
+            CurvatureParams.vehicle_postion_wrt_image_ceter
     )
     if mode == "debug":
         postprocess_pipeline.plot()

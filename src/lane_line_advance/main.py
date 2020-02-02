@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # Final Video Pipeline
     # -------------------------------------------------------------------------------------------
     if setting == "final":
-        clip2 = VideoFileClip(input_video_path)#.subclip(0, 10)
+        clip2 = VideoFileClip(input_video_path)#.subclip(0, 3)
         yellow_clip = clip2.fl_image(final_pipeline)
         yellow_clip.write_videofile(f'{output_video_path}/{setting}_out.mp4', audio=False)
         final_plots(output_video_path)

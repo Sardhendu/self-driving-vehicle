@@ -100,13 +100,35 @@ around the polynomial and fit the new polynomial using the points in that buffer
 
 ![Postprocessing-Img](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/postprocess.png)
 
+## (Discussion) Some Challenges that the Naive algorithm can face:
+--------------------
+1. Color spaces and gradients are a great way to find the lines under the assumption that lines are clearly visible. 
+But this may not always hold true. What if the lines are partly visible. In such a case, one good technique is to use
+ dynamic thresholding with gradients and color spaces. This would however introduce latency in running the whole 
+ alogorithm.  
+ 
+ Approach: A faster approach would be to predefine a set of 3 to 4 thresholds, and initiate 3 to 4 parallel threads 
+ to process the image with all thresholds. When finding lane line use the preprocess images one after another if the 
+ lane lines margin don't see many gradients. 
+ 
+2. What if the lane lines are totally missing, say wear and tear of the road has erased the lane lines for 
+several frames. In such a case we can simply use the lane lines from previous frames. This would not apply for lane 
+with abrupt changes in curvature, but would serve our purpose for many roads.
+
+3. What if all the preprocessing is noisy with lots of gradients, additionaly what if the **model.fit overfits**? A 
+wrong prediction in one image can have long term impact since we perform weightage average of t-1 frames. How would you 
+ actually provide a score to the **model.predict or the predicted lane line**. One simple way to tackle this is 
+ understanding curvature change. In the section below **Curvature Change (Scoring the lane line)** we have discussed 
+ a couple techniques to overcome this problem.
+   
+         
 
 ## A more Robust way (Minor improvements on the above techniques)
 ------------- 
   
 #### Histogram Weight Matrix:
 For many cases just summing the y axis values of the binary-warped preprocessed image may return good estimation of 
-the location where we should start the sliding window technique, but this is not always true (In challanging 
+the location where we should start the sliding window technique, but this is not always true (In challenging 
 scenarios where the bottom of the image has high gradients across the entire x axis this approach would fail). Here 
 we employ a simple weighting criteria. We have a prior knowledge of roughly where the lanes should originate. 
 Therefore, here we create a weight matrix based on our prior knowledge and multiply it to our binary-warped 

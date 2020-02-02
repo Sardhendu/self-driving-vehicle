@@ -252,8 +252,12 @@ class LaneCurvature:
             self.find_lane_points_with_prior_lane_points(mode)
             
     def fit(self, degree=2):
-        CurvatureParams.left_fit_pxl_curr = np.polyfit(CurvatureParams.left_lane_y_points, CurvatureParams.left_lane_x_points, deg=degree)
-        CurvatureParams.right_fit_pxl_curr = np.polyfit(CurvatureParams.right_lane_y_points, CurvatureParams.right_lane_x_points, deg=degree)
+        CurvatureParams.left_fit_pxl_curr = np.polyfit(
+                CurvatureParams.left_lane_y_points, CurvatureParams.left_lane_x_points, deg=degree
+        )
+        CurvatureParams.right_fit_pxl_curr = np.polyfit(
+                CurvatureParams.right_lane_y_points, CurvatureParams.right_lane_x_points, deg=degree
+        )
 
         CurvatureParams.left_fit_pxl_coefficients.append(CurvatureParams.left_fit_pxl_curr)
         CurvatureParams.right_fit_pxl_coefficients.append(CurvatureParams.right_fit_pxl_curr)
@@ -338,24 +342,34 @@ class LaneCurvature:
         :return:
         """
         CurvatureParams.left_fit_meter_curr = np.polyfit(
-                CurvatureParams.left_lane_y_points*CurvatureParams.ym_per_pix,
-                CurvatureParams.left_lane_x_points*CurvatureParams.xm_per_pix,
+                CurvatureParams.left_lane_y_points*CurvatureParams.y_meter_per_pix,
+                CurvatureParams.left_lane_x_points*CurvatureParams.x_meter_per_pix,
                 deg=2
         )
         
         CurvatureParams.right_fit_meter_curr = np.polyfit(
-                CurvatureParams.right_lane_y_points*CurvatureParams.ym_per_pix,
-                CurvatureParams.right_lane_x_points*CurvatureParams.xm_per_pix,
+                CurvatureParams.right_lane_y_points*CurvatureParams.y_meter_per_pix,
+                CurvatureParams.right_lane_x_points*CurvatureParams.x_meter_per_pix,
                 deg=2
         )
         lb2, lb1, _ = CurvatureParams.left_fit_meter_curr
         rb2, rb1, _ = CurvatureParams.right_fit_meter_curr
 
-        CurvatureParams.left_lane_curvature_radii_curr = ((1 + (2 * lb2 * self.h * CurvatureParams.ym_per_pix + lb1) ** 2) ** 1.5) / np.absolute(2 * lb2)
-        CurvatureParams.right_lane_curvature_radii_curr = ((1 + (2 * rb2 * self.h * CurvatureParams.ym_per_pix + rb1) ** 2) ** 1.5) / np.absolute(2 * rb2)
+        CurvatureParams.left_lane_curvature_radii_curr = ((1 + (2 * lb2 * self.h * CurvatureParams.y_meter_per_pix + lb1) ** 2) ** 1.5) / np.absolute(2 * lb2)
+        CurvatureParams.right_lane_curvature_radii_curr = ((1 + (2 * rb2 * self.h * CurvatureParams.x_meter_per_pix + rb1) ** 2) ** 1.5) / np.absolute(2 * rb2)
+        
         # Take any y value, here we take the max
         CurvatureParams.left_lane_curvature_radii.append(CurvatureParams.left_lane_curvature_radii_curr)
         CurvatureParams.right_lane_curvature_radii.append(CurvatureParams.right_lane_curvature_radii_curr)
+        
+    def get_vehicle_position_wrt_to_center(self):
+        image_meter_center_x = self.w//2 * CurvatureParams.x_meter_per_pix
+        vehicle_meter_center_x = (
+            CurvatureParams.left_lane_x_points[-1] +
+            (CurvatureParams.right_lane_x_points[-1] - CurvatureParams.left_lane_x_points[-1])//2
+        ) *  CurvatureParams.x_meter_per_pix
+
+        CurvatureParams.vehicle_postion_wrt_image_ceter = image_meter_center_x - vehicle_meter_center_x
         
     def plot(self, left_y_new, left_x_new, right_y_new, right_x_new):
         draw_points = np.asarray([left_x_new, left_y_new]).T.astype(np.int32)

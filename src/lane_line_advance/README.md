@@ -13,7 +13,7 @@ This project implements advanced computer vision techniques to detect lane lines
 
 ### Output Video sneak peek
  
-![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/output.gif)
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_line_advance/image/sneak_peak.gif)
 
 
 ## Install and Run:

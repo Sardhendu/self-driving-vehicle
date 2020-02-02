@@ -53,9 +53,12 @@ class CurvatureParams:
     # Capture all the b0, b1 and b2 for left and right lane poly fit
     left_fit_pxl_coefficients = []
     right_fit_pxl_coefficients = []
+    left_fit_meter_coefficients = []
+    right_fit_meter_coefficients = []
     
-    ym_per_pix = 30 / 720  # meters per pixel in y dimension
-    xm_per_pix = 3.7 / 700  # meters per pixel in x dimension
+    y_meter_per_pix = 30 / 720  # meters per pixel in y dimension
+    x_meter_per_pix = 3.7 / 700  # meters per pixel in x dimension
+    vehicle_postion_wrt_image_ceter = 0
     
     # -------------------------------------------------------------------------------------------
     # Some Awesome Hacks

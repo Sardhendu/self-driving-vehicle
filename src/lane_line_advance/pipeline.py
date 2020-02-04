@@ -176,7 +176,6 @@ class PostprocessingBuilder:
                 f"Right Lane Curvature (meter) = {str(right_lane_curvature_radius.round(0))}",
                 pos=(50, 100), color=(255, 255, 255)
         )
-        
         direction = "right" if vehicle_postion_wrt_image_ceter < 0 else "left"
         
         self.obj_img_plots.add_caption(
@@ -248,7 +247,7 @@ def postprocessing_pipeline(image, left_x_new, right_x_new, y_new, save_dir, mod
                 f'\n[Lane Detection] '
                 f'left_lane = {len(left_lane_points)}, right_lane = {len(right_lane_points)}'
         )
-        
+
     out_image = postprocess_pipeline.draw_final_result(
             left_lane_points, right_lane_points,
             CurvatureParams.left_lane_curvature_radii_curr,

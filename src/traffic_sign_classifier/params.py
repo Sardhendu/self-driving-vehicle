@@ -9,8 +9,8 @@ params = {
         "end_learning_rate": 0
     },
     "optimizer_learning_momentum": 0.9,
-    "epochs": 10,
-    "train_steps": 34799*10*256,
+    "epochs": 100,
+    "train_steps": 34799,
     "eval_steps": 100,
     "eval_data_cnt": 17,
     "save_checkpoint": 1000,

@@ -14,9 +14,12 @@ train_data_path = "./data/train.p"
 valid_data_path = "./data/valid.p"
 
 
-def preprocess(features: tf.Tensor, labels: tf.Tensor, num_classes: tf.Tensor):
+def preprocess(features: tf.Tensor, labels: tf.Tensor, num_classes: tf.Tensor, mode: str):
     features /= 255
     labels = tf.one_hot(labels, depth=num_classes[0])
+    
+    if mode == "train":
+        features = tf.keras.preprocessing.image.random_brightness(features, brightness_range=())
     return tf.cast(features, dtype=tf.float32), tf.cast(labels, dtype=tf.float32)
 
 
@@ -28,10 +31,11 @@ def dataset_pipeline(images, labels, input_fn, params, mode="train"):
     tf.assert_equal(len(images), len(labels), len(num_classes))
     shuffle_buffer_size = np.int32(images.shape[0])
     with tf.name_scope("input_pipeline"):
-        data_pipeline = tf.data.Dataset.from_tensor_slices((images, labels, num_classes))\
+        data_pipeline = tf.data.Dataset.from_tensor_slices((images, labels, num_classes, mode))\
             .shuffle(
                 buffer_size=shuffle_buffer_size,
-                reshuffle_each_iteration=True)
+                reshuffle_each_iteration=True
+        )
 
         if mode == "train":
             data_pipeline = data_pipeline.repeat(params["epochs"]).batch(params["batch_size"])
@@ -107,21 +111,31 @@ def eval(
         eval_summary_writer: SummaryCallback,
         params: Dict
 ):
+    eval_loss = tf.keras.metrics.Sum("eval_loss", dtype=tf.float32)
+    eval_acc = tf.keras.metrics.Accuracy("eval_accuracy", dtype=tf.float32)
+    
     def eval_(global_step):
         iterator_ = iter(eval_dataset)
         progbar = tf.keras.utils.Progbar(params["eval_data_cnt"])
-        eval_loss = tf.keras.metrics.Sum("eval_loss", dtype=tf.float32)
+        eval_loss.reset_states()
+        eval_acc.reset_states()
         it = 0
         while it < params["eval_data_cnt"]:
             eval_images, eval_target_one_hot = next(iterator_)
             eval_pred_logits = model_builder(eval_images)
+            
             loss_eval = loss_fn(eval_target_one_hot, eval_pred_logits)
             eval_loss.update_state(loss_eval)
+            
+            labels = tf.argmax(eval_target_one_hot, axis=-1)
+            preds = tf.argmax(eval_pred_logits, axis=-1)
+            eval_acc.update_state(y_true=labels, y_pred=preds)
             
             it += 1
             progbar.update(it)
         avg_eval_loss = tf.divide(eval_loss.result(), params["eval_data_cnt"])
         eval_summary_writer.scalar("eval_loss", avg_eval_loss, global_step)
+        eval_summary_writer.scalar("eval_accuracy", eval_acc.result(), global_step)
         
     return eval_
 
@@ -153,11 +167,11 @@ def train_eval(
 
     global_step = optimizer_.iterations.numpy()
     dataset_iterator = iter(dataset_)
-    progbar = tf.keras.utils.Progbar(params["train_steps"])
+    progbar = tf.keras.utils.Progbar(params["train_steps"]*params["epochs"])
     train_loss = tf.keras.metrics.Sum("train_loss", dtype=tf.float32)
 
     start = time.time()
-    while global_step < params["train_steps"]:
+    while global_step < (params["train_steps"]*params["epochs"]):
         feature, target = next(dataset_iterator)
         loss_vals = strategy.experimental_run_v2(step_fn, args=(feature, target))
         train_loss.update_state([loss_vals])
@@ -181,41 +195,34 @@ def train_eval(
         progbar.update(global_step)
 
 
-train_data = commons.read_pickle(train_data_path)
-eval_data = commons.read_pickle(valid_data_path)
 
-train_features = train_data["features"]
-train_labels = train_data["labels"]
-eval_features = eval_data["features"]
-eval_labels = eval_data["labels"]
-print(f"[Train]: features={train_features.shape}, labels={train_labels.shape}")
-print(f"[Train]: features={eval_features.shape}, labels={eval_labels.shape}")
-
-# output = model(tf.constant(np.random.random((1, 32, 32, 3)), dtype=tf.float32))
-# print(output.shape)
-
-train_summary_writer = SummaryCallback(model_dir=params['model_dir'], mode="train")
-eval_summary_writer = SummaryCallback(model_dir=params['model_dir'], mode="eval")
-
-train_dataset_ = dataset_pipeline(train_features, train_labels, preprocess, params, mode="train")
-eval_dataset_ = dataset_pipeline(eval_features, eval_labels, preprocess, params, mode="eval")
-model_fn_ = LeNet(num_classes=43)
-loss_fn_ = loss()
-lr_schedular_fn = PolyDecaySchedular(
-    learning_rate=params["poly_decay_schedular"]["learning_rate"],
-    total_steps=params["train_steps"],
-    learning_power=params["poly_decay_schedular"]["learning_power"],
-    minimum_learning_rate=params["poly_decay_schedular"]["learning_rate_min"],
-    end_learning_rate=params["poly_decay_schedular"]["end_learning_rate"],
-    save_summary_steps=params["save_summary_steps"],
-    train_summary_writer=train_summary_writer
-)
-eval_callback = eval(eval_dataset_, model_fn_, loss_fn_, eval_summary_writer, params)
-train_eval(train_dataset_, model_fn_, loss_fn_, lr_schedular_fn, eval_callback, train_summary_writer, params)
-
-
-# import tensorflow as tf
-# m = tf.keras.metrics.Sum("loss", dtype=tf.float32)
-# for i in [1,2,3,4,5,6]:
-#     m.update_state(i)
-# print('Final result: ', m.result().numpy())
+if __name__ == "__main__":
+    train_data = commons.read_pickle(train_data_path)
+    eval_data = commons.read_pickle(valid_data_path)
+    
+    train_features = train_data["features"]
+    train_labels = train_data["labels"]
+    eval_features = eval_data["features"]
+    eval_labels = eval_data["labels"]
+    print(f"[Train]: features={train_features.shape}, labels={train_labels.shape}")
+    print(f"[Train]: features={eval_features.shape}, labels={eval_labels.shape}")
+    
+    train_summary_writer = SummaryCallback(model_dir=params['model_dir'], mode="train")
+    eval_summary_writer = SummaryCallback(model_dir=params['model_dir'], mode="eval")
+    
+    train_dataset_ = dataset_pipeline(train_features, train_labels, preprocess, params, mode="train")
+    eval_dataset_ = dataset_pipeline(eval_features, eval_labels, preprocess, params, mode="eval")
+    model_fn_ = LeNet(num_classes=43)
+    loss_fn_ = loss()
+    lr_schedular_fn = PolyDecaySchedular(
+        learning_rate=params["poly_decay_schedular"]["learning_rate"],
+        total_steps=params["train_steps"],
+        learning_power=params["poly_decay_schedular"]["learning_power"],
+        minimum_learning_rate=params["poly_decay_schedular"]["learning_rate_min"],
+        end_learning_rate=params["poly_decay_schedular"]["end_learning_rate"],
+        save_summary_steps=params["save_summary_steps"],
+        train_summary_writer=train_summary_writer
+    )
+    eval_callback = eval(eval_dataset_, model_fn_, loss_fn_, eval_summary_writer, params)
+    train_eval(train_dataset_, model_fn_, loss_fn_, lr_schedular_fn, eval_callback, train_summary_writer, params)
+    

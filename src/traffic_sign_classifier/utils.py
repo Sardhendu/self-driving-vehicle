@@ -3,24 +3,33 @@ from typing import Any
 
 
 def preprocess(mode: str):
-    def preprocess_(features: tf.Tensor, labels: tf.Tensor, num_classes: tf.Tensor):
-    
-        labels = tf.one_hot(labels, depth=num_classes[0])
+    # def preprocess_(features: tf.Tensor, labels: tf.Tensor, num_classes: tf.Tensor):
+
+    # @tf.function
+    def preprocess_(features, labels, num_classes):
+        # print("23423423423 ", features.shape)
+        labels = tf.one_hot(labels, depth=num_classes)
+        print(labels)
+        features = tf.cast(features, dtype=tf.float32)
+        print(type(features))
         
-        if mode == "train":
-            features = tf.keras.preprocessing.image.random_shift(
-                    features, wrg=0.4, hrg=0.4, row_axis=0, col_axis=1, channel_axis=2, fill_mode='nearest'
+        # if mode == "train":
+        print("23423423423 ", features.shape)
+        wrg = 0.4
+        hrg = 0.4
+        features = tf.keras.preprocessing.image.random_shift(
+                features, wrg=wrg, hrg=hrg, row_axis=0, col_axis=1, channel_axis=2, fill_mode='nearest'
             )
-            
-            zoom_out = 0.6  # Magnifies the Image by 40%
-            zoom_in = 1.4  # Shrinks the image by 40%
-            features = tf.keras.preprocessing.image.random_zoom(
-                    features, (zoom_out, zoom_in), row_axis=0, col_axis=1, channel_axis=2, fill_mode='nearest',
-            )
-    
-            features = tf.keras.preprocessing.image.random_brightness(features, brightness_range=(0.6, 1.4))
-    
-            features = tf.image.flip_left_right(features)
+        #     print("23423423423 ", features.shape, type(features))
+        #     zoom_out = 0.6  # Magnifies the Image by 40%
+        #     zoom_in = 1.4  # Shrinks the image by 40%
+        #     features = tf.keras.preprocessing.image.random_zoom(
+        #         features, (zoom_out, zoom_in), row_axis=0, col_axis=1, channel_axis=2, fill_mode='nearest',
+        #     )
+        #     # print("23423423423 ", features.shape)
+        #     features = tf.image.flip_left_right(features)
+        #     print("23423423423 ", features.shape)
+        #     # features = tf.keras.preprocessing.image.random_brightness(features, brightness_range=(0.6, 1.4))
     
         features /= 255
         return tf.cast(features, dtype=tf.float32), tf.cast(labels, dtype=tf.float32)
@@ -104,7 +113,7 @@ if __name__ == "__main__":
     from src import commons
     np.random.seed(365)
     
-    method = "random_flip"
+    method = "random_shift"
     train_data_path = "./data/train.p"
     valid_data_path = "./data/valid.p"
     train_data = commons.read_pickle(train_data_path)
@@ -143,7 +152,9 @@ if __name__ == "__main__":
 
             idx = np.random.randint(0, len(train_features))
             feature = train_features[idx]
-            out = preprocess_test(feature, method=method)
+            feature_in = tf.constant(feature, dtype=tf.float32)
+            print(type(feature_in))
+            out = preprocess_test(feature_in, method=method)
             preprocessed_data = out.numpy()
 
             out_data = np.column_stack(

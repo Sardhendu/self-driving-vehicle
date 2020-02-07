@@ -6,21 +6,9 @@ from typing import Callable, Dict, Any
 
 from src import  commons
 from src.traffic_sign_classifier.params import params
-from src.traffic_sign_classifier.utils import PolyDecaySchedular, SummaryCallback
+from src.traffic_sign_classifier.utils import PolyDecaySchedular, SummaryCallback, preprocess
 
 strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
-
-train_data_path = "./data/train.p"
-valid_data_path = "./data/valid.p"
-
-
-def preprocess(features: tf.Tensor, labels: tf.Tensor, num_classes: tf.Tensor, mode: str):
-    features /= 255
-    labels = tf.one_hot(labels, depth=num_classes[0])
-    
-    if mode == "train":
-        features = tf.keras.preprocessing.image.random_brightness(features, brightness_range=())
-    return tf.cast(features, dtype=tf.float32), tf.cast(labels, dtype=tf.float32)
 
 
 def dataset_pipeline(images, labels, input_fn, params, mode="train"):
@@ -197,6 +185,8 @@ def train_eval(
 
 
 if __name__ == "__main__":
+    train_data_path = "./data/train.p"
+    valid_data_path = "./data/valid.p"
     train_data = commons.read_pickle(train_data_path)
     eval_data = commons.read_pickle(valid_data_path)
     

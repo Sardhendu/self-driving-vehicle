@@ -8,11 +8,12 @@ from typing import Callable, Dict, Any
 
 from src import commons
 from src.traffic_sign_classifier.params import params
-from src.traffic_sign_classifier.utils import PolyDecaySchedular, SummaryCallback, preprocess
+from src.traffic_sign_classifier.utils import SummaryCallback, preprocess
+from src.traffic_sign_classifier import learning_rate
 
 strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
 
-@tf.py_function
+
 def dataset_pipeline(images, labels, input_fn, params, mode="train"):
     num_classes = tf.constant(
             np.repeat(params["num_classes"], len(images)).astype(np.int32), dtype=tf.int32
@@ -21,6 +22,7 @@ def dataset_pipeline(images, labels, input_fn, params, mode="train"):
     shuffle_buffer_size = np.int32(images.shape[0])
     with tf.name_scope("input_pipeline"):
         data_pipeline = tf.data.Dataset.from_tensor_slices((images, labels, num_classes))
+        
         # We should map the data set first before making batches
         data_pipeline = data_pipeline.map(input_fn, num_parallel_calls=2)
         if mode == "train":
@@ -136,9 +138,11 @@ def train_eval(
         params: Dict
 ):
 
-    optimizer_ = tf.keras.optimizers.SGD(
-            learning_rate=learning_rate_schedular, momentum=params["optimizer_learning_momentum"]
-    )
+    # optimizer_ = tf.keras.optimizers.SGD(
+    #         learning_rate=learning_rate_schedular, momentum=params["optimizer_learning_momentum"]
+    # )
+
+    optimizer_ = tf.keras.optimizers.Adam(learning_rate=learning_rate_schedular)
 
     def step_fn(feature, target):
         """
@@ -159,10 +163,11 @@ def train_eval(
     start = time.time()
     while global_step < (params["train_steps"]*params["epochs"]):
         feature, target = next(dataset_iterator)
+        
         loss_vals = strategy.experimental_run_v2(step_fn, args=(feature, target))
         train_loss.update_state([loss_vals])
 
-        if ((global_step + 1) % params["save_summary_steps"]) == 0:
+        if ((global_step + 1) % params["save_summary_steps"]) == 0 or global_step==1:
             end = time.time()
             avg_train_loss = tf.divide(train_loss.result(), params["save_summary_steps"])
             train_summary_writer.scalar("loss", avg_train_loss, global_step)
@@ -203,15 +208,8 @@ if __name__ == "__main__":
     eval_dataset_ = dataset_pipeline(eval_features, eval_labels, eval_preprocess, params, mode="eval")
     model_fn_ = LeNet(num_classes=43)
     loss_fn_ = loss()
-    lr_schedular_fn = PolyDecaySchedular(
-        learning_rate=params["poly_decay_schedular"]["learning_rate"],
-        total_steps=params["train_steps"],
-        learning_power=params["poly_decay_schedular"]["learning_power"],
-        minimum_learning_rate=params["poly_decay_schedular"]["learning_rate_min"],
-        end_learning_rate=params["poly_decay_schedular"]["end_learning_rate"],
-        save_summary_steps=params["save_summary_steps"],
-        train_summary_writer=train_summary_writer
-    )
+
+    lr_schedular_fn = learning_rate.poly_cosine_schedular(params, train_summary_writer)
     eval_callback = eval(eval_dataset_, model_fn_, loss_fn_, eval_summary_writer, params)
     train_eval(train_dataset_, model_fn_, loss_fn_, lr_schedular_fn, eval_callback, train_summary_writer, params)
 #

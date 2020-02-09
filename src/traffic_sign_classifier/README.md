@@ -30,8 +30,12 @@ This project implements the Le-Net architecture to classify Traffic Signs.
 
 ## Preprocessng/Image-Augmenation:
 
+Note: All the images below can be found in a pair. The left image indicates the actual image from the dataset and 
+the right image indicates the preprocessed version.
+
 1. ***Brightness and Contrast*** would take care of edge cases when the test image is not clear, say foggy weather,
  or darker image. etc
+ 
 ![Random-Brightness](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/random_brightness.png)
  
 ![Random-Contrast](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/random_contrast.png)
@@ -53,7 +57,7 @@ unknown cases.
  
 ![Random-Zoom](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/random_zoom.png)
 
-4. ***Scale***: 
+4. ***Scale***: We simply divide all the pxl values by 255.
 
 ## Model Architecture: Le-Net:
 Le-Net is a simple convolutional neural network architecture with two convolutional layers, each followed by 
@@ -67,16 +71,17 @@ We use Xavier initialization to initialize all the network weights.
 ## Train/Eval Process:
 The Training Process is very modular and broken into 5 major parts.
 
-   1. Dataset Pipeline:
+   1. **Dataset Pipeline**:
         - Here we create a tensorflow dataset pipeline that parses records, performs preprocessing on images and 
         outputs the feature and labels to the model
             - Batch Size = 256
             - Epoch = 35
             - Train Steps = 34799/256  (total_data/batch_size)
-   2. Model Pipeline
-        - Optimizer: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, however
+   2. **Model Pipeline**:
+        - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
+        however
          in our case we use Adam Optimizer since Adam is said to work bet in many scenarios. 
-        - Learning Rate Scheduler: We use a variation of cosine annealing and polynomial decay combined. The idea is 
+        - *Learning Rate Scheduler*: We use a variation of cosine annealing and polynomial decay combined. The idea is 
         to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
          then decay using cosine annealing. Below is a plot of the learning rate decay function  
    3. 

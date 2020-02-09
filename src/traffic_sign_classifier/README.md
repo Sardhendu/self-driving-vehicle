@@ -27,6 +27,19 @@ This project implements the Le-Net architecture to classify Traffic Signs.
 5. A simple way to start is to run the Jupyter Notebook [P1.ipynb](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/P1.ipynb)
 6. Abstracted Methods can be found at [tools.py](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/lane_lines/tools.py)
 
+### Dataset
+The dataset belong to the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset). The data set contains more that 50,000 labeled images and can be [downloaded](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/traffic-signs-data.zip) here. The dataset contain 43 different traffic signals and is prone to class imbalance. 
+
+Data size:
+
+   - Train Size: 34799
+   - Validation Size: 4410
+   - Test Size: 12630
+   
+Class Distribution
+ 
+![Class-Distribution-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/class_distribution_plot.png)
+
 
 ## Preprocessng/Image-Augmenation:
 
@@ -79,8 +92,7 @@ The Training Process is very modular and broken into 5 major parts.
             - Train Steps = 34799/256  (total_data/batch_size)
    2. **Model Pipeline**:
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
-        however
-         in our case we use Adam Optimizer since Adam is said to work bet in many scenarios. 
+        however in our case we choose Adam Optimizer since Adam is said to work bet in many scenarios. 
         - *Learning Rate Scheduler*: We use a variation of cosine annealing and polynomial decay combined. The idea is 
         to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
          then decay using cosine annealing. Below is a plot of the learning rate decay function  

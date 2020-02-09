@@ -120,4 +120,3 @@ class CheckpointCallback:
         
     def restore(self):
         self.ckpt.restore(self.ckpt_manager.latest_checkpoint)
-    

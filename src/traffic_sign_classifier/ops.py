@@ -1,86 +1,123 @@
+import numpy as np
+import tensorflow as tf
+from typing import Any
 
 
-def transform_matrix_offset_center(matrix, x, y):
-  o_x = float(x) / 2 + 0.5
-  o_y = float(y) / 2 + 0.5
-  offset_matrix = np.array([[1, 0, o_x], [0, 1, o_y], [0, 0, 1]])
-  reset_matrix = np.array([[1, 0, -o_x], [0, 1, -o_y], [0, 0, 1]])
-  transform_matrix = np.dot(np.dot(offset_matrix, matrix), reset_matrix)
-  return transform_matrix
+class PolyScaledCosineAnneling(tf.optimizers.schedules.LearningRateSchedule):
+    def __init__(
+            self,
+            learning_rate: int,
+            total_steps: int,
+            poly_power: int,
+            end_learning_rate: int,
+            save_summary_steps: int,
+            train_summary_writer: Any
+    ):
+        self.learning_rate = learning_rate
+        self.poly_power = poly_power
+        self.total_steps = total_steps
+        self.end_learning_rate = end_learning_rate
+        self.save_summary_steps = save_summary_steps
+        self.train_summary_writer = train_summary_writer
+    
+    def __call__(self, step):
+        # This is polynomial decay
+        # We do this to dynamically scale the cosine function and to adjust the learning_rate decay between (
+        # learning_rate,
+        # minimum_learning_rate)
+        decay_factor = tf.cast(1 - (0.5 * tf.pow(1 - (step / self.total_steps), self.poly_power)), dtype=tf.float32)
+        
+        nw_lr = (
+                self.learning_rate * decay_factor
+                * ((1 + self.end_learning_rate) + tf.cos(np.pi * tf.cast(step, dtype=tf.float32) / self.total_steps))
+        )
+        
+        if ((step +1) % self.save_summary_steps) == 0:
+            self.train_summary_writer.scalar("learning_rate", nw_lr, step)
+        return nw_lr
 
 
-def apply_transform(x,
-                    transform_matrix,
-                    channel_axis=0,
-                    fill_mode='nearest',
-                    cval=0.):
-  """Apply the image transformation specified by a matrix.
-  Arguments:
-      x: 2D numpy array, single image.
-      transform_matrix: Numpy array specifying the geometric transformation.
-      channel_axis: Index of axis for channels in the input tensor.
-      fill_mode: Points outside the boundaries of the input
-          are filled according to the given mode
-          (one of `{'constant', 'nearest', 'reflect', 'wrap'}`).
-      cval: Value used for points outside the boundaries
-          of the input if `mode='constant'`.
-  Returns:
-      The transformed version of the input.
-  """
-  x = np.rollaxis(x, channel_axis, 0)
-  final_affine_matrix = transform_matrix[:2, :2]
-  final_offset = transform_matrix[:2, 2]
-  channel_images = [
-      ndi.interpolation.affine_transform(
-          x_channel,
-          final_affine_matrix,
-          final_offset,
-          order=1,
-          mode=fill_mode,
-          cval=cval) for x_channel in x
-  ]
-  x = np.stack(channel_images, axis=0)
-  x = np.rollaxis(x, 0, channel_axis + 1)
-  return x
+class PolyDecayScheduler(tf.optimizers.schedules.LearningRateSchedule):
+    def __init__(
+            self,
+            learning_rate: int,
+            total_steps: int,
+            learning_power: int,
+            minimum_learning_rate: int,
+            end_learning_rate: int,
+            save_summary_steps: int,
+            train_summary_writer: Any
+    ):
+        self.learning_rate = learning_rate
+        self.minimum_learning_rate = minimum_learning_rate
+        self.total_steps = total_steps
+        self.learning_power = learning_power
+        self.end_learning_rate = end_learning_rate
+        self.train_summary_writer = train_summary_writer
+        self.save_summary_steps = save_summary_steps
+    
+    def __call__(self, step):
+        current_step = tf.minimum(step, self.total_steps)
+        lrate = tf.cast(
+                (self.learning_rate - self.end_learning_rate) * tf.pow(1 - ((current_step) / self.total_steps),
+                                                                       self.learning_power) + self.end_learning_rate,
+                dtype=tf.float32
+        )
+        nw_lr = tf.maximum(lrate, self.minimum_learning_rate)
+        
+        if ((step + 1) % self.save_summary_steps) == 0:
+            self.train_summary_writer.scalar("learning_rate", nw_lr, step)
+        return nw_lr
 
 
-def random_zoom(x,
-                zoom_range,
-                row_axis=1,
-                col_axis=2,
-                channel_axis=0,
-                fill_mode='nearest',
-                cval=0.):
-  """Performs a random spatial zoom of a Numpy image tensor.
-  Arguments:
-      x: Input tensor. Must be 3D.
-      zoom_range: Tuple of floats; zoom range for width and height.
-      row_axis: Index of axis for rows in the input tensor.
-      col_axis: Index of axis for columns in the input tensor.
-      channel_axis: Index of axis for channels in the input tensor.
-      fill_mode: Points outside the boundaries of the input
-          are filled according to the given mode
-          (one of `{'constant', 'nearest', 'reflect', 'wrap'}`).
-      cval: Value used for points outside the boundaries
-          of the input if `mode='constant'`.
-  Returns:
-      Zoomed Numpy image tensor.
-  Raises:
-      ValueError: if `zoom_range` isn't a tuple.
-  """
-  if len(zoom_range) != 2:
-    raise ValueError('`zoom_range` should be a tuple or list of two floats. '
-                     'Received arg: ', zoom_range)
-
-  if zoom_range[0] == 1 and zoom_range[1] == 1:
-    zx, zy = 1, 1
-  else:
-    zx, zy = np.random.uniform(zoom_range[0], zoom_range[1], 2)
-  zoom_matrix = np.array([[zx, 0, 0], [0, zy, 0], [0, 0, 1]])
-
-  h, w = x.shape[row_axis], x.shape[col_axis]
-  transform_matrix = transform_matrix_offset_center(zoom_matrix, h, w)
-  x = apply_transform(x, transform_matrix, channel_axis, fill_mode, cval)
-  return x
+def poly_decay_schedular(params, train_summary_writer):
+    return PolyDecayScheduler(
+            learning_rate=params["poly_decay_schedular"]["learning_rate"],
+            total_steps=params["train_steps"]*params["epochs"],
+            learning_power=params["poly_decay_schedular"]["learning_power"],
+            minimum_learning_rate=params["poly_decay_schedular"]["learning_rate_min"],
+            end_learning_rate=params["poly_decay_schedular"]["end_learning_rate"],
+            save_summary_steps=params["save_summary_steps"],
+            train_summary_writer=train_summary_writer
+        )
 
 
+def poly_cosine_schedular(params, train_summary_writer):
+    return PolyScaledCosineAnneling(
+            learning_rate=params["poly_cosine_schedular"]["learning_rate"],
+            total_steps=params["train_steps"]*params["epochs"],
+            poly_power=params["poly_cosine_schedular"]["poly_power"],
+            end_learning_rate=params["poly_cosine_schedular"]["end_learning_rate"],
+            save_summary_steps=params["save_summary_steps"],
+            train_summary_writer=train_summary_writer
+    )
+
+
+class SummaryCallback:
+    def __init__(self, model_dir, mode):
+        if mode == "train":
+            self.summary_writer = tf.summary.create_file_writer(f"{model_dir}/")
+        else:
+            self.summary_writer = tf.summary.create_file_writer(f"{model_dir}/eval")
+
+    def scalar(self, name, value, step):
+        with self.summary_writer.as_default():
+            tf.summary.scalar(name, value, tf.cast(step, tf.int64))
+            self.summary_writer.flush()
+
+
+class CheckpointCallback:
+    def __init__(self, model_dir, optimizer, model):
+        self.model_dir = model_dir
+        self.ckpt = tf.train.Checkpoint(optimizer=optimizer, net=model)
+        self.ckpt_manager = tf.train.CheckpointManager(
+                self.ckpt, model_dir, max_to_keep=3, keep_checkpoint_every_n_hours=3
+        )
+        
+    def save(self, step):
+        self.ckpt_manager.save(step)
+        print("Saved checkpoint for step {}: {}".format(int(step), self.model_dir))
+        
+    def restore(self):
+        self.ckpt.restore(self.ckpt_manager.latest_checkpoint)
+    

@@ -13,8 +13,8 @@ params = {
         "poly_power": 0.9,
         "end_learning_rate": 0.0001
     },
-    "optimizer_learning_momentum": 0.95,
-    "epochs": 20,
+    "optimizer_learning_momentum": 0.9,
+    "epochs": 35,
     "train_steps": int(34799/256),
     "eval_steps": 100,
     "eval_data_cnt": 17,
@@ -22,5 +22,4 @@ params = {
     "save_summary_steps": 100,
     "model_dir": "./data/model"
 }
-
 

@@ -16,6 +16,9 @@ pillow = "*"
 shapely = "*"
 moviepy = "*"
 scipy = "*"
+sklearn = "*"
+pandas = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.7"

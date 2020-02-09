@@ -13,7 +13,6 @@ strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
 
 def loss():
     def loss_(y_true: tf.Tensor, y_logits: tf.Tensor):
-        # print(f"y_true -> {y_true.shape}, y_logits -> {y_logits.shape} ")
         loss_val = tf.nn.softmax_cross_entropy_with_logits(
             labels=y_true,
             logits=y_logits,

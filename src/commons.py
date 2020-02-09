@@ -1,10 +1,12 @@
 import os
 import cv2
 import pickle
-import numpy as np
 import imageio
+import itertools
+import numpy as np
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
-
 from typing import Tuple, List
 from moviepy.editor import VideoFileClip
 
@@ -92,6 +94,24 @@ def graph_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, ticks_fontsize
         return fig
     
     return _subplots
+
+
+def plot_confusion_matrix(x, color_map='YlGnBu'):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 12))
+    sns.heatmap(x, cmap=color_map, annot=True, ax=ax, annot_kws={"fontsize":5})
+    ax.set_title("confusion_matrix", fontsize=20)
+
+    for item in (
+            [ax.title, ax.xaxis.label,
+             ax.yaxis.label] +
+            ax.get_xticklabels() + ax.get_yticklabels()
+    ):
+        item.set_fontsize(5)
+
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(45)
+
+    plt.show()
 
 
 def save_matplotlib(image_path, fig):

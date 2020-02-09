@@ -26,9 +26,11 @@ def dataset_pipeline(images, labels, input_fn, params, mode="train"):
 class LeNet(tf.Module):
     def __init__(self, num_classes):
         self.conv1 = layers.Conv2D(filters=6, kernel_size=(5, 5), strides=1, activation="relu")
+        self.bn1 = layers.BatchNormalization()
         self.pool1 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))
         
         self.conv2 = layers.Conv2D(filters=16, kernel_size=(5, 5), strides=1, activation="relu")
+        self.bn2 = layers.BatchNormalization()
         self.pool2 = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 2))
         
         self.flatten = layers.Flatten()
@@ -38,10 +40,12 @@ class LeNet(tf.Module):
     
     def __call__(self, features):
         out = self.conv1(features)
+        out = self.bn1(out)
         # print('out.shape: ', out.shape)
         out = self.pool1(out)
         # print('out.shape: ', out.shape)
         out = self.conv2(out)
+        out = self.bn2(out)
         # print('out.shape: ', out.shape)
         out = self.pool2(out)
         # print('out.shape: ', out.shape)

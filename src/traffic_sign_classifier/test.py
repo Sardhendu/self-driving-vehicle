@@ -1,12 +1,21 @@
 import time
+import numpy as np
 import tensorflow as tf
-from typing import Callable, Any, Dict
+from typing import Callable, Dict
+from sklearn import metrics
 
 from src import commons
 from src.traffic_sign_classifier import ops
 from src.traffic_sign_classifier.params import params
 from src.traffic_sign_classifier.model import LeNet, dataset_pipeline
 from src.traffic_sign_classifier.preprocess import preprocess
+
+
+def confusion_matrix(n_classes):
+    def _confusion_matrix(y_true, y_pred):
+        conf_mat = metrics.confusion_matrix(y_true, y_pred, labels=np.arange(n_classes), normalize="true")
+        return np.round(conf_mat, 2)
+    return _confusion_matrix
 
 
 def test(
@@ -34,9 +43,15 @@ def test(
     
     assert(len(all_labels) == len(all_preds))
     match = sum([1 for i, j in zip(all_labels, all_preds) if i == j])
+
+    confusion_m = confusion_matrix(n_classes=43)(all_labels, all_preds)
+    commons.plot_confusion_matrix(
+            confusion_m
+    )
     print("Accuracy: ", match/len(all_preds))
+    print("\n Confusion Matrix \n: ", print(confusion_m))
     
-    
+
 if __name__ == "__main__":
     test_data_path = "./data/test.p"
     test_data = commons.read_pickle(test_data_path)

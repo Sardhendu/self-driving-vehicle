@@ -20,6 +20,7 @@ params = {
     "eval_data_cnt": 17,
     "save_checkpoint": 1000,
     "save_summary_steps": 100,
-    "model_dir": "./data/model"
+    "model_dir": "./data/model",
+    "summary_dir": "./data/model/summary"
 }
 

@@ -2,7 +2,7 @@
 import tensorflow as tf
 import time
 from typing import Callable, Dict, Any
-
+import os
 from src import commons
 from src.traffic_sign_classifier import ops
 from src.traffic_sign_classifier.params import params
@@ -46,16 +46,20 @@ def eval(
 ):
     eval_loss = tf.keras.metrics.Sum("eval_loss", dtype=tf.float32)
     eval_acc = tf.keras.metrics.Accuracy("eval_accuracy", dtype=tf.float32)
-
+    eval_pr = ops.PrecisionRecall(params["num_classes"], threshold=None, summary_dir=params["summary_dir"])
+    
     def eval_(global_step):
         iterator_ = iter(eval_dataset)
         progbar = tf.keras.utils.Progbar(params["eval_data_cnt"])
         eval_loss.reset_states()
         eval_acc.reset_states()
+        eval_pr.reset_states()
+        
         it = 0
         while it < params["eval_data_cnt"]:
             eval_images, eval_target_one_hot = next(iterator_)
             eval_pred_logits = model_builder(eval_images)
+            eval_pred_probs = tf.nn.softmax(eval_pred_logits)
 
             loss_eval = loss_fn(eval_target_one_hot, eval_pred_logits)
             eval_loss.update_state(loss_eval)
@@ -63,12 +67,14 @@ def eval(
             labels = tf.argmax(eval_target_one_hot, axis=-1)
             preds = tf.argmax(eval_pred_logits, axis=-1)
             eval_acc.update_state(y_true=labels, y_pred=preds)
+            eval_pr.update_state(labels, eval_pred_probs)
 
             it += 1
             progbar.update(it)
         avg_eval_loss = tf.divide(eval_loss.result(), params["eval_data_cnt"])
-        eval_summary_writer.scalar("eval_loss", avg_eval_loss, global_step)
+        eval_summary_writer.scalar("loss", avg_eval_loss, global_step)
         eval_summary_writer.scalar("eval_accuracy", eval_acc.result(), global_step)
+        eval_pr.write_summary(global_step)
 
     return eval_
 
@@ -140,9 +146,9 @@ if __name__ == "__main__":
     eval_labels = eval_data["labels"]
     print(f"[Train]: features={train_features.shape}, labels={train_labels.shape}")
     print(f"[Train]: features={eval_features.shape}, labels={eval_labels.shape}")
-
-    train_summary_writer = ops.SummaryCallback(model_dir=params['model_dir'], mode="train")
-    eval_summary_writer = ops.SummaryCallback(model_dir=params['model_dir'], mode="eval")
+    
+    train_summary_writer = ops.SummaryCallback(summary_dir=os.path.join(params['summary_dir'], "train"))
+    eval_summary_writer = ops.SummaryCallback(summary_dir=os.path.join(params['summary_dir'], "eval"))
 
     train_preprocess = preprocess(mode="train")
     eval_preprocess = preprocess(mode="eval")

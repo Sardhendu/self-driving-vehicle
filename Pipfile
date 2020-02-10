@@ -19,6 +19,7 @@ scipy = "*"
 sklearn = "*"
 pandas = "*"
 seaborn = "*"
+tensorflow-addons = "*"
 
 [requires]
 python_version = "3.7"

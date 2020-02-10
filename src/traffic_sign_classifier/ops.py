@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import tensorflow as tf
 from typing import Any
@@ -94,12 +95,9 @@ def poly_cosine_schedular(params, train_summary_writer):
 
 
 class SummaryCallback:
-    def __init__(self, model_dir, mode):
-        if mode == "train":
-            self.summary_writer = tf.summary.create_file_writer(f"{model_dir}/")
-        else:
-            self.summary_writer = tf.summary.create_file_writer(f"{model_dir}/eval")
-
+    def __init__(self, summary_dir):
+         self.summary_writer = tf.summary.create_file_writer(f"{summary_dir}")
+         
     def scalar(self, name, value, step):
         with self.summary_writer.as_default():
             tf.summary.scalar(name, value, tf.cast(step, tf.int64))
@@ -120,3 +118,63 @@ class CheckpointCallback:
         
     def restore(self):
         self.ckpt.restore(self.ckpt_manager.latest_checkpoint)
+
+
+class PrecisionRecall:
+    def __init__(self, num_classes, threshold=None, summary_dir=None):
+        self.summary_dir = summary_dir
+        self.threshold = threshold
+        self.num_classes = num_classes
+
+        self.precision_dict = {}
+        self.recall_dict = {}
+        self.precision_summary_writer_dict = {}
+        self.recall_summary_writer_dict = {}
+        for class_num in range(0, num_classes):
+            self.precision_dict[class_num] = tf.keras.metrics.Precision()
+            self.recall_dict[class_num] = tf.keras.metrics.Recall()
+            
+            if summary_dir is not None:
+                self.precision_summary_writer_dict[class_num] = SummaryCallback(
+                        os.path.join(summary_dir, "precision", str(class_num))
+                )
+                self.recall_summary_writer_dict[class_num] = SummaryCallback(
+                        os.path.join(summary_dir, "recall", str(class_num))
+                )
+            
+    def reset_states(self):
+        for class_num in range(0, self.num_classes):
+            self.precision_dict[class_num].reset_states()
+            self.recall_dict[class_num].reset_states()
+    
+    def update_state(self, y_true: tf.Tensor, y_pred_prob: tf.Tensor):
+        """
+        :param y_true:          [batch_size]
+        :param y_pred_prob:     [batch_size, num_classes]
+        :return:
+        """
+        if self.threshold is None:
+            y_pred = tf.argmax(y_pred_prob, axis=-1)
+        for class_num in range(self.num_classes):
+            a = tf.where(y_true == class_num, 1, 0)
+            b = tf.where(y_pred == class_num, 1, 0)
+            
+            self.precision_dict[class_num].update_state(a, b)
+            self.recall_dict[class_num].update_state(a, b)
+    
+    def result(self):
+        precision = []
+        recall = []
+        for class_num in range(0, self.num_classes):
+            precision += [self.precision_dict[class_num].result()]
+            recall += [self.recall_dict[class_num].result()]
+        return precision, recall
+    
+    def write_summary(self, step):
+        for class_num in range(0, self.num_classes):
+            self.precision_summary_writer_dict[class_num].scalar(
+                    "precision", self.precision_dict[class_num].result(), step
+            )
+            self.recall_summary_writer_dict[class_num].scalar(
+                    "recall", self.recall_dict[class_num].result(), step
+            )

@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 from typing import Callable, Dict
 from sklearn import metrics
+from sklearn.metrics import roc_curve
 
 from src import commons
 from src.traffic_sign_classifier import ops
@@ -17,7 +18,7 @@ def confusion_matrix(n_classes):
         return np.round(conf_mat, 2)
     return _confusion_matrix
 
-
+    
 def test(
         dataset_: Callable,
         model_builder: Callable,
@@ -25,6 +26,9 @@ def test(
 ):
     optimizer_ = tf.keras.optimizers.Adam(0.1)
     checkpoints = ops.CheckpointCallback(model_dir=params["model_dir"], optimizer=optimizer_, model=model_builder)
+    accuracy = tf.keras.metrics.Accuracy(name="test_accuracy", dtype=tf.float32)
+    auc = tf.keras.metrics.AUC(name="test_auc", dtype=tf.float32)
+    pr = ops.PrecisionRecall(params["num_classes"], threshold=None)
     checkpoints.restore()
     dataset_iterator = iter(dataset_)
     
@@ -36,20 +40,31 @@ def test(
         pred_logits = model_builder(feature)
         pred_prob = tf.nn.softmax(pred_logits)
 
-        labels = tf.argmax(target, axis=-1).numpy()
-        preds = tf.argmax(pred_prob, axis=-1).numpy()
-        all_labels += list(labels)
-        all_preds += list(preds)
+        labels = tf.argmax(target, axis=-1)
+        preds = tf.argmax(pred_prob, axis=-1)
+
+        labels_idx = tf.stack([
+            tf.cast(tf.range(tf.shape(feature)[0]), dtype=tf.int64), tf.cast(labels, dtype=tf.int64)
+        ], axis=1)
+        
+        class_pred_prob = tf.gather_nd(pred_prob, labels_idx)
+        accuracy.update_state(labels, preds)
+        auc.update_state(labels, class_pred_prob)
+        pr.update_state(labels, pred_prob)
+        
+        all_labels += list(labels.numpy())
+        all_preds += list(preds.numpy())
     
     assert(len(all_labels) == len(all_preds))
     match = sum([1 for i, j in zip(all_labels, all_preds) if i == j])
 
     confusion_m = confusion_matrix(n_classes=43)(all_labels, all_preds)
-    commons.plot_confusion_matrix(
-            confusion_m
-    )
+    commons.plot_confusion_matrix(confusion_m)
     print("Accuracy: ", match/len(all_preds))
     print("\n Confusion Matrix \n: ", print(confusion_m))
+    print(accuracy.result())
+    print(auc.result())
+    print(pr.result())
     
 
 if __name__ == "__main__":

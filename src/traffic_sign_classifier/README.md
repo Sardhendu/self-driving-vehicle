@@ -89,7 +89,7 @@ The Training Process is very modular and broken into 5 major parts.
         outputs the feature and labels to the model
             - Batch Size = 256
             - Epoch = 35
-            - Train Steps = 34799/256  (total_data/batch_size)
+            - Train Steps = 34799/256  (total_training_data/batch_size)
    2. **Model Pipeline**:
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
         however in our case we choose Adam Optimizer since Adam is said to work bet in many scenarios. 

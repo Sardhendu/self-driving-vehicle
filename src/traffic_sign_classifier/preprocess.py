@@ -1,4 +1,4 @@
-import numpy as np
+
 import tensorflow as tf
 from typing import Tuple
 
@@ -138,7 +138,7 @@ def affine_transform(
             name=None
     )
     return transformed_image
-\
+
 
 def preprocess(mode: str):
     # def preprocess_(features: tf.Tensor, labels: tf.Tensor, num_classes: tf.Tensor):

@@ -19,6 +19,7 @@ def loss():
             name=None
         )
         loss_val = tf.reduce_mean(loss_val)
+        
         return loss_val
     return loss_
 
@@ -30,11 +31,28 @@ def grad(images: tf.Tensor, target_one_hot: tf.Tensor, model_builder: Callable, 
 
         train_vars = model_builder.trainable_variables
 
-        # TODO: Try weights decay for all the weights
-        gradients = tape.gradient(loss_val, train_vars)
+        # ----------------------------------------------------------------------
+        # Weight Decay
+        # ----------------------------------------------------------------------
+        with tf.name_scope("weight_deacy"):
+            reg_loss_val = params["weight_deacay"] * tf.add_n(
+                    [
+                        tf.nn.l2_loss(v)
+                        for v in train_vars
+                        if "beta" not in v.name and "gamma" not in v.name
+                    ]
+            )
+            
+        total_loss = tf.add(loss_val, reg_loss_val, name="total_loss")
+
+        gradients = tape.gradient(total_loss, train_vars)
 
         # TODO: Try gradient Norm
-        return loss_val, zip(gradients, train_vars)
+        return {
+                   "loss": loss_val,
+                   "reg_loss": reg_loss_val,
+                   "total_loss": total_loss
+               }, zip(gradients, train_vars)
 
 
 def eval(
@@ -72,7 +90,7 @@ def eval(
             it += 1
             progbar.update(it)
         avg_eval_loss = tf.divide(eval_loss.result(), params["eval_data_cnt"])
-        eval_summary_writer.scalar("loss", avg_eval_loss, global_step)
+        eval_summary_writer.scalar("loss/loss", avg_eval_loss, global_step)
         eval_summary_writer.scalar("eval_accuracy", eval_acc.result(), global_step)
         eval_pr.write_summary(global_step)
 
@@ -98,26 +116,34 @@ def train_eval(
         :return:
             loss_vals = [batch_size,]
         """
-        loss_val, grad_vars = grad(feature, target, model_builder, loss_fn)
+        loss_dict, grad_vars = grad(feature, target, model_builder, loss_fn)
         optimizer_.apply_gradients(grad_vars)
-        return loss_val
+        return loss_dict
 
     global_step = optimizer_.iterations.numpy()
     dataset_iterator = iter(dataset_)
     progbar = tf.keras.utils.Progbar(params["train_steps"]*params["epochs"])
     train_loss = tf.keras.metrics.Sum("train_loss", dtype=tf.float32)
+    reg_loss = tf.keras.metrics.Sum("reg_loss", dtype=tf.float32)
+    total_loss = tf.keras.metrics.Sum("total_loss", dtype=tf.float32)
 
     start = time.time()
     while global_step < (params["train_steps"]*params["epochs"]):
         feature, target = next(dataset_iterator)
         
-        loss_vals = strategy.experimental_run_v2(step_fn, args=(feature, target))
-        train_loss.update_state([loss_vals])
+        loss_dict = strategy.experimental_run_v2(step_fn, args=(feature, target))
+        train_loss.update_state([loss_dict["loss"]])
+        reg_loss.update_state([loss_dict["reg_loss"]])
+        total_loss.update_state([loss_dict["total_loss"]])
 
         if ((global_step + 1) % params["save_summary_steps"]) == 0 or global_step == 1:
             end = time.time()
             avg_train_loss = tf.divide(train_loss.result(), params["save_summary_steps"])
-            train_summary_writer.scalar("loss", avg_train_loss, global_step)
+            avg_reg_loss = tf.divide(reg_loss.result(), params["save_summary_steps"])
+            avg_total_loss = tf.divide(total_loss.result(), params["save_summary_steps"])
+            train_summary_writer.scalar("loss/loss", avg_train_loss, global_step)
+            train_summary_writer.scalar("loss/reg_loss", avg_reg_loss, global_step)
+            train_summary_writer.scalar("loss/total_loss", avg_total_loss, global_step)
             train_loss.reset_states()
             steps_per_second = params["save_summary_steps"] / (end - start)
             train_summary_writer.scalar(

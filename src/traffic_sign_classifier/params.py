@@ -2,6 +2,7 @@
 params = {
     "num_classes": 43,
     "batch_size": 256,
+    "weight_deacay": 0.001,
     "poly_decay_schedular": {
         "learning_rate": 0.01,
         "learning_power": 0.9,
@@ -10,13 +11,13 @@ params = {
     },
     "poly_cosine_schedular": {
         "learning_rate": 0.01,
-        "poly_power": 0.9,
+        "poly_power": 0.95,
         "end_learning_rate": 0.0001
     },
     "optimizer_learning_momentum": 0.9,
-    "epochs": 35,
+    "epochs": 100,
     "train_steps": int(34799/256),
-    "eval_steps": 100,
+    "eval_steps": 200,
     "eval_data_cnt": 17,
     "save_checkpoint": 1000,
     "save_summary_steps": 100,

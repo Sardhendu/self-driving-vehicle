@@ -6,7 +6,7 @@ import os
 from src import commons
 from src.traffic_sign_classifier import ops
 from src.traffic_sign_classifier.params import params
-from src.traffic_sign_classifier.preprocess import preprocess
+from src.traffic_sign_classifier.preprocess.augment import preprocess
 from src.traffic_sign_classifier.model import dataset_pipeline, LeNet
 strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
 

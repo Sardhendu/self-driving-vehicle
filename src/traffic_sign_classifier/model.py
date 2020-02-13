@@ -40,12 +40,12 @@ class LeNet(tf.Module):
     
     def __call__(self, features):
         out = self.conv1(features)
-        out = self.bn1(out)
+        # out = self.bn1(out)
         # print('out.shape: ', out.shape)
         out = self.pool1(out)
         # print('out.shape: ', out.shape)
         out = self.conv2(out)
-        out = self.bn2(out)
+        # out = self.bn2(out)
         # print('out.shape: ', out.shape)
         out = self.pool2(out)
         # print('out.shape: ', out.shape)

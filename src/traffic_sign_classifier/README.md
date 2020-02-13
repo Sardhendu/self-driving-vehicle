@@ -14,7 +14,7 @@ This project implements the Le-Net architecture to classify Traffic Signs.
     - ROI Curve
     - Confidence Matrix
     - Top-5 Prediction output
-  * Challanges and Improvements
+  * Challenges and Improvements
 
 ### Final Metric
 
@@ -66,11 +66,27 @@ unknown cases.
  
 ![Random-Saturation](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/random_saturation.png)
 
-3. ***Zoom***: Zoom is a good feature to handle taffic sign at different scales. 
+4. ***Zoom***: Zoom is a good feature to handle taffic sign at different scales. 
  
 ![Random-Zoom](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/random_zoom.png)
 
-4. ***Scale***: We simply divide all the pxl values by 255.
+5. ***Affine Transform***: Affine Transform is governed by three transformation 
+   * 1) *Translation (tx, ty)*: Governs the horizontal and vertical shifts
+   * 2) *Rotation (angle)*: How much the image rotates along the axis
+   * 3) *Scale (s)*: Increase/Shrink the image size
+   
+   Since we develop a custom affine transform function (Tensorflow currently doesn't have one and keras ops are not 
+   supported inside tensorflow dataset pipeline), the output of the image may be a little weird. Cutting to the 
+   chase, we create a homogeous transform matrix using linear combination of each transform matrix and multiply it to
+    all our all out pixels values in the image.
+    
+![Random-WarpAffine](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/warp_affine.png)
+
+6. ***Random Shift*** Random shift is simply the Translation (tx, ty). 
+
+![Random-Shift](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/random_shift.png)
+
+7. ***Scale***: We simply divide all the pxl values by 255.
 
 ## Model Architecture: Le-Net:
 Le-Net is a simple convolutional neural network architecture with two convolutional layers, each followed by 

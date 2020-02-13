@@ -2,7 +2,7 @@
 params = {
     "num_classes": 43,
     "batch_size": 256,
-    "weight_deacay": 0.001,
+    "weight_deacay": 0.0001,
     "poly_decay_schedular": {
         "learning_rate": 0.01,
         "learning_power": 0.9,
@@ -11,7 +11,7 @@ params = {
     },
     "poly_cosine_schedular": {
         "learning_rate": 0.01,
-        "poly_power": 0.95,
+        "poly_power": 0.9,
         "end_learning_rate": 0.0001
     },
     "optimizer_learning_momentum": 0.9,

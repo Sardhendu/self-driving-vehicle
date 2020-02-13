@@ -55,7 +55,6 @@ def preprocess_test(features, method):
                 offset_xy=(np.random.uniform(-0.3, 0.3), np.random.uniform(-0.3, 0.3))
         )
         features *= 255
-        print(features)
         
     return tf.cast(features, dtype=tf.uint8)
 
@@ -67,7 +66,7 @@ if __name__ == "__main__":
     
     np.random.seed(365)
     
-    method = "random_shift"
+    method = "random_zoom"
     train_data_path = "../data/train.p"
     valid_data_path = "../data/valid.p"
     train_data = commons.read_pickle(train_data_path)

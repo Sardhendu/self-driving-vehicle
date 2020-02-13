@@ -10,12 +10,12 @@ params = {
         "end_learning_rate": 0
     },
     "poly_cosine_schedular": {
-        "learning_rate": 0.01,
-        "poly_power": 0.9,
-        "end_learning_rate": 0.0001
+        "learning_rate": 0.001,
+        "poly_power": 0.95,
+        "end_learning_rate": 0.000001
     },
     "optimizer_learning_momentum": 0.9,
-    "epochs": 100,
+    "epochs": 200,
     "train_steps": int(34799/256),
     "eval_steps": 200,
     "eval_data_cnt": 17,

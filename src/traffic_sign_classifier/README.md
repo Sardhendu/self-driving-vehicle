@@ -104,7 +104,7 @@ The Training Process is very modular and broken into 5 major parts.
         - Here we create a tensorflow dataset pipeline that parses records, performs preprocessing on images and 
         outputs the feature and labels to the model
             - Batch Size = 256
-            - Epoch = 35
+            - Epoch = 100
             - Train Steps = 34799/256  (total_training_data/batch_size)
    2. **Model Pipeline**:
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
@@ -112,4 +112,7 @@ The Training Process is very modular and broken into 5 major parts.
         - *Learning Rate Scheduler*: We use a variation of cosine annealing and polynomial decay combined. The idea is 
         to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
          then decay using cosine annealing. Below is a plot of the learning rate decay function  
-   3. 
+         - *Weight Decay*: We use weight decay to control overfiting. Additionally, augmentation in the dataset also 
+         prevents the model to overfit.
+
+## Eval/Test Metric:

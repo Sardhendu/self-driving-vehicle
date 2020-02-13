@@ -50,30 +50,30 @@ def preprocess(mode: str):
                 choice = tf.random.uniform(shape=[7], minval=0., maxval=1., dtype=tf.float32)
                 
                 x = tf.cond(
-                        choice[0] < 0.25, lambda: x, lambda: tf.image.random_brightness(x, max_delta=0.4)
+                        choice[0] < 0.2, lambda: x, lambda: tf.image.random_brightness(x, max_delta=0.4)
                 )
                 x = tf.cond(
-                        choice[1] < 0.25, lambda: x, lambda: tf.image.random_contrast(x, 0.6, 1.6)
+                        choice[1] < 0.2, lambda: x, lambda: tf.image.random_contrast(x, 0.6, 1.6)
                 )
                 # x = tf.cond(
                 #         choice[2] < 0.5, lambda: x, lambda: tf.image.random_hue(x, 0.03)
                 # )
                 x = tf.cond(
-                        choice[3] < 0.25, lambda: x, lambda: tf.image.random_saturation(x, 0.4, 1.6)
+                        choice[3] < 0.2, lambda: x, lambda: tf.image.random_saturation(x, 0.4, 1.6)
                 )
                 x = tf.cond(
-                        choice[4] < 0.25, lambda: x, lambda: tf_random_zoom(x)
+                        choice[4] < 0.2, lambda: x, lambda: tf_random_zoom(x)
                 )
 
                 x = tf.cond(
-                        choice[5] < 0.25, lambda: x, lambda: tf_warp_affine(
+                        choice[5] < 0.2, lambda: x, lambda: tf_warp_affine(
                             image=x,
                             translation_xy=(np.random.randint(0, 20), np.random.randint(0, 20)),
                             rotation=np.random.randint(-20, 20), scale=1.0
                 ))
                     
                 x = tf.cond(
-                        choice[6] < 0.25, lambda: x, lambda: tf_shift_image(
+                        choice[6] < 0.2, lambda: x, lambda: tf_shift_image(
                             image=features,
                             offset_xy=(np.random.uniform(-0.4, 0.4), np.random.uniform(-0.4, 0.4))
                     )
@@ -85,7 +85,7 @@ def preprocess(mode: str):
             # Only Perform preprocessing
             features /= 255
             choice = tf.random.uniform(shape=[], minval=0., maxval=1., dtype=tf.float32)
-            features = tf.cond(choice < 0.4, lambda: features, lambda: train_pp_(features))
+            features = tf.cond(choice < 0.5, lambda: features, lambda: train_pp_(features))
         else:
             features /= 255
         return tf.cast(features, dtype=tf.float32), tf.cast(labels, dtype=tf.float32)

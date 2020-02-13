@@ -9,7 +9,7 @@ from src import commons
 from src.traffic_sign_classifier import ops
 from src.traffic_sign_classifier.params import params
 from src.traffic_sign_classifier.model import LeNet, dataset_pipeline
-from src.traffic_sign_classifier.preprocess import preprocess
+from src.traffic_sign_classifier.preprocess.augment import preprocess
 
 
 def confusion_matrix(n_classes):

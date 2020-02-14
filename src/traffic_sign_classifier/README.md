@@ -118,12 +118,11 @@ The Training Process is very modular and broken into 5 major parts.
 
 ## Eval/Test Metric:
    * Eval Accuracy: 95.4%
-   * Test Accuracy: 94.7
+   * Test Accuracy: 94.7%
    * We observe that we have a high class imbalance, hence accuracy may not be a good measure of metric, rather we 
    can use precision recall. Below are the plots for accuracy, precision and recall
    
-![Accuracy](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images
-/learning_rate.png)
+![Accuracy](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/accuracy.png)
 
 ![Precision-Per-Class](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/precision.png)
 

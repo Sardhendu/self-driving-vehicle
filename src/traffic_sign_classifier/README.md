@@ -37,7 +37,7 @@ Data size:
    
 Class Distribution
  
-![Class-Distribution-Plot](https://githu..com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/class_distribution.png)
+![Class-Distribution-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/class_distribution.png)
 
 
 ## Preprocessng/Image-Augmenation:

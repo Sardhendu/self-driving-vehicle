@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 from typing import Callable, Dict
 from sklearn import metrics
-from sklearn.metrics import roc_curve
 
 from src import commons
 from src.traffic_sign_classifier import ops

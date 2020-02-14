@@ -109,23 +109,27 @@ The Training Process is very modular and broken into 5 major parts.
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
         however in our case we choose Adam Optimizer since Adam is said to work bet in many scenarios.
         ![Loss](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/loss.png) 
-        - *Learning Rate Scheduler*: We use a variation of cosine annealing and polynomial decay combined. The idea is 
+        - *Learning Rate Scheduler*: We test with polynomial decay and with a variation of cosine annealing and 
+        polynomial decay combined. The idea is to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
+         then decay using cosine annealing. Both the decay gives relative performance, for our final model we choose 
+         polynomial decay. Below is the plot showcasing that.
         ![Learningrate-Schedular](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/learning_rate.png)
-        to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
-         then decay using cosine annealing. Below is a plot of the learning rate decay function  
+         
          - *Weight Decay*: We use weight decay to control overfiting. Additionally, augmentation in the dataset also 
          prevents the model to overfit.
 
 ## Eval/Test Metric:
-   * Eval Accuracy: 95.4%
-   * Test Accuracy: 94.7%
+   * Eval Accuracy: 96.6%
+   * Test Accuracy: 95.2%
    * We observe that we have a high class imbalance, hence accuracy may not be a good measure of metric, rather we 
    can use precision recall. Below are the plots for accuracy, precision and recall
    
+   * Validation Metric:
 ![Accuracy](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/accuracy.png)
 
 ![Precision-Per-Class](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/precision.png)
 
 ![Recall-Per-Class](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/recall.png)
 
+   * Test Confidence Matrix: 
 ![Confidence-Matrix](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/confidence-matrix.png)

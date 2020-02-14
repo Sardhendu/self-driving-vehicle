@@ -183,7 +183,8 @@ if __name__ == "__main__":
     model_fn_ = LeNet(num_classes=43)
     loss_fn_ = loss()
 
-    lr_schedular_fn = ops.poly_cosine_schedular(params, train_summary_writer)
+    # lr_schedular_fn = ops.poly_cosine_schedular(params, train_summary_writer)
+    lr_schedular_fn = ops.poly_decay_schedular(params, train_summary_writer)
     eval_callback = eval(eval_dataset_, model_fn_, loss_fn_, eval_summary_writer, params)
     train_eval(train_dataset_, model_fn_, loss_fn_, lr_schedular_fn, eval_callback, train_summary_writer, params)
 

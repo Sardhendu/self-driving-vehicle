@@ -11,7 +11,6 @@ This project implements the Le-Net architecture to classify Traffic Signs.
     - Optimizer
   * Eval/Test Metric
     - Accuracy
-    - ROI Curve
     - Confidence Matrix
     - Top-5 Prediction output
   * Challenges and Improvements
@@ -38,7 +37,7 @@ Data size:
    
 Class Distribution
  
-![Class-Distribution-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/class_distribution_plot.png)
+![Class-Distribution-Plot](https://githu..com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/class_distribution.png)
 
 
 ## Preprocessng/Image-Augmenation:
@@ -108,11 +107,26 @@ The Training Process is very modular and broken into 5 major parts.
             - Train Steps = 34799/256  (total_training_data/batch_size)
    2. **Model Pipeline**:
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
-        however in our case we choose Adam Optimizer since Adam is said to work bet in many scenarios. 
+        however in our case we choose Adam Optimizer since Adam is said to work bet in many scenarios.
+        ![Loss](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/loss.png) 
         - *Learning Rate Scheduler*: We use a variation of cosine annealing and polynomial decay combined. The idea is 
+        ![Learningrate-Schedular](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/learning_rate.png)
         to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
          then decay using cosine annealing. Below is a plot of the learning rate decay function  
          - *Weight Decay*: We use weight decay to control overfiting. Additionally, augmentation in the dataset also 
          prevents the model to overfit.
 
 ## Eval/Test Metric:
+   * Eval Accuracy: 95.4%
+   * Test Accuracy: 94.7
+   * We observe that we have a high class imbalance, hence accuracy may not be a good measure of metric, rather we 
+   can use precision recall. Below are the plots for accuracy, precision and recall
+   
+![Accuracy](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images
+/learning_rate.png)
+
+![Precision-Per-Class](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/precision.png)
+
+![Recall-Per-Class](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/recall.png)
+
+![Confidence-Matrix](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/confidence-matrix.png)

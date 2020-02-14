@@ -108,12 +108,14 @@ The Training Process is very modular and broken into 5 major parts.
    2. **Model Pipeline**:
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 
         however in our case we choose Adam Optimizer since Adam is said to work bet in many scenarios.
+        
         ![Loss](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/loss.png) 
         
         - *Learning Rate Scheduler*: We test with polynomial decay and with a variation of cosine annealing and 
         polynomial decay combined. The idea is to bump up the learning rate in the 1st few thousand steps so that model learns the most from the dataset and
          then decay using cosine annealing. Both the decay gives relative performance, for our final model we choose 
          polynomial decay. Below is the plot showcasing that.
+        
         ![Learningrate-Schedular](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/learning_rate.png)
          
          - *Weight Decay*: We use weight decay to control overfiting. Additionally, augmentation in the dataset also 

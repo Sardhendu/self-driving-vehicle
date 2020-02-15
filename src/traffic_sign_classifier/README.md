@@ -103,7 +103,7 @@ The Training Process is very modular and broken into 5 major parts.
         - Here we create a tensorflow dataset pipeline that parses records, performs preprocessing on images and 
         outputs the feature and labels to the model
             - Batch Size = 256
-            - Epoch = 100
+            - Epoch = 300
             - Train Steps = 34799/256  (total_training_data/batch_size)
    2. **Model Pipeline**:
         - *Optimizer*: Since we use a relatively large batch size of 256 a good optimizer to use would be Adagrad, 

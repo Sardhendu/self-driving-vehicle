@@ -38,7 +38,9 @@ def preprocess(mode: str):
     tf_random_zoom = random_zoom(min_val=0.7)
     
     def preprocess_(features, labels, num_classes):
-        labels = tf.one_hot(labels, depth=num_classes)
+        if mode != "predict":
+            labels = tf.one_hot(labels, depth=num_classes)
+            
         features = tf.cast(features, dtype=tf.float32)
         
         if mode == "train":
@@ -88,7 +90,7 @@ def preprocess(mode: str):
             features = tf.cond(choice < 0.5, lambda: features, lambda: train_pp_(features))
         else:
             features /= 255
-        return tf.cast(features, dtype=tf.float32), tf.cast(labels, dtype=tf.float32)
+        return tf.cast(features, dtype=tf.float32), tf.cast(labels, dtype=tf.float32) if mode != "predict" else None
     
     return preprocess_
 

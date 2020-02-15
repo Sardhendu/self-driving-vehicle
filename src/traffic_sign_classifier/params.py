@@ -1,5 +1,7 @@
 
 params = {
+    "img_height": 32,
+    "img_width": 32,
     "num_classes": 43,
     "batch_size": 256,
     "weight_deacay": 0.0001,

@@ -117,6 +117,7 @@ class CheckpointCallback:
         print("Saved checkpoint for step {}: {}".format(int(step), self.model_dir))
         
     def restore(self):
+        print('REstoring Checkpoint from: ', self.ckpt_manager.latest_checkpoint)
         self.ckpt.restore(self.ckpt_manager.latest_checkpoint)
 
 

@@ -145,10 +145,10 @@ The Training Process is very modular and broken into 5 major parts.
 
 1. ***Right Turn***: This image is self explanatory, the image says right turn and the model says  
 ```
-    Running for path: ...... ./predict_images/right_turn.jpeg
-    Pred Labels:  [33 37 39]
-    Pred Classes  ['Turn right ahead', 'Go straight or left', 'Keep left']
-    Pred Scores:  [1. 0. 0.]
+Running for path: ...... ./predict_images/right_turn.jpeg
+Pred Labels:  [33 37 39  5 40]
+Pred Classes  ['Turn right ahead', 'Go straight or left', 'Keep left', 'Speed limit (80km/h)', 'Roundabout mandatory']
+Pred Scores:  [1. 0. 0. 0. 0.]
 ```
   
 2. ***Right Turn with yield*** I like this one because this image contain two signs. The model surprisingly output 
@@ -163,20 +163,20 @@ this information one
  independently to output **Dangerous curve to the right** which kinda has both the feature.   
  
 ```
-    Running for path: ...... ./predict_images/right_turn_yield.jpeg
-    Pred Labels:  [20  2 23]
-    Pred Classes  ['Dangerous curve to the right', 'Speed limit (50km/h)', 'Slippery road']
-    Pred Scores:  [0.52 0.29 0.08]
+Running for path: ...... ./predict_images/right_turn_yeild.jpeg
+Pred Labels:  [20  2 23 25  3]
+Pred Classes  ['Dangerous curve to the right', 'Speed limit (50km/h)', 'Slippery road', 'Road work', 'Speed limit (60km/h)']
+Pred Scores:  [0.516 0.29  0.078 0.038 0.021]
 ```
  
 3. ***Padestrian (Childern's crossing)*** Well I downloaded this images thinking of padestrians. After teh model 
 output convinced me more. The output makes sense given the image
 
 ```
-    Running for path: ...... ./predict_images/padestrian_2.jpeg
-    Pred Labels:  [28 11 23]
-    Pred Classes  ['Children crossing', 'Right-of-way at the next intersection', 'Slippery road']
-    Pred Scores:  [0.95 0.05 0.  ]
+Running for path: ...... ./predict_images/padestrian.jpeg
+Pred Labels:  [28 11 23 29 24]
+Pred Classes  ['Children crossing', 'Right-of-way at the next intersection', 'Slippery road', 'Bicycles crossing', 'Road narrows on the right']
+Pred Scores:  [0.951 0.049 0.    0.    0.   ]
 ```
  
 4. ***Speed Limit 120***: Now this one is easy. The model does pretty good at finding the right class. However, the 
@@ -187,10 +187,9 @@ with yield**, these shallow networks are not very good at determining relationsh
   only **two** features (2 and 0) whereas, 100 has **three** features.
     
 ```    
-    Running for path: ...... ./predict_images/speed_limit_120.jpeg
-    Pred Labels:  [8 7 2]
-    Pred Classes  ['Speed limit (120km/h)', 'Speed limit (100km/h)', 'Speed limit (50km/h)']
-    Pred Scores:  [0.66 0.34 0.  ]
+Pred Labels:  [8 7 2 4 5]
+Pred Classes  ['Speed limit (120km/h)', 'Speed limit (100km/h)', 'Speed limit (50km/h)', 'Speed limit (70km/h)', 'Speed limit (80km/h)']
+Pred Scores:  [0.661 0.339 0.    0.    0.   ]
 ```
 
 5. ***Stop Sign*** The model does say this as stop sign. However, if I don't crop this image to the boundary, but 
@@ -202,10 +201,10 @@ tends to indicate that the model is biased in some sense. So what now, do we hav
 would be to upsample minor classes, so that the model can see them more times.
  
 ```
-    Running for path: ...... ./predict_images/stop.jpeg
-    Pred Labels:  [14  1  0]
-    Pred Classes  ['Stop', 'Speed limit (30km/h)', 'Speed limit (20km/h)']
-    Pred Scores:  [0.51 0.49 0.  ]
+Running for path: ...... ./predict_images/stop.jpeg
+Pred Labels:  [14  1  0 18 29]
+Pred Classes  ['Stop', 'Speed limit (30km/h)', 'Speed limit (20km/h)', 'General caution', 'Bicycles crossing']
+Pred Scores:  [0.515 0.485 0.    0.    0.   ]
 ```
 
 References:

@@ -41,10 +41,10 @@ def predict(
         pred_logits = model_builder(features_pp)
         pred_prob = tf.nn.softmax(pred_logits)
         pred_prob = tf.squeeze(pred_prob, axis=0)
-        pred_score, pred_classes = tf.nn.top_k(pred_prob, 3)
+        pred_score, pred_classes = tf.nn.top_k(pred_prob, 5)
         print('Pred Labels: ', pred_classes.numpy())
         print('Pred Classes ', [label_to_class_mapping[i] for i in pred_classes.numpy()])
-        print('Pred Scores: ', np.round(pred_score.numpy(), 2))
+        print('Pred Scores: ', np.round(pred_score.numpy(), 3))
         
     fig = commons.image_subplots(nrows=1, ncols=5, figsize=(3, 6))(store_plots, img_names)
     commons.save_matplotlib("./images/test_images.png", fig)

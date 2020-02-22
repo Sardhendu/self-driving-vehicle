@@ -62,7 +62,7 @@ class TensorBoardCallback:
         tb_callback = tf.keras.callbacks.TensorBoard(
             log_dir=self.params['tensorboard_dir'],
             histogram_freq=0,
-            batch_size=self.params['train_batch_size'],
+            batch_size=self.params['batch_size'],
             write_graph=True,
             write_grads=False,
             write_images=False,
@@ -77,6 +77,7 @@ class ValidationCallback(tf.keras.callbacks.Callback):
     def __init__(self, model, eval_dataset, params):
         self.params = params
         self.log_at_step = params["eval_log_steps"]
+        self.eval_steps_per_epoch = params["eval_steps_per_epoch"]
         self.eval_dataset = eval_dataset
         self.model = model
         self.step = 0
@@ -85,17 +86,15 @@ class ValidationCallback(tf.keras.callbacks.Callback):
 
     def on_train_batch_end(self, batch, logs=None):
         self.step += 1
-        print("self.log_at_step: ", self.log_at_step)
         if (self.step % self.log_at_step) == 0:
             metric = tf.keras.metrics.Mean()
-            print(len(self.eval_dataset))
-            print(1/0)
-            # tf.keras.utils.Progbar()
-            for image_batch, label_batch in self.eval_dataset:
+            prog = tf.keras.utils.Progbar(self.eval_steps_per_epoch)
+            
+            for iter_, (image_batch, label_batch) in enumerate(self.eval_dataset):
                 pred_batch = self.model(image_batch)
                 mse_loss = tf.keras.losses.MSE(label_batch, self.flatten(pred_batch))
                 val_batch_loss = tf.reduce_mean(mse_loss)
                 metric.update_state(val_batch_loss)
-                
-            self.loss_writer.scalar("loss", metric.result(), self.step )
-            
+                prog.update(iter_)
+            self.loss_writer.scalar("loss", metric.result(), self.step)
+

@@ -56,7 +56,6 @@ class DataGenerator:
                 self.reset()
 
             img_path = os.path.join('./data', self.image_paths[self.gen_index].strip())
-            print("img_path: ", i, self.gen_index, len(self.image_paths), img_path)
             image = np.float32(commons.read_image(img_path))
             if self.mode != "debug":
                 image = self.preprocess(image)
@@ -126,14 +125,16 @@ def tf_generator(params, driving_log_path, mode):
     eval_generator = eval_generator.repeat()\
         .batch(params["batch_size"])\
         .take(eval_steps_per_epoch)
-    
-    return train_generator, eval_generator
+
+    params["eval_steps_per_epoch"] = eval_steps_per_epoch
+    params["train_steps_per_epoch"] = train_steps_per_epoch
+    return params, train_generator, eval_generator
 
 
 if __name__ == "__main__":
     from src.behavioural_cloning.params import params
     driving_log_path = "./data/driving_log.csv"
-    train_generator, eval_generator = tf_generator(
+    params, train_generator, eval_generator = tf_generator(
             params,
             driving_log_path=driving_log_path,
             mode="debug"

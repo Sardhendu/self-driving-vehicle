@@ -9,12 +9,13 @@ from src.behavioural_cloning.callbacks import TrainingCallback, SnapshotCallback
 driving_log_path = "./data/driving_log.csv"
 
 
-train_generator, eval_generator = tf_generator(
+params, train_generator, eval_generator = tf_generator(
         params,
         driving_log_path=driving_log_path,
         mode="train"
 )
-
+from pprint import pprint
+pprint(params)
 model = Model()()
 
 tensorboard_callback = TensorBoardCallback(params)()

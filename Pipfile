@@ -20,6 +20,10 @@ sklearn = "*"
 pandas = "*"
 seaborn = "*"
 tensorflow-addons = "*"
+socketio = "*"
+eventlet = "*"
+flask = "*"
+greenlet = "*"
 
 [requires]
 python_version = "3.7"

@@ -2,9 +2,7 @@ import os
 import cv2
 import pickle
 import imageio
-import itertools
 import numpy as np
-import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import Tuple, List

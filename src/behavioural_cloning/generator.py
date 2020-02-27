@@ -164,6 +164,21 @@ def keras_generator(params, driving_log_path_list):
     return params, train_generator, eval_generator, test_generator
 
 
+def plot_random_images(generator):
+    for i in range(0, len(generator)):
+        image, steering_val = eval_generator[i]
+
+        random_images = image[0:3, :, :].astype(np.uint8)
+        steering_val = steering_val[0:3, :]
+        steering_val = list(np.round(steering_val.flatten(), 2))
+        
+        cropped_img_list = [img[50:-20, :, :] for img in random_images]
+        fig = commons.image_subplots(nrows=2, ncols=3)(list(random_images)+cropped_img_list, steering_val+steering_val)
+        commons.save_matplotlib("./image/input_img.png", fig)
+
+        break
+        
+        
 if __name__ == "__main__":
     from src.behavioural_cloning.params import params
     
@@ -173,8 +188,7 @@ if __name__ == "__main__":
             driving_log_path_list=driving_log_path,
     )
     
-    for i in range(0, len(eval_generator)):
-        out = eval_generator[i]
+    # plot_random_images(train_generator)
         # print(out)
     # params, train_generator, eval_generator =
     

@@ -21,7 +21,6 @@ conda install eventlet
 
 ```
 
-# Behavioural Cloning 
 
 ## Data Collection:
 Here we collect two different versions of data.
@@ -30,24 +29,31 @@ Here we collect two different versions of data.
 bringing it back to the center. The idea here is to let the model understand that when the car is driven away from the center the
  car it to be brought back to the center. 
  
-## Data Augmentation:
+## Data Augmentation and Preparation:
  * We perform horizontal flip of the images. This is essential so the model doesnt overfit by steering left, when the
   track was anticlock.
  * We make use of all cameras (left, right and center). We add a constant value +0.2 to the steering value for every 
  image with left camera and -0.2 to every image with right camera view. By adding and subtracting this small value we
   make the left and right camera behave as the center camera. This help us augment our data three times.
+ * while training:
+    1. We Crop the 50 pixels and bottom 10 pixels of the image, that contains trees and the sky.
+    2. We normalize the data in the range of (-0.5, 0.5) 
     
     **Data Count**
     
     1. train_images=22901, train_steering_vals=22901
     2. eval_images=3053, eval_steering_vals=3053
     3. test_images=4580, test_steering_vals=4580
+    
+![Perspective-Transform](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/input_img.png)
 
 
 ## Model Architecture:
 We use the off-the shelf **"Xception Net"** backbone provide in the Keras Applcation Api. Though a deeper net, the use
  of Depth wise Separable convolution layers makes xception net an approachable algorithm to be run on real time. The 
- Author's of the Xception net uses two novel operation to reduce the number of parameters of the entire model.    
+ Author's of the Xception net uses two novel operation to reduce the number of parameters in the entire model, so 
+ that the model can train faster with better outcomes.
+ .   
  
   * **PointWise Convolution**: A 1x1 convolution is performed on he input feature map. 1x1 convolution introduce 
   significantly less parameters, while decreasing/increasing the number of channels (depth dimension).
@@ -63,7 +69,7 @@ We remove the top layer (classification layer) of the xception net and add a Den
     * Xception -> Dense -> Tanh
     
     
-## Model Training:
+## Model Training and Metric:
 We train the model with below parameters/hyperparameters:
 
    * **Epochs**: 30
@@ -72,4 +78,14 @@ We train the model with below parameters/hyperparameters:
    * **Pretrained weights**: ImageNet
    * **Loss**: Mean Squared Error (MSE)
    * **Optimizer**: Adam
+   * **Metric** We use MSE in the validation set to check models performance. A monotonicaly decreasing loss is a 
+   better indication of model learning.
+   
+   
+## Future Works (TODO's)
+
+  * Can we bring-in reinforcement learning into picture, but how do we get the rewards?
+  *   
+   
+
     

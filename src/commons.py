@@ -161,7 +161,7 @@ if __name__ == "__main__":
     write_gif(
             video_path="/Users/sam/workspace/app/self-driving-vehicle/src/behavioural_cloning/data/final_output.mov",
             subclip_from=(3*60 + 30),
-            subclip_to=(3*60 + 42),
-            resize=0.3,
-            speedx=5.0,
+            subclip_to=(3*60 + 44),
+            resize=0.2,
+            speedx=4.0,
             save_path=f"{out_dir}/sneak_peak.gif")

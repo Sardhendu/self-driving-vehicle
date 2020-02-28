@@ -65,10 +65,11 @@ We use the off-the shelf **"Xception Net"** backbone provide in the Keras Applca
   significantly less parameters, while decreasing/increasing the number of channels (depth dimension).
   * **DepthWise Convolution**: Here instead of performing a fully connected convolution operation, convolution 
   operation is performed in each channel separately and are later concatenated.  
+
+![Xception-block](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/xception_block.png)
+
   
-  
-Link(https://towardsdatascience.com/review-xception-with-depthwise-separable-convolution-better-than-inception-v3
--image-dc967dd42568)
+[Reference](https://towardsdatascience.com/review-xception-with-depthwise-separable-convolution-better-than-inception-v3-image-dc967dd42568)
 
 We remove the top layer (classification layer) of the xception net and add a Dense Layer followed by a tanh activation.
     

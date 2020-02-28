@@ -6,7 +6,7 @@ from src.behavioural_cloning.generator import keras_generator
 from src.behavioural_cloning.callbacks import TrainingCallback, SnapshotCallback, TensorBoardCallback, \
     ValidationCallback, LearningRateSchedular, poly_decay
 
-driving_log_path = ["./data/driving_log.csv", "./data/driving_log2.csv"]
+driving_log_path = ["./data/driving_log.csv"]#, "./data/driving_log2.csv"]
 
 
 params, train_generator, eval_generator, test_generator = keras_generator(

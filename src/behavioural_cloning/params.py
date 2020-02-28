@@ -1,4 +1,3 @@
-
 params = {
     "backbone": "xception",
     
@@ -21,6 +20,6 @@ params = {
         "learning_rate_min": 0.000001
     },
     
-    "weight_decay": None,#0.0001,
-    "model_weight_path": "/Users/sam/Downloads/xception_train_step_4500.h5"
+    "weight_decay": None,  # 0.0001,
+    "model_weight_path": "./data/xception_train_step_10000.h5"
 }

@@ -90,6 +90,7 @@ We train the model with below parameters/hyperparameters:
    * **Loss**: Mean Squared Error (MSE)
    * **Optimizer**: Adam
    * **Metric** We use MSE in the validation set to check models performance. A monotonicaly decreasing loss is a better indication of model learning.
+   * **Test MSE**: 0.00980
    
 ![Train-Eval-Metric](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/metric.png)
 

@@ -1,5 +1,11 @@
 # Behaviour Cloning:
 
+
+### Output Video sneak peek
+ 
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/sneak_peak.gif)
+
+
 1. Miniconda Installation:
 ```bash
 
@@ -45,7 +51,7 @@ bringing it back to the center. The idea here is to let the model understand tha
     2. eval_images=3053, eval_steering_vals=3053
     3. test_images=4580, test_steering_vals=4580
     
-![Perspective-Transform](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/input_img.png)
+![Orig-Preprocess-Images](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/input_img.png)
 
 
 ## Model Architecture:
@@ -60,10 +66,14 @@ We use the off-the shelf **"Xception Net"** backbone provide in the Keras Applca
   * **DepthWise Convolution**: Here instead of performing a fully connected convolution operation, convolution 
   operation is performed in each channel separately and are later concatenated.  
   
+  
+Link(https://towardsdatascience.com/review-xception-with-depthwise-separable-convolution-better-than-inception-v3
+-image-dc967dd42568)
+
 We remove the top layer (classification layer) of the xception net and add a Dense Layer followed by a tanh activation.
     
-  * **Tanh** Tanh is a suitable activation, because tanh squashes the activation value between -1 and 1, which again 
-  serves our purpose because out target steering value ranges from -1 to 1, where negative values indicate steering 
+  * **Tanh** Tanh is a suitable activation, because tanh squashes the values between -1 and 1, this serves our 
+  purpose since our target steering value ranges from -1 to 1, where negative values indicate steering 
   to the left and positive values indicate steering to the right.
 
     * Xception -> Dense -> Tanh
@@ -72,16 +82,16 @@ We remove the top layer (classification layer) of the xception net and add a Den
 ## Model Training and Metric:
 We train the model with below parameters/hyperparameters:
 
-   * **Epochs**: 30
+   * **Epochs**: 20
    * **Batch Size**: 32
    * **Learning Decay**: Polynomial Decay
    * **Pretrained weights**: ImageNet
    * **Loss**: Mean Squared Error (MSE)
    * **Optimizer**: Adam
-   * **Metric** We use MSE in the validation set to check models performance. A monotonicaly decreasing loss is a 
-   better indication of model learning.
+   * **Metric** We use MSE in the validation set to check models performance. A monotonicaly decreasing loss is a better indication of model learning.
    
-   
+![Train-Eval-Metric](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/metric.png)
+
 ## Future Works (TODO's)
 
   * Can we bring-in reinforcement learning into picture, but how do we get the rewards?

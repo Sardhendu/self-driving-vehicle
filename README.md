@@ -16,4 +16,9 @@ Using advance computer vision techniques to detect lane lines in a curvy road ro
 Project 3: Traffic Sign Classification [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/traffic_sign_classifier)
 -----------
 
-![New-Unseen-Images](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/test_images.png)
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/traffic_sign_classifier/images/test_images.png)
+
+
+Project 4: Behavioural Cloning [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/behavioural_cloning)
+------------
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/sneak_peak.gif)

@@ -22,6 +22,7 @@ class Model:
                 cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3))
         self.normalize = keras.layers.Lambda(lambda x: (x/255.)-0.5)
         self.flatten = keras.layers.Flatten()
+        self.dropout = keras.layers.Dropout(0.5)
         self.dense_squash = keras.layers.Dense(1, activation="tanh")
     
     def __call__(self):
@@ -30,6 +31,7 @@ class Model:
         inputs_pp = self.normalize(inputs_pp)
         inputs_pp = self.base_model(inputs_pp)
         inputs_pp = self.flatten(inputs_pp)
+        # inputs_pp = self.dropout(inputs_pp)
         outlayer = self.dense_squash(inputs_pp)
         
         model = keras.Model(

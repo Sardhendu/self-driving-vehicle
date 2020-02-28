@@ -148,20 +148,20 @@ def write_pickle(save_path, data_dict: dict):
         pickle.dump(data_dict, f)
 
 
-def write_gif(video_path, subclip_from, subclip_to, resize, save_path):
+def write_gif(video_path, subclip_from, subclip_to, resize, speedx, save_path):
     clip = (VideoFileClip(video_path)
             .subclip(subclip_from, subclip_to)
-            # .speedx(0.5)
+            .speedx(speedx)
             .resize(resize))
     clip.write_gif(save_path)
     
     
 if __name__ == "__main__":
-    out_dir = "/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video"
+    out_dir = "/Users/sam/workspace/app/self-driving-vehicle/src/behavioural_cloning/image"
     write_gif(
-            video_path="/Users/sam/workspace/app/self-driving-vehicle/src/lane_line_advance/data/project_video/final_out.mp4",
-            subclip_from=(35),
-            subclip_to=(43),
-            resize=0.5,
-            # speedx=1.15,
+            video_path="/Users/sam/workspace/app/self-driving-vehicle/src/behavioural_cloning/data/final_output.mov",
+            subclip_from=(3*60 + 30),
+            subclip_to=(3*60 + 42),
+            resize=0.3,
+            speedx=5.0,
             save_path=f"{out_dir}/sneak_peak.gif")

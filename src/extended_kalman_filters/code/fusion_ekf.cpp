@@ -1,5 +1,6 @@
 #include "Eigen/Dense"
 #include "fusion_ekf.h"
+// #include "kalman_filter.h"
 
 using namespace std;
 
@@ -27,6 +28,8 @@ FusionEKF::FusionEKF(){
               0, 1, 0, 0;
 
   // TODO: Write the Transition matrix for Radar
+
+
 }
 
 FusionEKF::~FusionEKF(){}
@@ -34,6 +37,7 @@ FusionEKF::~FusionEKF(){}
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package){
   if (measurement_package.sensor_type_ == MeasurementPackage::LASER){
       cout << "ahahahahahahahahahahahahahahahahahha" << "\n";
+      // kf_.Init()
   }
   else if (measurement_package.sensor_type_ == MeasurementPackage::RADAR){
       cout << "090909090900909090990909009090090990" << "\n";

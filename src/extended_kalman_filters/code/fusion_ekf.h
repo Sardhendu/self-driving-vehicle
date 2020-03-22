@@ -4,6 +4,7 @@
 #include <iostream>
 #include "Eigen/Dense"
 #include "measurement_package.h"
+#include "kalman_filter.h"
 
 class FusionEKF{
   private:
@@ -20,6 +21,8 @@ class FusionEKF{
     virtual ~FusionEKF();
 
     void ProcessMeasurement(const MeasurementPackage &meas_package_);
+
+    KalmanFilter kf_;
 
 };
 

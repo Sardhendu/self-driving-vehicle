@@ -58,11 +58,13 @@ int main(){
       meas_package.sensor_type_ = MeasurementPackage::LASER;
       meas_package.raw_measurements_ = VectorXd(2);
       meas_package.raw_measurements_ << meas_px_py[0], meas_px_py[1];
+      meas_package.timestamp_ = meas_parser.getTimestamp();
     }
     else if (meas_parser.sensor_type == "R"){
       meas_package.sensor_type_ = MeasurementPackage::RADAR;
       meas_package.raw_measurements_ = VectorXd(3);
       meas_package.raw_measurements_ << meas_px_py[0], meas_px_py[1], meas_px_py[3];
+      meas_package.timestamp_ = meas_parser.getTimestamp();
     }
     else{
       cout << "sensor_type = " << meas_parser.sensor_type << "not Understood" << "\n";

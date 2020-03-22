@@ -14,8 +14,10 @@ class MeasurementParser{
   public:
     vector<string> measurement_vector;
     string sensor_type;
+    long long timestamp_;
     void setMeasurements(vector<string> measurement_vector_in);
     vector<float> getMeasurements();
+    long long getTimestamp();
 };
 
 #endif

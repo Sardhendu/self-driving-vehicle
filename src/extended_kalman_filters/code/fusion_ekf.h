@@ -13,6 +13,16 @@ class FusionEKF{
     Eigen::MatrixXd R_radar_;
     Eigen::MatrixXd H_laser_;
 
+    // acceleration noise
+    float noise_ax;
+    float noise_ay;
+
+    // Declare Lidar params
+    Eigen::VectorXd x_laser_;
+    Eigen::MatrixXd F_laser_;
+    Eigen::MatrixXd P_laser_;
+    Eigen::MatrixXd Q_laser_;
+
   public:
     // Create a constructor to store the default values
     FusionEKF();
@@ -22,7 +32,7 @@ class FusionEKF{
 
     void ProcessMeasurement(const MeasurementPackage &meas_package_);
 
-    KalmanFilter kf_;
+    KalmanFilter kf;
 
 };
 

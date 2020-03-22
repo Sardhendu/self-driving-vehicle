@@ -36,3 +36,18 @@ vector<float> MeasurementParser::getMeasurements(){
   }
   return out;
 }
+
+long long MeasurementParser::getTimestamp(){
+  long long timestamp_;
+
+  if (sensor_type == "L"){
+    timestamp_ = stoll(measurement_vector[3]);
+  }
+  else if (sensor_type == "R"){
+    timestamp_ = stoll(measurement_vector[4]);
+  }
+  else{
+    cout << "The input sensor type does not match given" << measurement_vector[0] << "\n";
+    exit(1);
+  }
+}

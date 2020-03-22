@@ -35,7 +35,6 @@ class KalmanFilter{
     Eigen::MatrixXd R_;
     Eigen::MatrixXd H_;
 
-
 };
 
 #endif

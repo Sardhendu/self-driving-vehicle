@@ -10,7 +10,7 @@
 #include "Eigen/Dense"
 #include "utils.hpp"
 #include "parser.h"
-#include "measurement_package.h"
+#include "fusion_ekf.h"
 
 
 using Eigen::MatrixXd;
@@ -39,6 +39,7 @@ int main(){
 
   MeasurementParser meas_parser;
   MeasurementPackage meas_package;
+  FusionEKF ekf;
   while (getline(inFile, sensor_vals, '\n')){
     tokens.clear();
     istringstream iss(sensor_vals);
@@ -68,6 +69,8 @@ int main(){
       exit(1);
     }
 
+
+    ekf.ProcessMeasurement(meas_package);
     cout << "++++++++++++++++++++++++++++++++" << "\n";
 
 

@@ -1,4 +1,7 @@
-# include "Eigen/Dense"
+#ifndef MEASUREMENT_PACKAGE_H
+#define MEASERUMENT_PACKAGE_H
+
+#include "Eigen/Dense"
 
 class MeasurementPackage{
   public:
@@ -11,3 +14,5 @@ class MeasurementPackage{
 
     Eigen::VectorXd raw_measurements_;
 };
+
+#endif

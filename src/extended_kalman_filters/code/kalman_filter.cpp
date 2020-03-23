@@ -24,6 +24,23 @@ void KalmanFilter::Init(
   H_ = H_in;
 }
 
-// void KalmanFilter::Predict(){
-//   MatrixXd x_pred();
-// }
+void KalmanFilter::Predict(){
+  x_ = F_* x_;
+  P_ = F_ * P_ * F_.transpose() + Q_;
+}
+
+void KalmanFilter::Update(const Eigen::VectorXd &z_in){
+  VectorXd z_pred = H_ * x_;
+  MatrixXd H_T = H_.transpose();
+
+  VectorXd y_ = z_in - z_pred;
+  MatrixXd S_ = H_ * P_ * H_T + R_;
+  MatrixXd K_ = P_ * H_T * S_.inverse();
+
+
+  x_ = x_ + K_ * y_;
+  long x_size = x_.size();
+  MatrixXd I = MatrixXd::Identity(x_size, x_size);
+  P_ = (I - K_ * H_) * P_;
+
+}

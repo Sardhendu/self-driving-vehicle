@@ -8,6 +8,7 @@
 
 class FusionEKF{
   private:
+    bool is_initialized_;
     long long previous_timestamp_;
     Eigen::MatrixXd R_laser_;
     Eigen::MatrixXd R_radar_;

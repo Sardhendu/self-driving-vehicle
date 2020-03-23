@@ -23,10 +23,10 @@ class KalmanFilter{
     );
 
     // Declare the Predict method
-    // void Predict();
+    void Predict();
 
     // Declare the Update Method
-    // void Update(const Eigen::VectorXd &z_in);
+    void Update(const Eigen::VectorXd &z_in);
 
     // Define all the variables. We dont define size because For LIDAR and Radar
     // the shape of the actuall matrix differs

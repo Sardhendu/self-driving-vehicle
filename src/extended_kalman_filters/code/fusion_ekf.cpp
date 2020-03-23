@@ -5,7 +5,8 @@
 using namespace std;
 
 FusionEKF::FusionEKF(){
-
+  // is_initialized is required to initialize the x_ vector for the very first datapoint
+  is_initialized_ = false;
   previous_timestamp_ = 0;
 
   // Initialize Matrices
@@ -54,16 +55,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
   float dt_2 = dt * dt;
   float dt_3 = dt_2 * dt;
   float dt_4 = dt_3 * dt;
+
   if (measurement_package.sensor_type_ == MeasurementPackage::LASER){
       cout << "LIDAR ==> " << "\n";
       cout << '\t' << "curr_t == " << measurement_package.timestamp_ << "\n";
       cout << '\t' << "prev_t == " << previous_timestamp_ << "\n";
       cout << '\t' << "delta_t == " << dt << "\n";
 
-      x_laser_ << measurement_package.raw_measurements_[0],
-                  measurement_package.raw_measurements_[1],
-                  0,
-                  0;
       F_laser_ << 1, 0, dt, 0,
                   0, 1, 0, dt,
                   0, 0, dt, 0,
@@ -76,10 +74,26 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
                   0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
 
 
+      if (!is_initialized_){
+        x_laser_ << measurement_package.raw_measurements_[0],
+                    measurement_package.raw_measurements_[1],
+                    0,
+                    0;
+        is_initialized_ = true;
+      }
+      else{
 
+      }
+
+      cout << '\t' << "[Before] px = " << x_laser_[0]  << " py = "<< x_laser_[1] <<"\n";
+      cout << '\t' << "[Before] P_ == " << "\n" << P_laser_ << "\n";
       kf.Init(x_laser_, F_laser_, P_laser_, Q_laser_, R_laser_, H_laser_);
-      // kf.predict
-      // kf.update
+      kf.Predict();
+      kf.Update(measurement_package.raw_measurements_);
+      x_laser_ << kf.x_;
+      P_laser_ << kf.P_;
+      cout << '\t' << "[After] px = " << x_laser_[0]  << " py = "<< x_laser_[1] <<"\n";
+      cout << '\t' << "[After] P_ == " << "\n" << P_laser_ << "\n";
   }
   else if (measurement_package.sensor_type_ == MeasurementPackage::RADAR){
       cout << "090909090900909090990909009090090990" << "\n";

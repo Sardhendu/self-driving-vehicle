@@ -13,16 +13,20 @@ class FusionEKF{
     Eigen::MatrixXd R_laser_;
     Eigen::MatrixXd R_radar_;
     Eigen::MatrixXd H_laser_;
-
+    Eigen::MatrixXd H_radar_;
+    
     // acceleration noise
     float noise_ax;
     float noise_ay;
 
-    // Declare Lidar params
-    Eigen::VectorXd x_laser_;
-    Eigen::MatrixXd F_laser_;
-    Eigen::MatrixXd P_laser_;
-    Eigen::MatrixXd Q_laser_;
+    // Declare Prediction params
+    Eigen::VectorXd x_;
+    Eigen::MatrixXd F_;
+    Eigen::MatrixXd P_;
+    Eigen::MatrixXd Q_;
+
+    // Declare Radar Params
+
 
   public:
     // Create a constructor to store the default values

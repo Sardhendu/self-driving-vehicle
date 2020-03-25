@@ -14,4 +14,4 @@
 Install :
 1. docker build -t ekf .
 2. docker run -v /Users/sardhendu/workspace/self-driving-vehicle/src/extended_kalman_filters:/extended_kalman_filters -it ekf bash
-3. g++ -std=c++11 run.cpp -o run
+3. g++ -std=c++11 run.cpp parser.cpp kalman_filter.cpp fusion_ekf.cpp -o run

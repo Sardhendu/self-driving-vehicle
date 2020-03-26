@@ -51,3 +51,30 @@ long long MeasurementParser::getTimestamp(){
     exit(1);
   }
 }
+
+vector<float> MeasurementParser::getGroundTruth(){
+  /* This Function gets the ground truth Vector: Required for RMSE calculation*/
+  vector<float> out;
+  if (sensor_type == "L"){
+    cout << "LASER MEASUREMENT" << "\n";
+    float px = stof(measurement_vector[4]);
+    float py = stof(measurement_vector[5]);
+    float vx = stof(measurement_vector[6]);
+    float vy = stof(measurement_vector[7]);
+    out = {px, py, vx, vy};
+    // float v = stof(measurement_vector[1]);
+  }
+  else if (sensor_type == "R"){
+    cout << "RADAR MEASUREMENT" << "\n";
+    float px = stof(measurement_vector[5]);
+    float py = stof(measurement_vector[6]);
+    float vx = stof(measurement_vector[7]);
+    float vy = stof(measurement_vector[8]);
+    out = {px, py, vx, vy};
+  }
+  else{
+    cout << "The input sensor type does not match given" << measurement_vector[0] << "\n";
+    exit(1);
+  }
+  return out;
+}

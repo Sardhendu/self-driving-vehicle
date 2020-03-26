@@ -61,9 +61,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
   // ------------------------------------------------------------------
   // Prediction State
   // ------------------------------------------------------------------
-  cout << "LIDAR ==> " << "\n";
-  cout << '\t' << "curr_t == " << measurement_package.timestamp_ << "\n";
+  cout << "Timestep ==> " << "\n";
   cout << '\t' << "prev_t == " << previous_timestamp_ << "\n";
+  cout << '\t' << "curr_t == " << measurement_package.timestamp_ << "\n";
   cout << '\t' << "delta_t == " << dt << "\n";
 
   F_ << 1, 0, dt, 0,
@@ -89,16 +89,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
         is_initialized_ = true;
         return;
       }
-      cout << '\t' << "[Before] px = " << x_[0]  << " py = "<< x_[1] <<"\n";
-      cout << '\t' << "[Before] P_ == " << "\n" << P_ << "\n";
+      cout << "[Before] px = " << x_[0]  << " py = "<< x_[1] <<"\n";
+      cout << "[Before] P_ == " << "\n" << P_ << "\n";
       kf.Init(x_, F_, P_, Q_, R_laser_, H_laser_);
       kf.Predict();
       kf.Update(measurement_package.raw_measurements_);
       x_ << kf.x_;
       P_ << kf.P_;
-      cout << '\t' << "[After] px = " << x_[0]  << " py = "<< x_[1] <<"\n";
-      cout << '\t' << "[After] vx = " << x_[2]  << " vy = "<< x_[3] <<"\n";
-      cout << '\t' << "[After] P_ == " << "\n" << P_ << "\n";
+      cout << "[After] px = " << x_[0]  << " py = "<< x_[1] <<"\n";
+      cout << "[After] vx = " << x_[2]  << " vy = "<< x_[3] <<"\n";
+      cout << "[After] P_ == " << "\n" << P_ << "\n";
   }
   else if (measurement_package.sensor_type_ == MeasurementPackage::RADAR){
       // if (!is_initialized_){
@@ -120,11 +120,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
                   -(py/c1), (px/c1), 0, 0,
                   py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
 
+      cout << "[Before] px = " << x_[0]  << " py = "<< x_[1] <<"\n";
+      cout << "[Before] P_ == " << "\n" << P_ << "\n";
       kf.Init(x_, F_, P_, Q_, R_radar_, H_radar_);
       kf.Update(measurement_package.raw_measurements_);
       x_ << kf.x_;
       P_ << kf.P_;
       cout << H_radar_ << "\n";
+      cout << "[After] px = " << x_[0]  << " py = "<< x_[1] <<"\n";
+      cout << "[After] vx = " << x_[2]  << " vy = "<< x_[3] <<"\n";
+      cout << "[After] P_ == " << "\n" << P_ << "\n";
   }
   else{
     cout << "Sensor type = " << measurement_package.sensor_type_ << " not known" << "\n";

@@ -39,17 +39,17 @@ int main(){
 
   MeasurementParser meas_parser;
   MeasurementPackage meas_package;
-  FusionEKF ekf;
+  FusionEKF fusion_ekf;
+  int rec_no = 0;
   while (getline(inFile, sensor_vals, '\n')){
+    cout << "\n# --------------------------------------------------------------- \n ITERATION NUM =" << rec_no << "\n#---------------------------------------------------------------" << "\n";
     tokens.clear();
     istringstream iss(sensor_vals);
     while (getline(iss, token, '\t')){
       tokens.push_back(token);
     }
 
-    cout << sensor_vals << "\n";
     meas_parser.setMeasurements(tokens);
-    cout << "--------------------------------" << "\n";
     vector<float> meas_px_py = meas_parser.getMeasurements();
     printInfo(tokens);
 
@@ -72,11 +72,9 @@ int main(){
     }
 
 
-    ekf.ProcessMeasurement(meas_package);
-    cout << "++++++++++++++++++++++++++++++++" << "\n";
-
-
-
+    fusion_ekf.ProcessMeasurement(meas_package);
+    cout >> fusion_ekf.kf.x_.size() << "\n";
+    rec_no += 1;
 
   }
 

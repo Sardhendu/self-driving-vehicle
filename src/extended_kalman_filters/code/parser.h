@@ -18,6 +18,7 @@ class MeasurementParser{
     void setMeasurements(vector<string> measurement_vector_in);
     vector<float> getMeasurements();
     long long getTimestamp();
+    vector<float> getGroundTruth();
 };
 
 #endif

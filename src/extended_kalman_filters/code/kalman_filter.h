@@ -27,6 +27,7 @@ class KalmanFilter{
 
     // Declare the Update Method
     void Update(const Eigen::VectorXd &z_in);
+    void UpdateEKF(const Eigen::VectorXd &z_in);
 
     // Define all the variables. We dont define size because For LIDAR and Radar
     // the shape of the actuall matrix differs

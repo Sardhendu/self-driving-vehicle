@@ -11,6 +11,7 @@
 #include "utils.hpp"
 #include "parser.h"
 #include "fusion_ekf.h"
+#include "tools.h"
 
 
 using Eigen::MatrixXd;
@@ -37,10 +38,15 @@ int main(){
     exit(1);
   }
 
+  Tools tools;
   MeasurementParser meas_parser;
   MeasurementPackage meas_package;
   FusionEKF fusion_ekf;
+
   int rec_no = 0;
+  vector<VectorXd> estimations;
+  vector<VectorXd> ground_truth;
+
   while (getline(inFile, sensor_vals, '\n')){
     cout << "\n# --------------------------------------------------------------- \n ITERATION NUM =" << rec_no << "\n#---------------------------------------------------------------" << "\n";
     tokens.clear();
@@ -71,9 +77,37 @@ int main(){
       exit(1);
     }
 
+    // Stash Groung Truth to ground_truth vector
+    vector<float> gt_(4);
+    gt_ = meas_parser.getGroundTruth();
+    VectorXd gtruth(4);
+    gtruth(0) = gt_[0];
+    gtruth(1) = gt_[1];
+    gtruth(2) = gt_[2];
+    gtruth(3) = gt_[3];
+    ground_truth.push_back(gtruth);
 
+    // Stash Prediction to estimation vector
     fusion_ekf.ProcessMeasurement(meas_package);
-    cout >> fusion_ekf.kf.x_.size() << "\n";
+    double p_x = fusion_ekf.kf.x_(0);
+    double p_y = fusion_ekf.kf.x_(1);
+    double v1  = fusion_ekf.kf.x_(2);
+    double v2 = fusion_ekf.kf.x_(3);
+    VectorXd estimate(4);
+    estimate(0) = p_x;
+    estimate(1) = p_y;
+    estimate(2) = v1;
+    estimate(3) = v2;
+    estimations.push_back(estimate);
+    // cout << "New Vals: " << p_x << " " << p_y << " "<< v1 << " " << v2 << "\n";
+
+    VectorXd rmse(4);
+    rmse = tools.CalculateRMSE(estimations, ground_truth);
+
+    cout << "RMSE = ----------------------------------------> \n" << rmse << '\n';
+    // if (rec_no == 3){
+    //   exit(0);
+    // }
     rec_no += 1;
 
   }

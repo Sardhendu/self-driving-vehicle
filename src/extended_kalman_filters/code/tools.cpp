@@ -20,7 +20,7 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &y_pred, const vector<Vecto
     return rmse;
   }
   else{
-    cout << "y_true=" << y_true.size() << " != " << "y_pred=" << y_pred.size() << "\n";
+    cout << "y_true=" << y_true.size() << " == " << "y_pred=" << y_pred.size() << "\n";
   }
 
   for (unsigned int i=0; i < y_pred.size(); ++i){

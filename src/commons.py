@@ -157,11 +157,11 @@ def write_gif(video_path, subclip_from, subclip_to, resize, speedx, save_path):
     
     
 if __name__ == "__main__":
-    out_dir = "/Users/sam/workspace/app/self-driving-vehicle/src/behavioural_cloning/image"
+    out_dir = "/Users/sardhendu/workspace/self-driving-vehicle/src/extended_kalman_filters/images"
     write_gif(
-            video_path="/Users/sam/workspace/app/self-driving-vehicle/src/behavioural_cloning/data/final_output.mov",
-            subclip_from=(3*60 + 30),
-            subclip_to=(3*60 + 44),
-            resize=0.25,
+            video_path="/Users/sardhendu/Desktop/ekf.mov",
+            subclip_from=0,
+            subclip_to=12,
+            resize=0.5,
             speedx=4.0,
             save_path=f"{out_dir}/sneak_peak.gif")

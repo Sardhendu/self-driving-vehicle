@@ -38,7 +38,7 @@ class FusionEKF{
     void ProcessMeasurement(const MeasurementPackage &meas_package_);
 
     KalmanFilter ekf_;
-    Tools tls;
+    Tools tools;
 
 };
 

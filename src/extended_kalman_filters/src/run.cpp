@@ -25,7 +25,9 @@ using namespace std;
 int main(){
   cout << "Hello World" << "\n";
   string filepath = "../data/obj_pose-laser-radar-synthetic-input.txt";
+
   fstream inFile;
+  // ofstream outFile ("../data/ekf_output.txt");
 
   // datamembers to read json data
   string sensor_vals;
@@ -105,9 +107,9 @@ int main(){
     rmse = tools.CalculateRMSE(estimations, ground_truth);
 
     cout << "RMSE = ----------------------------------------> \n" << rmse << '\n';
-    if (rec_no == 100){
-      exit(0);
-    }
+    // if (rec_no == 100){
+    //   exit(0);
+    // }
     rec_no += 1;
 
   }
@@ -118,3 +120,11 @@ int main(){
   // }
   return 0;
 }
+
+
+/*
+1.08884
+ 1.0426
+2.06104
+2.11472
+*/

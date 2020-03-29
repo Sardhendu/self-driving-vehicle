@@ -45,7 +45,9 @@ void KalmanFilter::Update(const Eigen::VectorXd &z_in){
     cout << "z_pred = " << z_pred.size() << " != " << "z_in = " << z_in.size() << "\n";
     exit(0);
   }
-  UpdateWithY(y_);
+
+  cout << "[LOSS-ERROR] LIDAR: -----------> " << y_(0) << y_(1) << "\n";;
+  UpdateStates(y_);
 
 }
 
@@ -64,29 +66,30 @@ void KalmanFilter::UpdateEKF(const Eigen::VectorXd &z_in){
 
   double rho = sqrt(px*px + py*py);
   double theta = atan2(py, px);
-  cout << "theta == " << theta << "\n";
-  if (theta > M_PI || theta < -M_PI){
-    cout << "theta == " << theta << "\n";
-    exit(0);
-  }
   double rho_dot = (px*vx + py*vy) / rho;
 
   // Fetch the error
   VectorXd h = VectorXd(3);
   h << rho, theta, rho_dot;
 
-  if (h.size() != z_in.size()){
-    cout << "h = " << h.size() << " != " << "z_in = " << z_in.size() << "\n";
-    exit(0);
+  VectorXd y_ = z_in - h;
+
+  while ( y_(1) > M_PI || y_(1) < -M_PI ) {
+    if ( y_(1) > M_PI ) {
+      y_(1) -= M_PI;
+    } else {
+      y_(1) += M_PI;
+    }
   }
 
-  VectorXd y_ = z_in - h;
-  UpdateWithY(y_);
+
+  cout << "[LOSS-ERROR] RADAR: -----------> " << y_(0) << y_(1) << y_(2) << "\n";
+  UpdateStates(y_);
 
 }
 
 
-void KalmanFilter::UpdateWithY(const VectorXd &y_in){
+void KalmanFilter::UpdateStates(const VectorXd &y_in){
   cout << "H_ = " << H_.size() << "\n";
   MatrixXd H_T = H_.transpose();
   MatrixXd S_ = H_ * P_ * H_T + R_;

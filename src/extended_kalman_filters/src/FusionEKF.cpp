@@ -17,7 +17,6 @@ FusionEKF::FusionEKF(){
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
   H_laser_ = MatrixXd(2, 4);
-  // Hj_ = MatrixXd(3, 4);
 
   // Measrement noise from the laser sensor
   R_laser_ << 0.0225, 0,
@@ -80,10 +79,17 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
         double phi = measurement_package.raw_measurements_[1];
         double rho_dot = measurement_package.raw_measurements_[2];
 
-        ekf_.x_ << rho * cos(phi),
-                   rho * sin(phi),
-                   rho_dot * cos(phi),
-                   rho_dot * sin(phi);
+        double x = rho * cos(phi);
+        // if ( x < 0.0001 ) {
+        //   x = 0.0001;
+        // }
+    	  double y = rho * sin(phi);
+        // if ( y < 0.0001 ) {
+        //   y = 0.0001;
+        // }
+    	  double vx = rho_dot * cos(phi);
+    	  double vy = rho_dot * sin(phi);
+        ekf_.x_ << x, y, vx , vy;
     }
 
     is_initialized_ = true;
@@ -97,16 +103,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
   // Prediction Phase
   // ------------------------------------------------------------------
   // Calculate the new matrices
-  duble dt;
+  double dt;
   dt = (measurement_package.timestamp_ - previous_timestamp_) / 1000000.0;
   previous_timestamp_ = measurement_package.timestamp_;
 
   // Initialize the Transition Matrix
   ekf_.F_ = MatrixXd(4, 4);
   ekf_.F_ << 1, 0, dt, 0,
-            0, 1, 0, dt,
-            0, 0, dt, 0,
-            0, 0, 0, dt;
+             0, 1, 0, dt,
+             0, 0, 1, 0,
+             0, 0, 0, 1;
 
 
 
@@ -139,7 +145,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
     ekf_.Update(measurement_package.raw_measurements_);
   }
   else {
-    H_radar_ = tls.CalculateJacobian(ekf_.x_);
+    H_radar_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.H_ = H_radar_;
     ekf_.R_ = R_radar_;
     ekf_.UpdateEKF(measurement_package.raw_measurements_);

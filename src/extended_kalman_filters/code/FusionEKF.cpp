@@ -1,6 +1,7 @@
 #include <cmath>
 #include "Eigen/Dense"
-#include "fusion_ekf.h"
+#include "FusionEKF.h"
+
 // #include "kalman_filter.h"
 
 using namespace std;
@@ -35,13 +36,15 @@ FusionEKF::FusionEKF(){
   H_radar_ = MatrixXd(3, 4);
 
   // Acceleration Noise Component
-  noise_ax = 9;
-  noise_ay = 9;
+  noise_ax = 9.0;
+  noise_ay = 9.0;
 
   // Initialize Laser input params
   // x_ = Eigen::VectorXd(4, 1);
   // F_ = Eigen::MatrixXd(4, 4);
   // Q_ = Eigen::MatrixXd(4, 4);
+
+
 }
 
 FusionEKF::~FusionEKF(){}
@@ -51,10 +54,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
   // Initialize States
   // ------------------------------------------------------------------
   if (!is_initialized_){
-    kf.x_ = VectorXd(4);
-    kf.x_ << 1, 1, 1, 1;
-    kf.P_ = MatrixXd(4, 4);
-    kf.P_ << 1, 0, 0, 0,
+    cout << "Initializing States =============>" << "\n";
+    ekf_.x_ = VectorXd(4);
+    ekf_.x_ << 1, 1, 1, 1;
+    ekf_.P_ = MatrixXd(4, 4);
+    ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
               0, 0, 1000, 0,
               0, 0, 0, 1000;
@@ -62,38 +66,44 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
     previous_timestamp_ = measurement_package.timestamp_;
 
     if (measurement_package.sensor_type_ == MeasurementPackage::LASER){
-        cout << "[Initializing] px = " << kf.x_[0]  << " py = "<< kf.x_[1] <<"\n";
-        cout << "[Initializing] P_ == " << "\n" << kf.P_ << "\n";
+        cout << "[Initializing] px = " << ekf_.x_[0]  << " py = "<< ekf_.x_[1] <<"\n";
+        cout << "[Initializing] P_ == " << "\n" << ekf_.P_ << "\n";
 
-        kf.x_ <<  measurement_package.raw_measurements_[0],
+        ekf_.x_ <<  measurement_package.raw_measurements_[0],
                   measurement_package.raw_measurements_[1],
                   0,
                   0;
-        // kf.Init(x_, F_, P_, Q_, R_laser_, H_laser_);
     }
     else {
-      //TODO: Convert the polar coordinate system to cartesian coordinate space
-        float s = 0;
+        //TODO: Convert the polar coordinate system to cartesian coordinate space
+        double rho = measurement_package.raw_measurements_[0];
+        double phi = measurement_package.raw_measurements_[1];
+        double rho_dot = measurement_package.raw_measurements_[2];
+
+        ekf_.x_ << rho * cos(phi),
+                   rho * sin(phi),
+                   rho_dot * cos(phi),
+                   rho_dot * sin(phi);
     }
 
     is_initialized_ = true;
     return;
   }
 
-  cout << "[Input]" << " x = \n" << kf.x_ << "\n";
-  cout << "[Input]" << " P = \n" << kf.P_ << "\n";
+  cout << "[Prior]" << " x = \n" << ekf_.x_ << "\n";
+  cout << "[Prior]" << " P = \n" << ekf_.P_ << "\n";
 
   // ------------------------------------------------------------------
   // Prediction Phase
   // ------------------------------------------------------------------
   // Calculate the new matrices
-  float dt;
+  duble dt;
   dt = (measurement_package.timestamp_ - previous_timestamp_) / 1000000.0;
   previous_timestamp_ = measurement_package.timestamp_;
 
   // Initialize the Transition Matrix
-  kf.F_ = MatrixXd(4, 4);
-  kf.F_ << 1, 0, dt, 0,
+  ekf_.F_ = MatrixXd(4, 4);
+  ekf_.F_ << 1, 0, dt, 0,
             0, 1, 0, dt,
             0, 0, dt, 0,
             0, 0, 0, dt;
@@ -101,61 +111,42 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_package
 
 
   // Initialize the Process Noise
-  float dt_2 = dt * dt;
-  float dt_3 = dt_2 * dt;
-  float dt_4 = dt_3 * dt;
-  kf.Q_ = MatrixXd(4, 4);
-  kf.Q_ << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
+  double dt_2 = dt * dt;
+  double dt_3 = dt_2 * dt;
+  double dt_4 = dt_3 * dt;
+  ekf_.Q_ = MatrixXd(4, 4);
+  ekf_.Q_ << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
             0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
             dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
             0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
 
 
-  cout << "Timestep ==> " << "\n";
-  cout << '\t' << "prev_t == " << previous_timestamp_ << "\n";
-  cout << '\t' << "curr_t == " << measurement_package.timestamp_ << "\n";
-  cout << '\t' << "delta_t == " << dt << "\n";
+  // cout << "Timestep ==> " << "\n";
+  // cout << '\t' << "prev_t == " << previous_timestamp_ << "\n";
+  // cout << '\t' << "curr_t == " << measurement_package.timestamp_ << "\n";
+  // cout << '\t' << "delta_t == " << dt << "\n";
 
-  kf.Predict();
-  cout << "[Prediction]" << " x = \n" << kf.x_ << "\n";
-  cout << "[Prediction]" << " P = \n" << kf.P_ << "\n";
+  ekf_.Predict();
+  // cout << "[Prediction]" << " x = \n" << ekf_.x_ << "\n";
+  // cout << "[Prediction]" << " P = \n" << ekf_.P_ << "\n";
 
   // ------------------------------------------------------------------
   // Update Phase
   // ------------------------------------------------------------------
   if (measurement_package.sensor_type_ == MeasurementPackage::LASER){
-    kf.H_ = H_laser_;
-    kf.R_ = R_laser_;
-    kf.Update(measurement_package.raw_measurements_);
+    ekf_.H_ = H_laser_;
+    ekf_.R_ = R_laser_;
+    ekf_.Update(measurement_package.raw_measurements_);
   }
   else {
-      float px = kf.x_[0];
-      float py = kf.x_[1];
-      float vx = kf.x_[2];
-      float vy = kf.x_[3];
-      float c1 = pow(px, 2) + pow(py, 2);
-      float c2 = sqrt(c1);
-      float c3 = c1*c2;
-      kf.H_ = MatrixXd(3, 4);
-
-      //check division by zero
-    	if(fabs(c1) < 0.0001){
-    		cout << "ERROR - CalculateJacobian () - Division by Zero" << endl;
-    		return Hj;
-    	}
-      else{
-        kf.H_ << (px/c2), (py/c2), 0, 0,
-                -(py/c1), (px/c1), 0, 0,
-                  py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
-        
-      }
-
-      kf.R_ = R_radar_;
-      kf.UpdateEKF(measurement_package.raw_measurements_);
+    H_radar_ = tls.CalculateJacobian(ekf_.x_);
+    ekf_.H_ = H_radar_;
+    ekf_.R_ = R_radar_;
+    ekf_.UpdateEKF(measurement_package.raw_measurements_);
   }
 
 
-  cout << "[Update]" << " x = \n" << kf.x_ << "\n";
-  cout << "[Update]" << " P = \n" << kf.P_ << "\n";
+  // cout << "[Update]" << " x = \n" << ekf_.x_ << "\n";
+  // cout << "[Update]" << " P = \n" << ekf_.P_ << "\n";
 
 }

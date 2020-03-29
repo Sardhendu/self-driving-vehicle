@@ -1,10 +1,12 @@
-#ifndef FUSION_EKF_H
-#define FUSION_EKF_H
+#ifndef FUSIONEKF_H_
+#define FUSIONEKF_H_
 
 #include <iostream>
 #include "Eigen/Dense"
 #include "measurement_package.h"
 #include "kalman_filter.h"
+#include "tools.h"
+
 
 class FusionEKF{
   private:
@@ -16,16 +18,14 @@ class FusionEKF{
     Eigen::MatrixXd H_radar_;
 
     // acceleration noise
-    float noise_ax;
-    float noise_ay;
+    double noise_ax;
+    double noise_ay;
 
     // Declare Prediction params
     Eigen::VectorXd x_;
     Eigen::MatrixXd F_;
     Eigen::MatrixXd P_;
     Eigen::MatrixXd Q_;
-
-    // Declare Radar Params
 
 
   public:
@@ -37,7 +37,8 @@ class FusionEKF{
 
     void ProcessMeasurement(const MeasurementPackage &meas_package_);
 
-    KalmanFilter kf;
+    KalmanFilter ekf_;
+    Tools tls;
 
 };
 

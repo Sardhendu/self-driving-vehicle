@@ -13,9 +13,9 @@ using std::vector;
 // for convenience
 using json = nlohmann::json;
 
-Checks if the SocketIO event has JSON data.
-If there is data the JSON object in string format will be returned,
-else the empty string "" will be returned.
+// Checks if the SocketIO event has JSON data.
+// If there is data the JSON object in string format will be returned,
+// else the empty string "" will be returned.
 string hasData(string s) {
   auto found_null = s.find("null");
   auto b1 = s.find_first_of("[");
@@ -58,7 +58,7 @@ int main() {
           // j[1] is the data JSON object
           string sensor_measurement = j[1]["sensor_measurement"];
 
-
+          MeasurementPackage meas_package;
           std::istringstream iss(sensor_measurement);
 
           long long timestamp;
@@ -67,8 +67,6 @@ int main() {
           string sensor_type;
           iss >> sensor_type;
 
-          // Instantiate the MeasurementPackage and store data to the class members
-          MeasurementPackage meas_package;
           if (sensor_type.compare("L") == 0) {
             meas_package.sensor_type_ = MeasurementPackage::LASER;
             meas_package.raw_measurements_ = VectorXd(2);

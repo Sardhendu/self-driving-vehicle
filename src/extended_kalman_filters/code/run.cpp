@@ -10,7 +10,7 @@
 #include "Eigen/Dense"
 #include "utils.hpp"
 #include "parser.h"
-#include "fusion_ekf.h"
+#include "FusionEKF.h"
 #include "tools.h"
 
 
@@ -89,10 +89,10 @@ int main(){
 
     // Stash Prediction to estimation vector
     fusion_ekf.ProcessMeasurement(meas_package);
-    double p_x = fusion_ekf.kf.x_(0);
-    double p_y = fusion_ekf.kf.x_(1);
-    double v1  = fusion_ekf.kf.x_(2);
-    double v2 = fusion_ekf.kf.x_(3);
+    double p_x = fusion_ekf.ekf_.x_(0);
+    double p_y = fusion_ekf.ekf_.x_(1);
+    double v1  = fusion_ekf.ekf_.x_(2);
+    double v2 = fusion_ekf.ekf_.x_(3);
     VectorXd estimate(4);
     estimate(0) = p_x;
     estimate(1) = p_y;
@@ -105,9 +105,9 @@ int main(){
     rmse = tools.CalculateRMSE(estimations, ground_truth);
 
     cout << "RMSE = ----------------------------------------> \n" << rmse << '\n';
-    // if (rec_no == 3){
-    //   exit(0);
-    // }
+    if (rec_no == 100){
+      exit(0);
+    }
     rec_no += 1;
 
   }

@@ -20,7 +20,7 @@
 2. cd src/extended_kalman_filter
 3. docker build -t ekf .
 4. docker run -v ../extended_kalman_filters:/extended_kalman_filters -it ekf bash
-5. g++ -std=c++11 run.cpp parser.cpp kalman_filter.cpp FusionEKF.cpp -o run
+5. g++ -std=c++11 run.cpp parser.cpp kalman_filter.cpp FusionEKF.cpp tools.cpp -o run
 6. ./run
 
 

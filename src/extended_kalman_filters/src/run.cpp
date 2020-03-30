@@ -26,19 +26,24 @@ int main(){
   cout << "Hello World" << "\n";
   string filepath = "../data/obj_pose-laser-radar-synthetic-input.txt";
 
+  // Read the Input File
   fstream inFile;
-  // ofstream outFile ("../data/ekf_output.txt");
-
-  // datamembers to read json data
-  string sensor_vals;
-  string token;
-  vector<string> tokens;
-
   inFile.open(filepath);
   if (!inFile) {
     cout << "Unable to open infile @" << filepath << "\n";
     exit(1);
   }
+
+  // Write to the output Files
+  ofstream outFile_lidar;
+  ofstream outFile_radar;
+  outFile_lidar.open("../data/lidar_ekf_output.txt");
+  outFile_radar.open("../data/radar_ekf_output.txt");
+
+  // datamembers to read json data
+  string sensor_vals;
+  string token;
+  vector<string> tokens;
 
   Tools tools;
   MeasurementParser meas_parser;
@@ -107,14 +112,46 @@ int main(){
     rmse = tools.CalculateRMSE(estimations, ground_truth);
 
     cout << "RMSE = ----------------------------------------> \n" << rmse << '\n';
-    // if (rec_no == 100){
-    //   exit(0);
-    // }
+
+    // Capture Prediction and Error Outputs into a File to compute statistics.
+
+    if (rec_no == 0){
+      outFile_lidar << "px_msmt,py_msmt,px_pred,py_pred,px_error,py_error,px_gt,py_gt,vx_gt,vy_gt,px_rmse,py_rmse,vx_rmse,vy_rmse" << "\n";
+      outFile_radar << "rho_msmt,phi_msmt,rho_dot_msmt,rho_pred,phi_pred,rho_dot_pred,rho_error,phi_error,rho_dot_error,px_gt,py_gt,vx_gt,vy_gt,px_rmse,py_rmse,vx_rmse,vy_rmse" << "\n";
+    }
+    else{
+      if (meas_parser.sensor_type == "L"){
+        outFile_lidar << meas_package.raw_measurements_(0) << "," << meas_package.raw_measurements_(1) << ","
+                      << fusion_ekf.ekf_.z_pred_(0) << "," << fusion_ekf.ekf_.z_pred_(1) << ","
+                      << fusion_ekf.ekf_.y_(0) << "," << fusion_ekf.ekf_.y_(1) << ","
+                      << gt_[0] << "," << gt_[1] << "," << gt_[2] << "," << gt_[3] << ","
+                      << rmse(0) << "," << rmse(1) << "," << rmse(2) << "," << rmse(3)
+                      << "\n";
+
+
+      }
+      else{
+        outFile_radar << meas_package.raw_measurements_(0) << "," << meas_package.raw_measurements_(1) << "," << meas_package.raw_measurements_(2) << ","
+                      << fusion_ekf.ekf_.z_pred_(0) << "," << fusion_ekf.ekf_.z_pred_(1) << "," << fusion_ekf.ekf_.z_pred_(2) << ","
+                      << fusion_ekf.ekf_.y_(0) << "," << fusion_ekf.ekf_.y_(1) << "," << fusion_ekf.ekf_.y_(2) << ","
+                      << gt_[0] << "," << gt_[1] << "," << gt_[2] << "," << gt_[3] << ","
+                      << rmse(0) << "," << rmse(1) << "," << rmse(2) << "," << rmse(3)
+                      << "\n";
+
+      }
+
+    }
+
+
+
+
     rec_no += 1;
 
   }
 
   inFile.close();
+  outFile_lidar.close();
+  outFile_radar.close();
   // if (length && length > 2 && data[0] == '4' && data[1] == '2'){
   //   auto s = hasData(string(data));
   // }

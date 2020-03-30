@@ -39,8 +39,18 @@ class KalmanFilter{
     Eigen::MatrixXd R_; //(2, 2);
     Eigen::MatrixXd H_; //(2, 4);
 
+    //Intermidiate Values to store into csv to perform analysis
+    Eigen::VectorXd y_; // To capture the error stats
+    Eigen::VectorXd z_pred_; // To capture the Prediction values
+
 
 
 };
 
 #endif
+
+//
+// 1.11177
+// 0.858536
+// 2.18684
+// 1.70063

@@ -39,12 +39,11 @@ void KalmanFilter::Update(const Eigen::VectorXd &z_in){
   cout << "Updating For LIDAR ============> " << "\n";
 
   // Fetch the error
-  VectorXd z_pred = H_ * x_;
-  VectorXd y_ = z_in - z_pred;
-  if (z_pred.size() != z_in.size()){
-    cout << "z_pred = " << z_pred.size() << " != " << "z_in = " << z_in.size() << "\n";
-    exit(0);
-  }
+  z_pred_ = VectorXd(2);
+  y_ = VectorXd(2);
+
+  z_pred_ = H_ * x_;
+  y_ = z_in - z_pred_;
 
   cout << "[LOSS-ERROR] LIDAR: -----------> " << y_(0) << y_(1) << "\n";;
   UpdateStates(y_);
@@ -69,10 +68,11 @@ void KalmanFilter::UpdateEKF(const Eigen::VectorXd &z_in){
   double rho_dot = (px*vx + py*vy) / rho;
 
   // Fetch the error
-  VectorXd h = VectorXd(3);
-  h << rho, theta, rho_dot;
+  z_pred_ = VectorXd(3);
+  y_ = VectorXd(3);
 
-  VectorXd y_ = z_in - h;
+  z_pred_ << rho, theta, rho_dot;
+  y_ = z_in - z_pred_;
 
   while ( y_(1) > M_PI || y_(1) < -M_PI ) {
     if ( y_(1) > M_PI ) {

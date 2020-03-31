@@ -70,10 +70,18 @@ void KalmanFilter::UpdateEKF(const Eigen::VectorXd &z_in){
   // Fetch the error
   z_pred_ = VectorXd(3);
   y_ = VectorXd(3);
+  y_NW = VectorXd(3);
 
   z_pred_ << rho, theta, rho_dot;
-  y_ = z_in - z_pred_;
+  y_NW = z_in - z_pred_;
+  y_ = y_NW;
 
+  // Option 1: Didn't work vy RMSE was too high and didn't meet requirement
+  // if ( y_NW(1) <= M_PI || y_NW(1) >= -M_PI ) {
+  //   y_ = y_NW;
+  // }
+
+  // Option 2: This worked.
   while ( y_(1) > M_PI || y_(1) < -M_PI ) {
     if ( y_(1) > M_PI ) {
       y_(1) -= M_PI;
@@ -81,6 +89,8 @@ void KalmanFilter::UpdateEKF(const Eigen::VectorXd &z_in){
       y_(1) += M_PI;
     }
   }
+
+  // Option 3: This didn't smooth the curve as expected there was one spike
   // if (y_(1) > 3.14){
   //   y_(1) = 3.14;
   // }

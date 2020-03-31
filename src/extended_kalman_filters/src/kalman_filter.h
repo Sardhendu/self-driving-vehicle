@@ -41,6 +41,7 @@ class KalmanFilter{
 
     //Intermidiate Values to store into csv to perform analysis
     Eigen::VectorXd y_; // To capture the error stats
+    Eigen::VectorXd y_NW;
     Eigen::VectorXd z_pred_; // To capture the Prediction values
 
 

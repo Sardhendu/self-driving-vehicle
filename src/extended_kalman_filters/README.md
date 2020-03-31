@@ -87,5 +87,12 @@ The **bearning (phi)** in radar can take values between (-pi, pi) and so the err
 ![FUSION-RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/fusion_radar.png)
 
 
+#### TODO:
+
+1. Try adding some sort of weighted averaging, this could help solve some RADAR noise.
+2. Try using only LIDAR when RADAR confidence is low, the confidence can again be measured using previous measurement from both the sensors, say radar prediction at timestep **t+4** is way off than the meaasurement of LIDAR and RADAR at **t-3, t-2, t-1 and t**.
+3. Perform more analysis on the intermittent spikes in the RADAR distribution.
+
+
 ##### Output RMSE and Tracking path:
 ![Ouptut-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/output_png.png)

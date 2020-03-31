@@ -81,6 +81,12 @@ void KalmanFilter::UpdateEKF(const Eigen::VectorXd &z_in){
       y_(1) += M_PI;
     }
   }
+  // if (y_(1) > 3.14){
+  //   y_(1) = 3.14;
+  // }
+  // else if (y_(1) < -3.14){
+  //   y_(1) = -3.14;
+  // }
 
 
   cout << "[LOSS-ERROR] RADAR: -----------> " << y_(0) << y_(1) << y_(2) << "\n";

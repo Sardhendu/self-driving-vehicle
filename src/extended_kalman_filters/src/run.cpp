@@ -68,6 +68,7 @@ int main(){
 
     // Set the sensor input to the MeasurementPackage
     if (meas_parser.sensor_type == "L"){
+      // continue;
       meas_package.sensor_type_ = MeasurementPackage::LASER;
       meas_package.raw_measurements_ = VectorXd(2);
       meas_package.raw_measurements_ << meas_px_py[0], meas_px_py[1];
@@ -76,7 +77,7 @@ int main(){
     else if (meas_parser.sensor_type == "R"){
       meas_package.sensor_type_ = MeasurementPackage::RADAR;
       meas_package.raw_measurements_ = VectorXd(3);
-      meas_package.raw_measurements_ << meas_px_py[0], meas_px_py[1], meas_px_py[3];
+      meas_package.raw_measurements_ << meas_px_py[0], meas_px_py[1], meas_px_py[2];
       meas_package.timestamp_ = meas_parser.getTimestamp();
     }
     else{
@@ -121,6 +122,7 @@ int main(){
     }
     else{
       if (meas_parser.sensor_type == "L"){
+        // continue;
         outFile_lidar << meas_package.raw_measurements_(0) << "," << meas_package.raw_measurements_(1) << ","
                       << fusion_ekf.ekf_.z_pred_(0) << "," << fusion_ekf.ekf_.z_pred_(1) << ","
                       << fusion_ekf.ekf_.y_(0) << "," << fusion_ekf.ekf_.y_(1) << ","

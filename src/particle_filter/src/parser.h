@@ -30,6 +30,8 @@ struct ground_truth {
 	double theta;	// Global vehicle yaw [rad]
 };
 
+
+
 // ------------------------------------------------------------------------
 // Read Map Landmarks
 // ------------------------------------------------------------------------
@@ -170,5 +172,45 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 	return true;
 }
 
+
+// ------------------------------------------------------------------------
+// Read Landmark observation at a time step
+// ------------------------------------------------------------------------
+inline bool read_landmark_data(string filename, vector<landmark>& observations) {
+
+	// Get file of landmark measurements:
+	ifstream in_file_obs(filename.c_str(), ifstream::in);
+	// Return if we can't open the file.
+	if (!in_file_obs) {
+		return false;
+	}
+
+	// Declare single line of landmark measurement file:
+  string line_obs;
+
+	// Run over each single line:
+	while(getline(in_file_obs, line_obs)){
+
+		istringstream iss_obs(line_obs);
+
+		// Declare position values:
+		double local_x, local_y;
+
+		//read data from line to values:
+		iss_obs >> local_x;
+		iss_obs >> local_y;
+
+		// Declare single landmark measurement:
+		landmark meas;
+
+		// Set values
+		meas.x = local_x;
+		meas.y = local_y;
+
+		// Add to list of control measurements:
+		observations.push_back(meas);
+	}
+	return true;
+}
 
 #endif

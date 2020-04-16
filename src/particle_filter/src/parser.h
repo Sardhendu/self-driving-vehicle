@@ -1,4 +1,4 @@
-#ifndef PASER_H_
+#ifndef PARSER_H_
 #define PARSER_H_
 
 #include <sstream>
@@ -12,7 +12,7 @@ using namespace std;
 struct control {
   // The controls of a vehicle is defined by its velocity and yaw_rate about the z axis
   double velocity; // meter/sec
-  double yawrate;  // rad/sec
+  double yaw_rate;  // rad/sec
 };
 
 struct landmark {
@@ -108,7 +108,7 @@ inline bool read_control_data(string filename, vector<control>& control_meas) {
 		istringstream iss_pos(line_pos);
 
 		// Declare position values:
-		double velocity, yawrate;
+		double velocity, yaw_rate;
 
 		// Declare single control measurement:
 		control meas;
@@ -116,12 +116,12 @@ inline bool read_control_data(string filename, vector<control>& control_meas) {
 		//read data from line to values:
 
 		iss_pos >> velocity;
-		iss_pos >> yawrate;
+		iss_pos >> yaw_rate;
 
 
 		// Set values
 		meas.velocity = velocity;
-		meas.yawrate = yawrate;
+		meas.yaw_rate = yaw_rate;
 
 		// Add to list of control measurements:
 		control_meas.push_back(meas);

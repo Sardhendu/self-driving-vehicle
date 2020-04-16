@@ -6,7 +6,7 @@
 #include "json.hpp"
 #include "map.h"
 #include "parser.h"
-// #include "particle_filter.h"
+#include "particle_filter.h"
 
 // for convenience
 using nlohmann::json;
@@ -50,11 +50,14 @@ int main(){
 
 
   // Read the Landmark data at each timesteps
-  int num_time_steps = control_meas.size();
+  int num_time_steps = 3;  //control_meas.size();
+  ParticleFilter pf;
   for (int t; t<num_time_steps; t++){
     cout << "Running timestep ....................... " << t << "\n";
     ostringstream file;
 		file << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt";
+
+    cout << "\tReading filename = " << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt" << "\n";
 		vector<landmark> observations;
 		if (!read_landmark_data(file.str(), observations)) {
 			cout << "Error: Could not open observation file " << t+1 << endl;
@@ -62,23 +65,20 @@ int main(){
 		}
     cout << "\tsensed landmark count = " << observations.size() << "\n";
 
-    /*
-      Steps:
-        1. initialize n particles
-        2.
 
-    */
+    // ----------------------------------------------------------------------
+    // Initialize
+    // ----------------------------------------------------------------------
+    if (!pf.initialized()){
+      pf.init(gt[t].x, gt[t].y, gt[t].theta, sigma_pos);
+      pf.print_particle_attributes(2);
+      // cout << "Particles Initialized: Total Count = " << pf.particles.size() << "\n";
+    }
+    else {
+      pf.predict(delta_t, control_meas[t-1].velocity, control_meas[t-1].yaw_rate, sigma_pos);
+      pf.print_particle_attributes(2);
+      // pf.dataAssociation(observations, map.landmark_list);
+      pf.updateWeights(sensor_range, sigma_landmark, observations, map);
+    }
   }
 }
-
-// string hasData(string s) {
-//   auto found_null = s.find("null");
-//   auto b1 = s.find_first_of("[");
-//   auto b2 = s.find_first_of("]");
-//   if (found_null != string::npos) {
-//     return "";
-//   } else if (b1 != string::npos && b2 != string::npos) {
-//     return s.substr(b1, b2 - b1 + 1);
-//   }
-//   return "";
-// }

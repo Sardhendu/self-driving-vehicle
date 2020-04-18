@@ -15,6 +15,7 @@ class Map{
     };
 
     vector<single_landmark_s> landmark_list;
+
 };
 
 

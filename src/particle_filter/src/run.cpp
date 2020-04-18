@@ -50,7 +50,7 @@ int main(){
 
 
   // Read the Landmark data at each timesteps
-  int num_time_steps = 3;  //control_meas.size();
+  int num_time_steps = 2;  //control_meas.size();
   ParticleFilter pf;
   for (int t; t<num_time_steps; t++){
     cout << "Running timestep ....................... " << t << "\n";

@@ -29,6 +29,7 @@ class ParticleFilter {
     int num_particles;
     vector<Particle> particles;
     bool is_initialized;
+    double max_particle_weight;
 
   public:
     // Define constructors
@@ -86,9 +87,7 @@ class ParticleFilter {
     */
     // void dataAssociation(vector<landmark> observed_landmarks, vector<landmark> map_landmarks);
 
-    void dataAssociation(
-      vector<landmark> observed_landmarks, vector<Map::single_landmark_s> map_landmarks, Particle single_particle
-    );
+    void dataAssociation(vector<landmark> &observed_landmarks, vector<landmark> map_landmarks);
 
     // ------------------------------------------------------------------------
     // Update Weights
@@ -106,7 +105,18 @@ class ParticleFilter {
     */
     void updateWeights(
       double sensor_range, double std_landmark[],
-      const vector<landmark> &observed_landmarks, const Map &map_landmarks);
+      vector<landmark> &observed_landmarks, const Map &map_landmarks);
+
+    // ------------------------------------------------------------------------
+    // Resample: Using the resampling wheel
+    /*
+      From the previous step we have new set of particle weights.
+        -> These weights define the importance od the particle.
+        -> The closer the particle is to the vehicle, the higher is the weight.
+        -> Here, we apply sampling particle for the next run based on there weights.
+    */
+
+    void resampling();
 };
 
 #endif

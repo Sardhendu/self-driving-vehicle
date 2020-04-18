@@ -50,7 +50,7 @@ int main(){
 
 
   // Read the Landmark data at each timesteps
-  int num_time_steps = 2;  //control_meas.size();
+  int num_time_steps = control_meas.size();
   ParticleFilter pf;
   for (int t; t<num_time_steps; t++){
     cout << "Running timestep ....................... " << t << "\n";
@@ -79,6 +79,7 @@ int main(){
       pf.print_particle_attributes(2);
       // pf.dataAssociation(observations, map.landmark_list);
       pf.updateWeights(sensor_range, sigma_landmark, observations, map);
+      pf.resampling();
     }
   }
 }

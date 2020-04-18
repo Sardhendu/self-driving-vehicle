@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cmath>
 #include <random>
+#include <set>
 #include "particle_filter.h"
 #include "utils.hpp"
-
 
 using namespace std;
 using std::normal_distribution;
@@ -106,7 +106,6 @@ void ParticleFilter::updateWeights(
   double sig_x = std_landmark[0];
   double sig_y = std_landmark[1];
 
-  max_particle_weight = 0.0;
   // Calculate the probability density/ new weights for each particels
   for (int p=0; p<particles.size(); p++){
     // Reinit the weights everytime
@@ -171,34 +170,70 @@ void ParticleFilter::updateWeights(
         sig_x, sig_y, obs_landmark_map[ol].x, obs_landmark_map[ol].y, gt_lx, gt_ly
       );
 
-      cout << "\n\t\tobserved_landmark = " << obs_landmark_map[ol].x << " " << obs_landmark_map[ol].y << " " << "\n";
-      cout << "\t\tmap_landmark = " << gt_lx << " " << gt_ly << " " << "\n";
-      cout << "\t\tcurr probability density = " << prob << "\n";
-      cout << "\t\t[Before] cumulative probability density = " << particles[p].weight << "\n";
+      // cout << "\n\t\tobserved_landmark = " << obs_landmark_map[ol].x << " " << obs_landmark_map[ol].y << " " << "\n";
+      // cout << "\t\tmap_landmark = " << gt_lx << " " << gt_ly << " " << "\n";
+      // cout << "\t\tcurr probability density = " << prob << "\n";
+      // cout << "\t\t[Before] cumulative probability density = " << particles[p].weight << "\n";
       particles[p].weight *= prob;
-      cout << "\t\t[After] cumulative probability density = " << particles[p].weight << "\n";
+      // cout << "\t\t[After] cumulative probability density = " << particles[p].weight << "\n";
     }
 
     if (particles[p].weight > 1){
         exit;
     }
-    if (particles[p].weight > 0){
-      cout << "\n\tFinal pdf = " << particles[p].weight << "\n";
-    }
-
-
-    if (particles[p].weight > max_particle_weight){
-      max_particle_weight = particles[p].weight;
-    }
+    // if (particles[p].weight > 0){
+    //   cout << "\n\tFinal pdf = " << particles[p].weight << "\n";
+    // }
 
   }
-
-  cout << "\n\tmax_particle_weight = " << max_particle_weight << "\n";
 
 }
 
 void ParticleFilter::resampling(){
-  double a = 0;
+  std::default_random_engine gen;
+  double beta = 0;
+  // Select a random index within the range of (0, num_particles)
+  auto index = int(rand() % num_particles);
+
+  // Fetch the weight of every partice
+  vector<double> weights;
+  double max_particle_weight = 0;
+  for (int s=0; s<num_particles; s++){
+     weights.push_back(particles[s].weight);
+     if (particles[s].weight > max_particle_weight){
+       max_particle_weight = particles[s].weight;
+     }
+  }
+
+  // cout << "max_particle_weight " << max_particle_weight << "\n";
+
+  // Define a random generator
+  uniform_real_distribution<double> unirealdist(0.0, max_particle_weight);
+  set<int> unq_particle_ids;
+  // Spin the sampling wheel
+  for (int i=0; i<num_particles; i++){
+    double gen_val = unirealdist(gen);
+    beta +=  gen_val * 2 * max_particle_weight;
+    while (weights[index] < beta){
+        beta -= weights[index];
+        index = (index + 1) % particles.size(); // the index should not exceed num_particles
+    }
+
+    // Update the particles attributes with the new sampled particles
+    particles[i].id = particles[index].id;
+    particles[i].x = particles[index].x;
+    particles[i].y = particles[index].y;
+    particles[i].theta = particles[index].theta;
+    particles[i].weight = particles[index].weight;
+
+    // cout << "particle selected = " << particles[i].id << "\n";
+    unq_particle_ids.insert(particles[i].id);
+  }
+
+  // vector<int>::iterator it;
+  // it = unique(particle_ids.begin(), particle_ids.end());
+  cout << "Unique particle count " << unq_particle_ids.size() << "\n";
+
 }
 
 

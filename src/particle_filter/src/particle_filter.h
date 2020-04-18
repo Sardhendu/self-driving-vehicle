@@ -29,7 +29,6 @@ class ParticleFilter {
     int num_particles;
     vector<Particle> particles;
     bool is_initialized;
-    double max_particle_weight;
 
   public:
     // Define constructors

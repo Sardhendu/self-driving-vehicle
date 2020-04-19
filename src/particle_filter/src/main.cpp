@@ -46,13 +46,18 @@ int main() {
 
   // Create particle filter
   ParticleFilter pf;
-
-  h.onMessage([&pf,&map,&delta_t,&sensor_range,&sigma_pos,&sigma_landmark]
+  int timestep_ = -1;
+  double max_pr_theta = 0;
+  // double max_gt_theta = 0;
+  double min_pr_theta = 1000;
+  // double min_gt_theta = 1000;
+  h.onMessage([&pf,&map,&delta_t,&sensor_range,&sigma_pos,&sigma_landmark,&timestep_,&max_pr_theta,&min_pr_theta]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+    timestep_ += 1;
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
       auto s = hasData(string(data));
 
@@ -129,8 +134,27 @@ int main() {
             weight_sum += particles[i].weight;
           }
 
-          std::cout << "highest w " << highest_weight << std::endl;
-          std::cout << "average w " << weight_sum/num_particles << std::endl;
+          if (max_pr_theta <  best_particle.theta){
+            max_pr_theta = best_particle.theta;
+          }
+
+          // if (max_gt_theta <  gt[t].theta){
+          //   max_gt_theta = gt[t].theta;
+          // }
+
+          if (min_pr_theta >  best_particle.theta){
+            min_pr_theta = best_particle.theta;
+          }
+
+          // if (min_gt_theta >  gt[t].theta){
+          //   min_gt_theta = gt[t].theta;
+          // }
+          std::cout << "\nRunning for to timestep .................. " << timestep_ << std::endl;
+          std::cout << "\thighest and average weights = " << highest_weight << " " << weight_sum/num_particles << "\n";
+          std::cout << "\tbest particle = " << best_particle.id << " " << best_particle.x << " " << best_particle.y << " " << best_particle.theta << std::endl;
+          // cout << "\tground truth = " << gt[t].x << " " << gt[t].y << " " << gt[t].theta << std::endl;
+          std::cout << "\tmax_theta, pr/gt " << max_pr_theta << std::endl;
+          std::cout << "\tmin_theta, pr/gt " << min_pr_theta << std::endl;
 
           json msgJson;
           msgJson["best_particle_x"] = best_particle.x;

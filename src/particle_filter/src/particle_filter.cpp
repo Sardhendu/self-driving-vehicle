@@ -60,21 +60,33 @@ void ParticleFilter::prediction(
   normal_distribution<double> dist_y(0, std[1]);
   normal_distribution<double> dist_theta(0, std[2]);
 
+  // Handle when yaw_rate = 0 to avoid division by zero
+  if (yaw_rate < 0.000001){
+    yaw_rate += 0.0000001;
+  }
 
-  double vy = velocity/yaw_rate;
+  double vyaw = velocity/yaw_rate;
   double yaw_dt = yaw_rate*delta_t;
 
-  for (unsigned int i=0; i<particles.size(); i++){
-    particles[i].x += vy*(sin(particles[i].theta + yaw_dt) - sin(particles[i].theta));
-    particles[i].y += vy*(cos(particles[i].theta) - cos(particles[i].theta +  yaw_dt));
-    particles[i].theta += yaw_dt;
+  for (unsigned int p=0; p<particles.size(); p++){
+    // if (p<10){
+    //   cout << "\t\tRUNNING FOR PARTICLE =================> " << p << "\n";
+    //   cout << "\t\tbefore predict " << particles[p].id << " " << particles[p].x << " " << particles[p].y << " " << particles[p].theta << " " << particles[p].weight << "\n";
+    //   cout << "\t\tparms " << velocity << " " << yaw_rate << " " << vyaw << " " << yaw_dt << " " << sin(particles[p].theta + yaw_dt) << " "  << sin(particles[p].theta) << " " << cos(particles[p].theta) << " "  << cos(particles[p].theta +  yaw_dt) << "\n";
+    //   cout << "\t\tafter predict " << particles[p].id << " " << particles[p].x << " " << particles[p].y << " " << particles[p].theta << " " << particles[p].weight << "\n";
+    // }
+    particles[p].x += vyaw*(sin(particles[p].theta + yaw_dt) - sin(particles[p].theta));
+    particles[p].y += vyaw*(cos(particles[p].theta) - cos(particles[p].theta +  yaw_dt));
+    particles[p].theta += yaw_dt;
 
 
     // Now we add noise to the preciction
     // (This noise accounts for uncertainty in sensor measurements about the velocity and yawrate)
-    particles[i].x += dist_x(gen);
-    particles[i].y += dist_y(gen);
-    particles[i].theta += dist_theta(gen);
+    particles[p].x += dist_x(gen);
+    particles[p].y += dist_y(gen);
+    particles[p].theta += dist_theta(gen);
+
+
   }
 
 }
@@ -126,7 +138,7 @@ void ParticleFilter::updateWeights(
     // Reinit the weights everytime
     particles[p].weight = 1.0;
 
-    // cout << "\n\tRUNNING FOR PARTICLE -================> " << p << "\n";
+    // cout << "\t\tupdate_weights" << particles[p].id << " " << particles[p].x << " " << particles[p].y << " " << particles[p].weight;
 
 
     // ---------------------------------------------------------------------------------
@@ -136,6 +148,7 @@ void ParticleFilter::updateWeights(
     for (unsigned int ml=0; ml<map_landmarks.landmark_list.size(); ml++){
         landmark s_obs;
         Map::single_landmark_s s_ml = map_landmarks.landmark_list[ml];
+        // cout << s_ml.x_f << " " << particles[p].x << "  " << s_ml.y_f << " " << particles[p].y << "  " << sensor_range << "\n";
         if (fabs(s_ml.x_f - particles[p].x) <= sensor_range && fabs(s_ml.y_f - particles[p].y) <= sensor_range){
           s_obs.id = s_ml.id_i;
           s_obs.x = s_ml.x_f;
@@ -220,7 +233,7 @@ void ParticleFilter::resample(){
      }
   }
 
-  // cout << "max_particle_weight " << max_particle_weight << "\n";
+  // cout << "\t\tmax_particle_weight " << max_particle_weight << "\n";
 
   // Define a random generator
   uniform_real_distribution<double> unirealdist(0.0, max_particle_weight);

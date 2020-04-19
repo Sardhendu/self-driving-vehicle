@@ -1,5 +1,5 @@
-#ifndef HELPER_FUNCTIONS_H_
-#define HELPER_FUNCTIONS_H_
+#ifndef PARSER_H_
+#define PARSER_H_
 
 #include <math.h>
 #include <fstream>

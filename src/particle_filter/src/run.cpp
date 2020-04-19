@@ -3,6 +3,7 @@
 #include <string>
 #include <ctime>
 #include <iomanip>
+#include <fstream>
 #include "json.hpp"
 #include "map.h"
 #include "parser.h"
@@ -16,7 +17,7 @@ using std::vector;
 int main(){
   // Write to the output Files
   ofstream out_gt_prediction_file;
-  outFile_lidar.open("../data/gt_prediction.txt");
+  out_gt_prediction_file.open("../data/gt_prediction.txt");
 
   // Set up parameters here
   double delta_t = 0.1;  // Time elapsed between measurements [sec]
@@ -54,9 +55,15 @@ int main(){
 
 
   // Read the Landmark data at each timesteps
-  int num_time_steps = 100; //control_meas.size();
+  int num_time_steps = control_meas.size();
+  double max_pr_theta = 0;
+  double max_gt_theta = 0;
+  double min_pr_theta = 1000;
+  double min_gt_theta = 1000;
+
+
   ParticleFilter pf;
-  for (int t; t<num_time_steps; t++){
+  for (int t=0; t<num_time_steps; t++){
     // cout << "Running timestep ....................... " << t << "\n";
     ostringstream file;
 		file << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt";
@@ -107,19 +114,37 @@ int main(){
       weight_sum += particles[i].weight;
     }
 
+    if (max_pr_theta <  best_particle.theta){
+      max_pr_theta = best_particle.theta;
+    }
+
+    if (max_gt_theta <  gt[t].theta){
+      max_gt_theta = gt[t].theta;
+    }
+
+    if (min_pr_theta >  best_particle.theta){
+      min_pr_theta = best_particle.theta;
+    }
+
+    if (min_gt_theta >  gt[t].theta){
+      min_gt_theta = gt[t].theta;
+    }
+
     if (t == 0){
-      out_gt_prediction_file << "gt_x, gt_y, gt_theta, pr_id, pr_x, pr_ym, pr_theta, pr_weight" << "\n";
+      out_gt_prediction_file << "gt_x,gt_y,gt_theta,pr_id,pr_x,pr_y,pr_theta,pr_weight,pr_avg_weight" << "\n";
     }
     else{
       out_gt_prediction_file << gt[t].x << "," << gt[t].y << "," << gt[t].theta << ","
-                             << best_particle.id << "," best_particle.x, << "," << best_particle.y << "," << best_particle.y << ","
-                             << highest_weight << "\n";
+                             << best_particle.id << "," << best_particle.x << "," << best_particle.y << "," << best_particle.theta << ","
+                             << highest_weight << "," << weight_sum/num_particles <<"\n";
     }
 
     cout << "\ntime step =  ............................ " << t << "\n";
     cout << "\thighest and average weights = " << highest_weight << " " << weight_sum/num_particles << "\n";
     cout << "\tbest particle = " << best_particle.id << " " << best_particle.x << " " << best_particle.y << " " << best_particle.theta << "\n";
     cout << "\tground truth = " << gt[t].x << " " << gt[t].y << " " << gt[t].theta << "\n";
+    cout << "\tmax_theta, pr/gt " << max_pr_theta << " " << max_gt_theta << "\n";
+    cout << "\tmin_theta, pr/gt " << min_pr_theta << " " << min_gt_theta << "\n";
 
 
   }

@@ -14,6 +14,10 @@ using std::string;
 using std::vector;
 
 int main(){
+  // Write to the output Files
+  ofstream out_gt_prediction_file;
+  outFile_lidar.open("../data/gt_prediction.txt");
+
   // Set up parameters here
   double delta_t = 0.1;  // Time elapsed between measurements [sec]
   double sensor_range = 50;  // Sensor range [m]
@@ -50,20 +54,20 @@ int main(){
 
 
   // Read the Landmark data at each timesteps
-  int num_time_steps = control_meas.size();
+  int num_time_steps = 100; //control_meas.size();
   ParticleFilter pf;
   for (int t; t<num_time_steps; t++){
-    cout << "Running timestep ....................... " << t << "\n";
+    // cout << "Running timestep ....................... " << t << "\n";
     ostringstream file;
 		file << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt";
 
-    cout << "\tReading filename = " << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt" << "\n";
+    // cout << "\tReading filename = " << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt" << "\n";
 		vector<landmark> observations;
 		if (!read_landmark_data(file.str(), observations)) {
 			cout << "Error: Could not open observation file " << t+1 << endl;
 			return -1;
 		}
-    cout << "\tsensed landmark count = " << observations.size() << "\n";
+    // cout << "\tsensed landmark count = " << observations.size() << "\n";
 
 
     // ----------------------------------------------------------------------
@@ -75,11 +79,52 @@ int main(){
       // cout << "Particles Initialized: Total Count = " << pf.particles.size() << "\n";
     }
     else {
-      pf.predict(delta_t, control_meas[t-1].velocity, control_meas[t-1].yaw_rate, sigma_pos);
-      pf.print_particle_attributes(2);
-      // pf.dataAssociation(observations, map.landmark_list);
-      pf.updateWeights(sensor_range, sigma_landmark, observations, map);
-      pf.resampling();
+      pf.prediction(delta_t, sigma_pos, control_meas[t-1].velocity, control_meas[t-1].yawrate);
+      // pf.print_particle_attributes(2);
     }
+
+    // ----------------------------------------------------------------------
+    // Update weights and Resample
+    // ----------------------------------------------------------------------
+    pf.updateWeights(sensor_range, sigma_landmark, observations, map);
+    pf.resample();
+
+
+    // ----------------------------------------------------------------------
+    // Model Analysis
+    // ----------------------------------------------------------------------
+    vector<Particle> particles = pf.particles;
+    int num_particles = particles.size();
+    double highest_weight = -1.0;
+    Particle best_particle;
+    double weight_sum = 0.0;
+    for (int i = 0; i < num_particles; ++i) {
+      if (particles[i].weight > highest_weight) {
+        highest_weight = particles[i].weight;
+        best_particle = particles[i];
+      }
+
+      weight_sum += particles[i].weight;
+    }
+
+    if (t == 0){
+      out_gt_prediction_file << "gt_x, gt_y, gt_theta, pr_id, pr_x, pr_ym, pr_theta, pr_weight" << "\n";
+    }
+    else{
+      out_gt_prediction_file << gt[t].x << "," << gt[t].y << "," << gt[t].theta << ","
+                             << best_particle.id << "," best_particle.x, << "," << best_particle.y << "," << best_particle.y << ","
+                             << highest_weight << "\n";
+    }
+
+    cout << "\ntime step =  ............................ " << t << "\n";
+    cout << "\thighest and average weights = " << highest_weight << " " << weight_sum/num_particles << "\n";
+    cout << "\tbest particle = " << best_particle.id << " " << best_particle.x << " " << best_particle.y << " " << best_particle.theta << "\n";
+    cout << "\tground truth = " << gt[t].x << " " << gt[t].y << " " << gt[t].theta << "\n";
+
+
   }
+
+  out_gt_prediction_file.close();
+
+  return 0;
 }

@@ -1,9 +1,24 @@
-#include <iostream>
-#include <cmath>
+#include "particle_filter.h"
+
+
 #include <random>
 #include <set>
-#include "particle_filter.h"
+#include <cmath>
+#include <math.h>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <numeric>
+#include <random>
+#include <string>
+#include <vector>
 #include "utils.hpp"
+#include "parser.h"
+
+using std::string;
+using std::vector;
+
+
 
 using namespace std;
 using std::normal_distribution;
@@ -19,7 +34,7 @@ void ParticleFilter::init(double gps_x, double gps_y, double theta, double std[]
   normal_distribution<double> dist_x(0, std[0]);
   normal_distribution<double> dist_y(0, std[1]);
   normal_distribution<double> dist_theta(0, std[2]);
-  cout << "input: " << gps_x << " " << gps_y << " " << theta << "\n";
+  // cout << "input: " << gps_x << " " << gps_y << " " << theta << "\n";
 
   for (int i=0; i<num_particles; i++){
     Particle single_particle;
@@ -30,15 +45,15 @@ void ParticleFilter::init(double gps_x, double gps_y, double theta, double std[]
     single_particle.theta = theta + dist_theta(gen);
     single_particle.weight = 1.0;
 
-    cout << "Particle generated = " << single_particle.x << " " << single_particle.y << " " << single_particle.theta << "\n";
+    // cout << "Particle generated = " << single_particle.x << " " << single_particle.y << " " << single_particle.theta << "\n";
     particles.push_back(single_particle);
   }
   is_initialized = true;
 }
 
 
-void ParticleFilter::predict(
-  double delta_t, double velocity, double yaw_rate, double std[]
+void ParticleFilter::prediction(
+  double delta_t, double std[], double velocity, double yaw_rate
 ){
   std::default_random_engine gen;
   normal_distribution<double> dist_x(0, std[0]);
@@ -49,7 +64,7 @@ void ParticleFilter::predict(
   double vy = velocity/yaw_rate;
   double yaw_dt = yaw_rate*delta_t;
 
-  for (int i=0; i<particles.size(); i++){
+  for (unsigned int i=0; i<particles.size(); i++){
     particles[i].x += vy*(sin(particles[i].theta + yaw_dt) - sin(particles[i].theta));
     particles[i].y += vy*(cos(particles[i].theta) - cos(particles[i].theta +  yaw_dt));
     particles[i].theta += yaw_dt;
@@ -68,11 +83,11 @@ void ParticleFilter::predict(
 void ParticleFilter::dataAssociation(
   vector<landmark> &observed_landmarks, vector<landmark> map_landmarks
 ){
-    for (int ol=0; ol<observed_landmarks.size(); ol++){
+    for (unsigned ol=0; ol<observed_landmarks.size(); ol++){
       // cout << "\n\t\tobserved_landmark = " << observed_landmarks[ol].x << " " << observed_landmarks[ol].y << " " << "\n";
       int map_id = -1;
       double min_dist = 100000;
-      for (int ml=0; ml<map_landmarks.size(); ml++){
+      for (unsigned int ml=0; ml<map_landmarks.size(); ml++){
           // Calculate the euclidean distance
           double dist_ = euclid_dist(
             observed_landmarks[ol].x, observed_landmarks[ol].y,
@@ -107,18 +122,18 @@ void ParticleFilter::updateWeights(
   double sig_y = std_landmark[1];
 
   // Calculate the probability density/ new weights for each particels
-  for (int p=0; p<particles.size(); p++){
+  for (unsigned int p=0; p<particles.size(); p++){
     // Reinit the weights everytime
     particles[p].weight = 1.0;
 
-    cout << "\n\tRUNNING FOR PARTICLE -================> " << p << "\n";
+    // cout << "\n\tRUNNING FOR PARTICLE -================> " << p << "\n";
 
 
     // ---------------------------------------------------------------------------------
     // Select Map Landmarks that are within the range of the particle
     // ---------------------------------------------------------------------------------
     vector<landmark> gt_landmarks_map;
-    for (int ml=0; ml<map_landmarks.landmark_list.size(); ml++){
+    for (unsigned int ml=0; ml<map_landmarks.landmark_list.size(); ml++){
         landmark s_obs;
         Map::single_landmark_s s_ml = map_landmarks.landmark_list[ml];
         if (fabs(s_ml.x_f - particles[p].x) <= sensor_range && fabs(s_ml.y_f - particles[p].y) <= sensor_range){
@@ -129,13 +144,13 @@ void ParticleFilter::updateWeights(
         }
 
     }
-    cout << "\t\tCount of landmark within range = " << gt_landmarks_map.size() << "\n";
+    // cout << "\t\tCount of landmark within range = " << gt_landmarks_map.size() << "\n";
 
     // ---------------------------------------------------------------------------------
     // Transform the observed_landmark in vechicle frame to map frame
     // ---------------------------------------------------------------------------------
     vector<landmark> obs_landmark_map;
-    for (int ol=0; ol<observed_landmarks.size(); ol++){
+    for (unsigned int ol=0; ol<observed_landmarks.size(); ol++){
         landmark transformed_obs;
         transformed_obs.id = observed_landmarks[ol].id;
         transformed_obs.x = (observed_landmarks[ol].x*cos(particles[p].theta)) - (observed_landmarks[ol].y*sin(particles[p].theta)) + particles[p].x;
@@ -152,14 +167,14 @@ void ParticleFilter::updateWeights(
     // ---------------------------------------------------------------------------------
     // Calculate the probability density function for the particle given the observed and map landmark
     // ---------------------------------------------------------------------------------
-    for (int ol=0; ol<obs_landmark_map.size(); ol++){
+    for (unsigned int ol=0; ol<obs_landmark_map.size(); ol++){
       double map_id = obs_landmark_map[ol].id;
 
 
       // TODO: This is a bad process to loop everytime, try to save map_landmark as dictionaty with key as the map_id
       double gt_lx;
       double gt_ly;
-      for (int ml=0; ml<gt_landmarks_map.size(); ml++){
+      for (unsigned int ml=0; ml<gt_landmarks_map.size(); ml++){
         if (gt_landmarks_map[ml].id == map_id){
           gt_lx = gt_landmarks_map[ml].x;
           gt_ly = gt_landmarks_map[ml].y;
@@ -178,9 +193,9 @@ void ParticleFilter::updateWeights(
       // cout << "\t\t[After] cumulative probability density = " << particles[p].weight << "\n";
     }
 
-    if (particles[p].weight > 1){
-        exit;
-    }
+//     if (particles[p].weight > 1){
+//         exit;
+//     }
     // if (particles[p].weight > 0){
     //   cout << "\n\tFinal pdf = " << particles[p].weight << "\n";
     // }
@@ -189,7 +204,7 @@ void ParticleFilter::updateWeights(
 
 }
 
-void ParticleFilter::resampling(){
+void ParticleFilter::resample(){
   std::default_random_engine gen;
   double beta = 0;
   // Select a random index within the range of (0, num_particles)
@@ -232,10 +247,49 @@ void ParticleFilter::resampling(){
 
   // vector<int>::iterator it;
   // it = unique(particle_ids.begin(), particle_ids.end());
-  cout << "Unique particle count " << unq_particle_ids.size() << "\n";
+  // cout << "Unique particle count " << unq_particle_ids.size() << "\n";
 
 }
 
+
+void ParticleFilter::SetAssociations(Particle& particle,
+                                     const vector<int>& associations,
+                                     const vector<double>& sense_x,
+                                     const vector<double>& sense_y) {
+  // particle: the particle to which assign each listed association,
+  //   and association's (x,y) world coordinates mapping
+  // associations: The landmark id that goes along with each listed association
+  // sense_x: the associations x mapping already converted to world coordinates
+  // sense_y: the associations y mapping already converted to world coordinates
+  particle.associations= associations;
+  particle.sense_x = sense_x;
+  particle.sense_y = sense_y;
+}
+
+string ParticleFilter::getAssociations(Particle best) {
+  vector<int> v = best.associations;
+  stringstream ss;
+  copy(v.begin(), v.end(), ostream_iterator<int>(ss, " "));
+  string s = ss.str();
+  s = s.substr(0, s.length()-1);  // get rid of the trailing space
+  return s;
+}
+
+string ParticleFilter::getSenseCoord(Particle best, string coord) {
+  vector<double> v;
+
+  if (coord == "X") {
+    v = best.sense_x;
+  } else {
+    v = best.sense_y;
+  }
+
+  std::stringstream ss;
+  copy(v.begin(), v.end(), std::ostream_iterator<float>(ss, " "));
+  string s = ss.str();
+  s = s.substr(0, s.length()-1);  // get rid of the trailing space
+  return s;
+}
 
 void ParticleFilter::print_particle_attributes(int particle_cnt){
   cout << "\t" << "Particle Attributes ........." << "\n";

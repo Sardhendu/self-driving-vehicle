@@ -1,20 +1,38 @@
-#ifndef PARSER_H_
-#define PARSER_H_
+#ifndef HELPER_FUNCTIONS_H_
+#define HELPER_FUNCTIONS_H_
 
-#include <sstream>
-#include <fstream>
 #include <math.h>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
 #include "map.h"
 
-using namespace std;
+// for portability of M_PI (Vis Studio, MinGW, etc.)
+#ifndef M_PI
+const double M_PI = 3.14159265358979323846;
+#endif
 
+/**
+ * Struct representing one position/control measurement.
+ */
 struct control {
-  // The controls of a vehicle is defined by its velocity and yaw_rate about the z axis
-  double velocity; // meter/sec
-  double yaw_rate;  // rad/sec
+  double velocity;  // Velocity [m/s]
+  double yawrate;   // Yaw rate [rad/s]
 };
 
+/**
+ * Struct representing one ground truth position.
+ */
+struct ground_truth {
+  double x;     // Global vehicle x position [m]
+  double y;     // Global vehicle y position
+  double theta; // Global vehicle yaw [rad]
+};
+
+/**
+ * Struct representing one landmark observation measurement.
+ */
 struct landmark {
   // The landmark points is defined by its id, x coordinate and y coordinate
   int id;
@@ -22,195 +40,204 @@ struct landmark {
   double y;   // x position [meter]
 };
 
-
-struct ground_truth {
-
-	double x;		  // Global vehicle x position [meter]
-	double y;		  // Global vehicle y position [meter]
-	double theta;	// Global vehicle yaw [rad]
-};
-
-
-
-// ------------------------------------------------------------------------
-// Read Map Landmarks
-// ------------------------------------------------------------------------
-inline bool read_map_data(string filename, Map &map) {
-  /*
-  About the data:
-    The map data has three columns
-      1. x: the x position of the landmark in the map cartesian coordinate system
-      2. y: the y position of the landmark in the map cartesian coordinate system
-      3. id: the landmark id
-  */
-	// Get file of map:
-	ifstream in_file_map(filename.c_str(), ifstream::in);
-	// Return if we can't open the file.
-	if (!in_file_map) {
-		return false;
-	}
-
-	// Declare single line of map file:
-	string line_map;
-
-	// Run over each single line:
-	while(getline(in_file_map, line_map)){
-
-		istringstream iss_map(line_map);
-
-		// Declare landmark values and ID:
-		float landmark_x_f, landmark_y_f;
-		int id_i;
-
-		// Read data from current line to values::
-		iss_map >> landmark_x_f;
-		iss_map >> landmark_y_f;
-		iss_map >> id_i;
-
-		// Declare single_landmark:
-		Map::single_landmark_s single_landmark_temp;
-
-		// Set values
-		single_landmark_temp.id_i = id_i;
-		single_landmark_temp.x_f  = landmark_x_f;
-		single_landmark_temp.y_f  = landmark_y_f;
-
-		// Add to landmark list of map:
-		map.landmark_list.push_back(single_landmark_temp);
-	}
-	return true;
+/**
+ * Computes the Euclidean distance between two 2D points.
+ * @param (x1,y1) x and y coordinates of first point
+ * @param (x2,y2) x and y coordinates of second point
+ * @output Euclidean distance between two 2D points
+ */
+inline double dist(double x1, double y1, double x2, double y2) {
+  return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-
-// ------------------------------------------------------------------------
-// Read Control Data
-// ------------------------------------------------------------------------
-inline bool read_control_data(string filename, vector<control>& control_meas) {
-  /*
-  About the data:
-    The control data has three columns
-      1. velocity: the velocity of the vehicle at time t
-      2. yawrate: the turn angle about the z axis of the vehicle coordinate frame
-  */
-	// Get file of position measurements:
-	ifstream in_file_pos(filename.c_str(), ifstream::in);
-	// Return if we can't open the file.
-	if (!in_file_pos) {
-		return false;
-	}
-
-	// Declare single line of position measurement file:
-	string line_pos;
-
-	// Run over each single line:
-	while(getline(in_file_pos, line_pos)){
-
-		istringstream iss_pos(line_pos);
-
-		// Declare position values:
-		double velocity, yaw_rate;
-
-		// Declare single control measurement:
-		control meas;
-
-		//read data from line to values:
-
-		iss_pos >> velocity;
-		iss_pos >> yaw_rate;
-
-
-		// Set values
-		meas.velocity = velocity;
-		meas.yaw_rate = yaw_rate;
-
-		// Add to list of control measurements:
-		control_meas.push_back(meas);
-	}
-	return true;
+/**
+ * Computes the error between ground truth and particle filter data.
+ * @param (gt_x, gt_y, gt_theta) x, y and theta of ground truth
+ * @param (pf_x, pf_y, pf_theta) x, y and theta of particle filter
+ * @output Error between ground truth and particle filter data.
+ */
+inline double * getError(double gt_x, double gt_y, double gt_theta, double pf_x,
+                         double pf_y, double pf_theta) {
+  static double error[3];
+  error[0] = fabs(pf_x - gt_x);
+  error[1] = fabs(pf_y - gt_y);
+  error[2] = fabs(pf_theta - gt_theta);
+  error[2] = fmod(error[2], 2.0 * M_PI);
+  if (error[2] > M_PI) {
+    error[2] = 2.0 * M_PI - error[2];
+  }
+  return error;
 }
 
+/**
+ * Reads map data from a file.
+ * @param filename Name of file containing map data.
+ * @output True if opening and reading file was successful
+ */
+inline bool read_map_data(std::string filename, Map& map) {
+  // Get file of map
+  std::ifstream in_file_map(filename.c_str(),std::ifstream::in);
+  // Return if we can't open the file
+  if (!in_file_map) {
+    return false;
+  }
 
-// ------------------------------------------------------------------------
-// Read GroundTruths
-// ------------------------------------------------------------------------
+  // Declare single line of map file
+  std::string line_map;
+
+  // Run over each single line
+  while (getline(in_file_map, line_map)) {
+
+    std::istringstream iss_map(line_map);
+
+    // Declare landmark values and ID
+    float landmark_x_f, landmark_y_f;
+    int id_i;
+
+    // Read data from current line to values
+    iss_map >> landmark_x_f;
+    iss_map >> landmark_y_f;
+    iss_map >> id_i;
+
+    // Declare single_landmark
+    Map::single_landmark_s single_landmark_temp;
+
+    // Set values
+    single_landmark_temp.id_i = id_i;
+    single_landmark_temp.x_f  = landmark_x_f;
+    single_landmark_temp.y_f  = landmark_y_f;
+
+    // Add to landmark list of map
+    map.landmark_list.push_back(single_landmark_temp);
+  }
+  return true;
+}
+
+/**
+ * Reads control data from a file.
+ * @param filename Name of file containing control measurements.
+ * @output True if opening and reading file was successful
+ */
+inline bool read_control_data(std::string filename,
+                              std::vector<control>& position_meas) {
+  // Get file of position measurements
+  std::ifstream in_file_pos(filename.c_str(),std::ifstream::in);
+  // Return if we can't open the file
+  if (!in_file_pos) {
+    return false;
+  }
+
+  // Declare single line of position measurement file:
+  std::string line_pos;
+
+  // Run over each single line:
+  while (getline(in_file_pos, line_pos)) {
+
+    std::istringstream iss_pos(line_pos);
+
+    // Declare position values:
+    double velocity, yawrate;
+
+    // Declare single control measurement:
+    control meas;
+
+    //read data from line to values:
+    iss_pos >> velocity;
+    iss_pos >> yawrate;
+
+    // Set values
+    meas.velocity = velocity;
+    meas.yawrate = yawrate;
+
+    // Add to list of control measurements:
+    position_meas.push_back(meas);
+  }
+  return true;
+}
+
+/**
+ * Reads ground truth data from a file.
+ * @param filename Name of file containing ground truth.
+ * @output True if opening and reading file was successful
+ */
 inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
+  // Get file of position measurements
+  std::ifstream in_file_pos(filename.c_str(),std::ifstream::in);
+  // Return if we can't open the file
+  if (!in_file_pos) {
+    return false;
+  }
 
-	// Get file of position measurements:
-	ifstream in_file_pos(filename.c_str(), ifstream::in);
-	// Return if we can't open the file.
-	if (!in_file_pos) {
-		return false;
-	}
+  // Declare single line of position measurement file
+  std::string line_pos;
 
-	// Declare single line of position measurement file:
-	string line_pos;
+  // Run over each single line
+  while (getline(in_file_pos, line_pos)) {
 
-	// Run over each single line:
-	while(getline(in_file_pos, line_pos)){
+    std::istringstream iss_pos(line_pos);
 
-	istringstream iss_pos(line_pos);
+    // Declare position values
+    double x, y, azimuth;
 
-		// Declare position values:
-		double x, y, azimuth;
+    // Declare single ground truth
+    ground_truth single_gt;
 
-		// Declare single ground truth:
-		ground_truth single_gt;
+    //read data from line to values
+    iss_pos >> x;
+    iss_pos >> y;
+    iss_pos >> azimuth;
 
-		//read data from line to values:
-		iss_pos >> x;
-		iss_pos >> y;
-		iss_pos >> azimuth;
+    // Set values
+    single_gt.x = x;
+    single_gt.y = y;
+    single_gt.theta = azimuth;
 
-		// Set values
-		single_gt.x = x;
-		single_gt.y = y;
-		single_gt.theta = azimuth;
-
-		// Add to list of control measurements and ground truth:
-		gt.push_back(single_gt);
-	}
-	return true;
+    // Add to list of control measurements and ground truth
+    gt.push_back(single_gt);
+  }
+  return true;
 }
 
+/**
+ * Reads landmark observation data from a file.
+ * @param filename Name of file containing landmark observation measurements.
+ * @output True if opening and reading file was successful
+ */
+inline bool read_landmark_data(std::string filename,
+                               std::vector<landmark>& observations) {
+  // Get file of landmark measurements
+  std::ifstream in_file_obs(filename.c_str(),std::ifstream::in);
+  // Return if we can't open the file
+  if (!in_file_obs) {
+    return false;
+  }
 
-// ------------------------------------------------------------------------
-// Read Landmark observation at a time step
-// ------------------------------------------------------------------------
-inline bool read_landmark_data(string filename, vector<landmark>& observations) {
+  // Declare single line of landmark measurement file
+  std::string line_obs;
 
-	// Get file of landmark measurements:
-	ifstream in_file_obs(filename.c_str(), ifstream::in);
-	// Return if we can't open the file.
-	if (!in_file_obs) {
-		return false;
-	}
+  // Run over each single line
+  while (getline(in_file_obs, line_obs)) {
 
-	// Declare single line of landmark measurement file:
-  string line_obs;
+    std::istringstream iss_obs(line_obs);
 
-	// Run over each single line:
-	while(getline(in_file_obs, line_obs)){
+    // Declare position values
+    double local_x, local_y;
 
-		istringstream iss_obs(line_obs);
+    //read data from line to values
+    iss_obs >> local_x;
+    iss_obs >> local_y;
 
-		// Declare position values:
-		double local_x, local_y;
+    // Declare single landmark measurement
+    landmark meas;
 
-		//read data from line to values:
-		iss_obs >> local_x;
-		iss_obs >> local_y;
+    // Set values
+    meas.x = local_x;
+    meas.y = local_y;
 
-		// Declare single landmark measurement:
-		landmark meas;
-
-		// Set values
-		meas.x = local_x;
-		meas.y = local_y;
-
-		// Add to list of control measurements:
-		observations.push_back(meas);
-	}
-	return true;
+    // Add to list of control measurements
+    observations.push_back(meas);
+  }
+  return true;
 }
 
-#endif
+#endif  // HELPER_FUNCTIONS_H_

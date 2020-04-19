@@ -21,16 +21,20 @@ struct Particle {
   double y;
   double theta;
   double weight;
+
+  std::vector<int> associations;
+  std::vector<double> sense_x;
+  std::vector<double> sense_y;
 };
 
 
 class ParticleFilter {
   private:
     int num_particles;
-    vector<Particle> particles;
     bool is_initialized;
 
   public:
+	vector<Particle> particles;
     // Define constructors
     ParticleFilter() : num_particles(0), is_initialized(false) {};
     ~ParticleFilter() {};
@@ -72,7 +76,7 @@ class ParticleFilter {
         1. A transformation is needed from behicle coordinate frame to map frame
         2. We resample partices before doing the prediction. This makes sure, we get the particlces most closest to the vehicle location
     */
-    void predict(double delta_t, double velocity, double yaw_rate, double std[]);
+    void prediction(double delta_t, double std[], double velocity, double yaw_rate);
 
     // ------------------------------------------------------------------------
     // Data Association
@@ -115,7 +119,23 @@ class ParticleFilter {
         -> Here, we apply sampling particle for the next run based on there weights.
     */
 
-    void resampling();
+    void resample();
+
+    // ------------------------------------------------------------------------
+    /* Set a particles list of associations, along with the associations'
+     *   calculated world x,y coordinates
+     * This can be a very useful debugging tool to make sure transformations
+     *   are correct and assocations correctly connected
+     */
+    void SetAssociations(Particle& particle, const std::vector<int>& associations,
+                         const std::vector<double>& sense_x,
+                         const std::vector<double>& sense_y);
+
+    /**
+        * Used for obtaining debugging information related to particles.
+        */
+    std::string getAssociations(Particle best);
+    std::string getSenseCoord(Particle best, std::string coord);
 };
 
 #endif

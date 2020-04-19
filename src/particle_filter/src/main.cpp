@@ -69,6 +69,8 @@ int main() {
             double sense_y = std::stod(j[1]["sense_y"].get<string>());
             double sense_theta = std::stod(j[1]["sense_theta"].get<string>());
 
+            std::cout << sense_x << " " << sense_y << " " << sense_theta << "\n";
+
             pf.init(sense_x, sense_y, sense_theta, sigma_pos);
           } else {
             // Predict the vehicle's next state from previous
@@ -82,7 +84,7 @@ int main() {
           // receive noisy observation data from the simulator
           // sense_observations in JSON format
           //   [{obs_x,obs_y},{obs_x,obs_y},...{obs_x,obs_y}]
-          vector<LandmarkObs> noisy_observations;
+          vector<landmark> noisy_observations;
           string sense_observations_x = j[1]["sense_observations_x"];
           string sense_observations_y = j[1]["sense_observations_y"];
 
@@ -100,8 +102,8 @@ int main() {
           std::istream_iterator<float>(),
           std::back_inserter(y_sense));
 
-          for (int i = 0; i < x_sense.size(); ++i) {
-            LandmarkObs obs;
+          for (unsigned int i = 0; i < x_sense.size(); ++i) {
+            landmark obs;
             obs.x = x_sense[i];
             obs.y = y_sense[i];
             noisy_observations.push_back(obs);

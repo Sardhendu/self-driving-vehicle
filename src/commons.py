@@ -94,6 +94,29 @@ def graph_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, ticks_fontsize
     return _subplots
 
 
+def pandas_subplots(nrows=1, ncols=1, figsize=(6, 6), fontsize=25, facecolor='w'):
+    figsize = tuple([max(figsize[0], ncols * 6), max(figsize[1], nrows * 4)])
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize, facecolor=facecolor)
+
+    if ncols > 1:
+        ax = ax.ravel()
+    else:
+        ax = [ax]
+
+    def _subplots(list_of_df, list_of_titles=None):
+        if list_of_titles is not None:
+            assert (len(list_of_df) == len(list_of_titles))
+        else:
+            list_of_titles = [f"graph_{i}" for i in np.arange(len(list_of_df))]
+
+        for i, (df, img_name) in enumerate(zip(list_of_df, list_of_titles)):
+            df.plot(ax=ax[i])
+            ax[i].set_title(img_name, fontsize=fontsize)
+        return fig
+
+    return _subplots
+
+
 def plot_confusion_matrix(x, color_map='YlGnBu'):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 12))
     sns.heatmap(x, cmap=color_map, annot=True, ax=ax, annot_kws={"fontsize":5})

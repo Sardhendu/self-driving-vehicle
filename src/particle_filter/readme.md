@@ -62,13 +62,13 @@ Included are some dataset that can help run/debug the algorithm before testing i
 
 ### Idea:
 ------------------
-The idea of the particle filter is to generate many-many points in **map-frame** and importance weight particles whose distance to each landmark in map-frame matches the distance of vehicle to landmarks in vehicle frame. **Another way to think of it**, is to think of particles as random transformation with translation and rotation values (x, y, theta). We use all the transformation to transform the landmark observation (fetched using sensors) from vehicle-frame to map-frame. Finally we provide higher weights to transformations that minimize the distance of landmark-car in vehicle-frame and landmark-car in map-frame
+The idea is pretty simple, think of generating 100's of point that represents particle in *map-frame*. Think of these particles as transformation vectors with (x,y=translation, theta=orientation) to transform observation from vehicle-frame to map-frame. Use these transformations/particles to transform landmarks location from *vehicle-frame* to *map-frame*. Provide high weights to the particle/transformations that matches the car-lankmark distance using real-world landmark data and transformed landmark data. Particle closest to the vehicle/car would have higher weights.    
 
 ### Frame:
 ----------------
     * Map Frame:
        - Particles
-       - Landmarks
+       - Landmarks position
     * Vehicle Frame:
        - Sensor data
           - Current vechicle position
@@ -80,15 +80,21 @@ The idea of the particle filter is to generate many-many points in **map-frame**
     - We initialize particles say 100 of them in an approximate area using GPS coordinates of the vehicle
     - Points are sampled from gaussian distribution with mean = GPS location and a standard deviation of say 20-50 meters or something like that.
 
-2. **Prediction Step**:
-    - We assume each particle to be the car's location in the vehicle coordinate frame.
-    - In this step we simply predict the current car/particle location in vehicle-frame using sensor readings.
+2. **Prediction Step / Move**:
+    - Here we use the velocity and yaw_rate from sensors to move the car or find new states for particle using particle information from previous timestep. 
+    - In this step we simply predict the current car/particle location in vehicle-frame using sensor readings and previous state of particle.
+    - Though velocity and theta are measured by vehicle, they dont have direct dependency on positions in the vehicle frame. As we are multiplying the velocity and yaw_rate to particles position and as long as we are consistent in our implementation the filter would learn the correct particle position.
 
 3. **Update**:
     * *Transformation*:
        - For each particle we transform all landmark observations to map-frame.
+    * *Data Association**: Here we associate each transformed landmark to their nearest landmark in map-frame. This is done by nearest neighbor method. 
     * *Update*:
-       - We compute the new weights for each particle, which is the product of the probability density (computed using multivariate gaussian). This process ensure providing higher weights to particle near the vehicle.
+       - We have,
+          - *Transformed landmarks*: Estimated landmark in map-frame
+          - *landmarks*: The actual landmark position in map-frame
+       - Think of the update step as calculating the likelihood of *Transformed landmarks* and *landmarks* for each particle and providing weights to each particle based on their likelihood value. This process ensure providing higher weights to particle near the vehicle.
+       - The likelihood criteria used is the product of the probability density (computed using multivariate gaussian).
 
 
 4. **Resample**:

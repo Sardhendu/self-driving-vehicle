@@ -43,24 +43,30 @@ Included are some dataset that can help run/debug the algorithm before testing i
    - **prediction_gt_data**: The ourputs of the prediction for plots.
 
 ### Code files
+--------------------
 
+   - **particle_filter.cpp**: Contains the entire particle_filter algorithm code.
+   - **parser.cpp**: Code to read/write data and some helper functions.
+   - **run.cpp**: Helper code to run/debug the algorithm with simulator (used data from ./files/*).
+   - **main.cpp**: The main functions that call the uWebSocket to communicate with the simulator.
+   
 
 ### Goal: 
+--------------------
    - We have to localize/find the vehicle position in the map/real-world coordinate frame.
 
 ### What we need:
+-------------------
    1. We need a way to map sensor data from vehicle frame to the map frame at each time step.
    2. We need lamdmark locations since localization takes place by using Landmarks as reference points in both the vehicle and the map frame.
    3. We need a way to match landmarks in vehicle frame to landmarks in map-frame.
 
 ### Idea:
-The idea of the particle filter is to generate many-many points in **map-frame** and importance weight particles whose distance to each landmark in map-frame matches the distance of vehicle to landmarks in vehicle frame.
-
-(OR Rather)
-
-Think of particles as random transformation with translation and rotation values (x, y, theta). We use all the transformation to transform the landmark observation (fetched using sensors) from vehicle-frame to map-frame. Finally we provide higher weights to transformations that minimize the distance of landmark-car in vehicle-frame and landmark-car in map-frame
+------------------
+The idea of the particle filter is to generate many-many points in **map-frame** and importance weight particles whose distance to each landmark in map-frame matches the distance of vehicle to landmarks in vehicle frame. **Another way to think of it**, is to think of particles as random transformation with translation and rotation values (x, y, theta). We use all the transformation to transform the landmark observation (fetched using sensors) from vehicle-frame to map-frame. Finally we provide higher weights to transformations that minimize the distance of landmark-car in vehicle-frame and landmark-car in map-frame
 
 ### Frame:
+----------------
     * Map Frame:
        - Particles
        - Landmarks
@@ -70,6 +76,7 @@ Think of particles as random transformation with translation and rotation values
           - Landmarks position
 
 ### Process:
+----------------
 1. **Initialization**:
     - We initialize particles say 100 of them in an approximate area using GPS coordinates of the vehicle
     - Points are sampled from gaussian distribution with mean = GPS location and a standard deviation of say 20-50 meters or something like that.
@@ -90,8 +97,9 @@ Think of particles as random transformation with translation and rotation values
 
 
 ### Prediction Plot
+-------------------
 
-[analysis_plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/gt_prediction_plot.png)
+![analysis_plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/gt_prediction_plot.png)
 
 
 

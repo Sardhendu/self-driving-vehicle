@@ -17,7 +17,7 @@ using std::vector;
 int main(){
   // Write to the output Files
   ofstream out_gt_prediction_file;
-  out_gt_prediction_file.open("../data/gt_prediction.txt");
+  out_gt_prediction_file.open("../files/gt_prediction.txt");
 
   // Set up parameters here
   double delta_t = 0.1;  // Time elapsed between measurements [sec]
@@ -30,7 +30,7 @@ int main(){
 
   // Landmark Map coordinates
   Map map;
-  if (!read_map_data("../data/map_data.txt", map)) {
+  if (!read_map_data("../files/map_data.txt", map)) {
     std::cout << "Error: Could not open map file" << std::endl;
     return -1;
   }
@@ -38,7 +38,7 @@ int main(){
 
   // Vehicle Control Data
   vector<control> control_meas;
-  if (!read_control_data("../data/control_data.txt", control_meas)) {
+  if (!read_control_data("../files/control_data.txt", control_meas)) {
     std::cout << "Error: Could not open map file" << std::endl;
     return -1;
   }
@@ -47,7 +47,7 @@ int main(){
 
   // Ground Truth Data
   vector<ground_truth> gt;
-  if (!read_gt_data("../data/gt_data.txt", gt)) {
+  if (!read_gt_data("../files/gt_data.txt", gt)) {
     std::cout << "Error: Could not open map file" << std::endl;
     return -1;
   }
@@ -66,7 +66,7 @@ int main(){
   for (int t=0; t<num_time_steps; t++){
     // cout << "Running timestep ....................... " << t << "\n";
     ostringstream file;
-		file << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt";
+		file << "../files/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt";
 
     // cout << "\tReading filename = " << "../data/observation/observations_" << setfill('0') << setw(6) << t+1 << ".txt" << "\n";
 		vector<landmark> observations;

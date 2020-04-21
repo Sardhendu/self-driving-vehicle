@@ -24,7 +24,7 @@ using namespace std;
 
 int main(){
   cout << "Hello World" << "\n";
-  string filepath = "../data/obj_pose-laser-radar-synthetic-input.txt";
+  string filepath = "../files/obj_pose-laser-radar-synthetic-input.txt";
 
   // Read the Input File
   fstream inFile;
@@ -37,8 +37,8 @@ int main(){
   // Write to the output Files
   ofstream outFile_lidar;
   ofstream outFile_radar;
-  outFile_lidar.open("../data/lidar_ekf_output.txt");
-  outFile_radar.open("../data/radar_ekf_output.txt");
+  outFile_lidar.open("../files/lidar_ekf_output.txt");
+  outFile_radar.open("../files/radar_ekf_output.txt");
 
   // datamembers to read json data
   string sensor_vals;

@@ -2,18 +2,17 @@
 
 This project is aimed to build a particle filter in C++ to localize a vehicle in the real-worlds.
 
-   - 
 
 ### Output Video sneak peek
  
-![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/sneak_peak.gif)
-\
-### Installation:
+![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/sneak_peak.gif)
+
+### Installation and Local run:
 --------------
 ```bash
 cd src/p article_filter
 docker build -t pfilter .
-docker run -v /Users/sardhendu/workspace/self-driving-vehicle/src/particle_filter:/particle_filter -it pfilter bash
+docker run -v ./particle_filter:/particle_filter -it pfilter bash
 chmod u+x install-ubuntu.sh
 ./install-ubuntu.sh
 g++ -std=c++11 run.cpp particle_filter.cpp -o run

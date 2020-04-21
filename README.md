@@ -24,6 +24,11 @@ Project 4: Behavioural Cloning [*Link*](https://github.com/Sardhendu/self-drivin
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/behavioural_cloning/image/sneak_peak.gif)
 
 
-Project 5: Extended Kalman Filter's [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/extended_kalman_filters)
+Project 5: Extended Kalman Filter [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/extended_kalman_filters)
 ------------
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/sneak_peak.gif)
+
+
+Project 6: Particle Filter [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/particle_filter)
+------------
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/sneak_peak.gif)

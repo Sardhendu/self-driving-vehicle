@@ -7,11 +7,14 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
+#include "spline.h"
 
+#include "experiments.h"
 // for convenience
 using nlohmann::json;
 using std::string;
 using std::vector;
+using namespace std;
 
 int main() {
   uWS::Hub h;
@@ -90,34 +93,12 @@ int main() {
 
           json msgJson;
 
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
-          std::cout << "============================" << "\n";
-          std::cout << "car_x " << car_x << "\n";
-          std::cout << "car_y " << car_y << "\n";
-          std::cout << "car_s " << car_s << "\n";
-          std::cout << "car_d " << car_d << "\n";
-          std::cout << "car_yaw " << car_yaw << "\n";
-          std::cout << "car_speed " << car_speed << "\n";
-          std::cout << "previous_path_x " << previous_path_x << "\n";
-          std::cout << "previous_path_y " << previous_path_x << "\n";
-          std::cout << "sensor_fusion " << sensor_fusion << "\n";
+          vector<vector<double>> next_xy = move_smoothly_in_the_lane(
+            car_s, car_d, map_waypoints_s, map_waypoints_x, map_waypoints_y
+          );
 
-
-          // Move the car staraight
-          double dist_inc = 0.5; // 0.5 indicates ~ 50 miles/hr
-          for (int i=0; i<50; i++){
-              next_x_vals.push_back(car_x+(dist_inc*(i+1))*cos(deg2rad(car_yaw)));
-              next_y_vals.push_back(car_y+(dist_inc*(i+1))*sin(deg2rad(car_yaw)));
-          }
-          /**
-           * TODO: define a path made up of (x,y) points that the car will visit
-           *   sequentially every .02 seconds
-           */
-
-
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+          msgJson["next_x"] = next_xy[0];
+          msgJson["next_y"] = next_xy[1];
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 

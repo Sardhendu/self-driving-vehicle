@@ -49,14 +49,30 @@
 About the Dataset:
 
 1. Highway Map Data (highway_map.csv):
-   This file containes 5 columns each indicating the way points in the map
+   This file contains 5 columns each indicating the way points in the map
 
-   1. x
+   * The track contains 181 waypoints.
+   * Each way points the center point between the two yellow center line in the road.
+   * Column 1:      x position of waypoint in map coordinate.
+   * Column 2:      y position of waypoint in map coordinate.
+   * Column 3:      s position of waypoint in frenet coordinate.
+   * Column 4 & 5:  d position vector of waypoint in frenet coordinate. (the d vector has a magnitude of 1)
+              the d vector can be used to calculate the lane number
+              * each lane is 4 meters wide
+                 l1  l2  l3   l4  l5  l6
+                |   |   |   ||   |   |   |
+                |   |   |   ||   |   |   |
+                |-12| -8|-4 ||  4|  8| 12|
+                |   |   |   ||   |   |   |
+                |   |   |   ||   |   |   |
+              * To be in the center of a particular lane say l6 in map coordinate. we simple do,
+              * (l6x, l6y) = ((x, y) + (d1, s2)) * (8 + 2) , 8-> distance of l6 from center, 2->to reach the center of the lane
+
 
 2. Data from the Simulator:
 
-    * car_x:              x position of the car in the map coordinate frame
-    * car_y:              y position of the car in the map coordinate frame
+    * car_x:              x position of the car in the map coordinate frame (derived from **localizing** the car)
+    * car_y:              y position of the car in the map coordinate frame (derived from **localizing** the car)
     * car_s:              s position (longitudinal displacement) of the car in the frenet coordinate frame
     * car_d:              d position (lateral displacement) of the car in the frenet coordinate frame
     * car_yaw:            car's yaw angle in the map coordinate frame
@@ -65,4 +81,20 @@ About the Dataset:
     * previous_path_x:    list of x positions in map frame of the polynomial path in the previous (t-1) state.
     * previous_path_x:    list of y positions in map frame the polynomial path in the previous (t-1) state
 
-    * sensor_fusion:      list(list)
+    * sensor_fusion:      list of information on each vehicle in the right lane.
+      * Data format:       [ id, x, y, vx, vy, s, d]
+        * id:             Vehicle id
+        * x:              x position in map coordinate
+        * y:              y position in map coordinate
+        * vx:             velocity in x direction
+        * vy:             velocity in y direction
+        * s:              s value in frenet coordinate
+        * d:              d value in frenet coordinate
+
+3. Some Gotchas:
+
+   * The car movement should be defined in frenet coordinate system.
+   * When building polynomials or trajectories that involve math (which it will). Its a good idea to do the math in vehicle coordinate system
+      * Transform the localized xy points from map coordinate frame to vehicle coordinate frame (Remember Localization using particle filter).
+      * Do your math of building out the polynomials or whatever.
+      * Transform back the xy point to map coordinate frame using the same transformation.

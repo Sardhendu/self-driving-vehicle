@@ -1,12 +1,12 @@
 #ifndef EXPERIMENTS_H
 #define EXPERIMENTS_H
-
+#include <iostream>
 #include <vector>
-#include "helpers.h"
+#include "utils.h"
 #include "spline.h"
-using namespace std;
 
-vector<vector<double>> move_smoothly_in_the_lane(
+
+inline vector<vector<double>> moveSmoothlyInOneLane(
   double car_s,
   double car_d,
   vector<double> map_waypoints_s,
@@ -48,20 +48,31 @@ vector<vector<double>> move_smoothly_in_the_lane(
   vector<double> Y = {
     next_y_vals[0], next_y_vals[9], next_y_vals[19], next_y_vals[29], next_y_vals[39], next_y_vals[49]
   };
-  cout << "Fiting piecewise polynomial with spline " << "\n";
+  std::cout << "Fiting piecewise polynomial with spline " << "\n";
   tk::spline s;
   s.set_points(X,Y);
 
   vector<double> smooth_next_y_vals;
   for (int k =0; k<next_x_vals.size(); k++){
     double smooth_y = s(next_x_vals[k]);
-    cout << next_x_vals[k] << " " << next_y_vals[k] << " " <<smooth_y << "\n";
+    std::cout << next_x_vals[k] << " " << next_y_vals[k] << " " <<smooth_y << "\n";
     smooth_next_y_vals.push_back(smooth_y);
 
   }
 
   return {next_x_vals, smooth_next_y_vals};
 }
+
+
+// inline vector<vector<double>> moveSmoothlyAvoidingColisionInOneLane(
+//   double car_s,
+//   double car_d,
+//   vector<double> map_waypoints_s,
+//   vector<double> map_waypoints_x,
+//   vector<double> map_waypoints_y
+// ){
+//
+// }
 
 #endif
 
@@ -73,4 +84,44 @@ vector<vector<double>> move_smoothly_in_the_lane(
   Funciton 4: Calculate the speed magnitude of any car given velocity vector. (In Frenet)
   Function 5: Calculate the path (s, d) of other cars atleast for few timestems. (In Frenet)
   Function 6: Function that check potential collision in all feasible lane
+
+  Class 1: Vehicle:
+    -> private :
+        -> id
+        -> position (s)
+        -> velocity (v)
+        -> and others
+        -> horizon (timsteps that we want to project the behaviour of other vehicles)
+    -> methods:
+        -> position_at_timestep
+        -> prediction_for_timesteps (creates new vehicle object)
+
+
+Class 2: My Vehicle:
+  1. end goal: determine a trajectory
+  2. whats needed:
+    -> position = s
+    -> Velocity = v
+    -> accelearation = a
+    -> state={
+          CS (constant speed),
+          KL (keep lane) ,
+          PLCL (Plan lane change left),
+          PLCR (Plan lane change Right),
+          LCL (Lane Change Left),
+          LCR (Lane Change Right)
+        }
+  3. Things to think about:
+    -> Every State will have its own Trajectory
+    -> And a trajectory is a list of (lane, pos, vel, acc, state),
+    -> say for steps = 2, we may have
+        trajectory = [
+              [t=1 Vehicle(lane, pos, vel, acc, state)]
+              [t=2 Vehicle(lane, pos, vel, acc, state)]
+        ]
+  -> methods
+
+      -> get_kinematics: Uses prediction(other vehicle info) to derive the next moves (new_position, new_velocity, new_acceleartion)
+      -> get_vehicle_ahead
+      -> get_vehicle_behind
 */

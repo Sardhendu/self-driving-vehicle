@@ -3,18 +3,40 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
-#include "helpers.h"
+
 #include "json.hpp"
 #include "spline.h"
 
+// #include "experiments.h"
+#include "prediction.h"
+#include "vehicle.h"
 #include "experiments.h"
+
+#include <typeinfo>
+
+
 // for convenience
 using nlohmann::json;
 using std::string;
 using std::vector;
-using namespace std;
+using std::map;
+// using namespace std;
+
+string hasData(string s) {
+  auto found_null = s.find("null");
+  auto b1 = s.find_first_of("[");
+  auto b2 = s.find_first_of("}");
+  if (found_null != string::npos) {
+    return "";
+  } else if (b1 != string::npos && b2 != string::npos) {
+    return s.substr(b1, b2 - b1 + 2);
+  }
+  return "";
+}
+
 
 int main() {
   uWS::Hub h;
@@ -53,10 +75,22 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
 
-  h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
-               &map_waypoints_dx,&map_waypoints_dy]
-              (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-               uWS::OpCode opCode) {
+  Prediction prediction_obj;
+  Vehicle vehicle_obj;
+  h.onMessage([
+    &prediction_obj,
+    &vehicle_obj,
+    &map_waypoints_x,
+    &map_waypoints_y,
+    &map_waypoints_s,
+    &map_waypoints_dx,
+    &map_waypoints_dy
+    ](
+      uWS::WebSocket<uWS::SERVER> ws,
+      char *data,
+      size_t length,
+      uWS::OpCode opCode
+    ) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -90,15 +124,61 @@ int main() {
           // Sensor Fusion Data, a list of all other cars on the same side
           //   of the road.
           auto sensor_fusion = j[1]["sensor_fusion"];
+          // std::cout << "sensor_fusion : "<< "\n" << sensor_fusion << "\n";
+          // std::cout << "TYPE: " << typeid(sensor_fusion).name() << endl;
+
+          // for (int v=0; v<sensor_fusion.size(); v++){
+          //   cout << "   " << sensor_fusion[v] << "\n";
+          // }
+
 
           json msgJson;
 
-          vector<vector<double>> next_xy = move_smoothly_in_the_lane(
-            car_s, car_d, map_waypoints_s, map_waypoints_x, map_waypoints_y
-          );
+          vector<vector<double>> sensor_fusion_data;
+          for (int ii=0; ii<sensor_fusion.size(); ii++){
+            vector<double> my_vector {
+              sensor_fusion[ii][0],
+              sensor_fusion[ii][1],
+              sensor_fusion[ii][2],
+              sensor_fusion[ii][3],
+              sensor_fusion[ii][4],
+              sensor_fusion[ii][5]
+            };
+            sensor_fusion_data.push_back(my_vector);
+          }
 
-          msgJson["next_x"] = next_xy[0];
-          msgJson["next_y"] = next_xy[1];
+          vector<double> previous_path_x_;
+          vector<double> previous_path_y_;
+          for (int ii=0; ii<previous_path_x.size(); ii++){
+            previous_path_x_.push_back(previous_path_x[ii]);
+            previous_path_y_.push_back(previous_path_y[ii]);
+          }
+
+          prediction_obj.setPredctions(sensor_fusion_data, "CS");
+          vehicle_obj.setVehicle(
+            car_x,
+            car_y,
+            car_s,
+            car_d,
+            car_yaw,
+            car_speed,
+            map_waypoints_s,
+            map_waypoints_x,
+            map_waypoints_y
+          );
+          std::cout << "car_s " << car_s << "\n";
+          std::cout << "car_d " << car_d << "\n";
+          vector<vector<double>> trajectoryXY = vehicle_obj.generateTrajectory(
+            previous_path_x_,
+            previous_path_y_
+          );
+          // Prediction prediction_dict;
+          // vector<vector<double>> trajectoryXY = moveSmoothlyInOneLane(
+          //   car_s, car_d, map_waypoints_s, map_waypoints_x, map_waypoints_y
+          // );
+
+          msgJson["next_x"] = trajectoryXY[0];//next_xy[0];
+          msgJson["next_y"] = trajectoryXY[1];//next_xy[1];
 
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 

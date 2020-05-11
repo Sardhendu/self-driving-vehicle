@@ -10,6 +10,7 @@
 using std::string;
 using std::vector;
 using std::max;
+using std::min;
 
 // using namespace std;
 // Checks if the SocketIO event has JSON data.
@@ -250,7 +251,7 @@ inline double getVelocity(
   double max_lane_v
 ){
   double next_velocity = curr_v + increment_v;
-  return max(next_velocity, max_lane_v);
+  return min(next_velocity, max_lane_v);
 }
 
 #endif  // UTILS_H

@@ -42,10 +42,15 @@ vector<vector<double>> Vehicle::generateTrajectory(
   std::cout << "set s_frn: " << s_frn << "\n";
   std::cout << "set d_frn: " << d_frn << "\n";
   int lane_num = getLane(d_frn);
-  double curr_velocity = max_lane_velocity[lane_num];
+  curr_velocity = getVelocity(
+    curr_velocity,
+    increment_velocity,
+    max_lane_velocity[lane_num]
+  );
+
+  max_lane_velocity[lane_num];
 
   std::cout << "curr_velocity = " << curr_velocity << "\n";
-
   vector<vector<double>> trajectoryXY = moveSmoothlyAvoidingColisionInOneLane(
     x_map,
     y_map,

@@ -1,13 +1,15 @@
 #ifndef UTILS_H
 #define UTILS_H
-
+#include <iostream>
 #include <math.h>
 #include <string>
 #include <vector>
 
+
 // for convenience
 using std::string;
 using std::vector;
+using std::max;
 
 // using namespace std;
 // Checks if the SocketIO event has JSON data.
@@ -173,8 +175,10 @@ inline vector<vector<double>> transformMapToVehicleFrame(
 
   vector<double> trans_x;
   vector<double> trans_y;
+  std::cout << "\tMap To Vehicle: ref_x = " << ref_x << " ref_y = " << ref_y << "\n";
   for (int i=0; i<points_x.size(); i++){
 
+    std::cout << "\tMap To Vehicle: x_point = " << points_x[i] << " y_point = " << points_y[i] << "\n";
     double shift_x = points_x[i]-ref_x;
     double shift_y = points_y[i]-ref_y;
 
@@ -214,13 +218,14 @@ inline vector<vector<double>> transformVehicleToMapFrame(
   vector<double> trans_x;
   vector<double> trans_y;
   for (int i=0; i<points_x.size(); i++){
-
+    std::cout << "\tVechicle To Map: x_point = " << points_x[i] << " y_point = " << points_y[i] << "\n";
     double rotate_x = points_x[i] * cos(ref_theta) - points_y[i] * sin(ref_theta);
     double rotate_y = points_x[i] * sin(ref_theta) + points_y[i] * cos(ref_theta);
 
     rotate_x += ref_x;
     rotate_y += ref_y;
 
+    std::cout << "\tVechicle To Map: x_fnl = " << rotate_x << " y_fnl= " << rotate_y << "\n";
     trans_x.push_back(rotate_x);
     trans_y.push_back(rotate_y);
 
@@ -234,5 +239,18 @@ inline int getLane(double d){
   return lane_num;
 }
 
+inline double get_d_fromLane(int lane){
+  // 4 is the width of the road
+  return 4*lane + 2;
+}
+
+inline double getVelocity(
+  double curr_v,
+  double increment_v,
+  double max_lane_v
+){
+  double next_velocity = curr_v + increment_v;
+  return max(next_velocity, max_lane_v);
+}
 
 #endif  // UTILS_H

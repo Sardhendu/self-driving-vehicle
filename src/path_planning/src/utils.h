@@ -176,10 +176,10 @@ inline vector<vector<double>> transformMapToVehicleFrame(
 
   vector<double> trans_x;
   vector<double> trans_y;
-  std::cout << "\tMap To Vehicle: ref_x = " << ref_x << " ref_y = " << ref_y << "\n";
+  // std::cout << "\tMap To Vehicle: ref_x = " << ref_x << " ref_y = " << ref_y << "\n";
   for (int i=0; i<points_x.size(); i++){
 
-    std::cout << "\tMap To Vehicle: x_point = " << points_x[i] << " y_point = " << points_y[i] << "\n";
+    // std::cout << "\tMap To Vehicle: x_point = " << points_x[i] << " y_point = " << points_y[i] << "\n";
     double shift_x = points_x[i]-ref_x;
     double shift_y = points_y[i]-ref_y;
 
@@ -219,14 +219,14 @@ inline vector<vector<double>> transformVehicleToMapFrame(
   vector<double> trans_x;
   vector<double> trans_y;
   for (int i=0; i<points_x.size(); i++){
-    std::cout << "\tVechicle To Map: x_point = " << points_x[i] << " y_point = " << points_y[i] << "\n";
+    // std::cout << "\tVechicle To Map: x_point = " << points_x[i] << " y_point = " << points_y[i] << "\n";
     double rotate_x = points_x[i] * cos(ref_theta) - points_y[i] * sin(ref_theta);
     double rotate_y = points_x[i] * sin(ref_theta) + points_y[i] * cos(ref_theta);
 
     rotate_x += ref_x;
     rotate_y += ref_y;
 
-    std::cout << "\tVechicle To Map: x_fnl = " << rotate_x << " y_fnl= " << rotate_y << "\n";
+    // std::cout << "\tVechicle To Map: x_fnl = " << rotate_x << " y_fnl= " << rotate_y << "\n";
     trans_x.push_back(rotate_x);
     trans_y.push_back(rotate_y);
 

@@ -75,10 +75,10 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
 
-  Prediction prediction_obj;
+  // Prediction prediction_obj;
   Vehicle vehicle_obj;
   h.onMessage([
-    &prediction_obj,
+    // &prediction_obj,
     &vehicle_obj,
     &map_waypoints_x,
     &map_waypoints_y,
@@ -127,9 +127,11 @@ int main() {
           // std::cout << "sensor_fusion : "<< "\n" << sensor_fusion << "\n";
           // std::cout << "TYPE: " << typeid(sensor_fusion).name() << endl;
 
-          // for (int v=0; v<sensor_fusion.size(); v++){
-          //   cout << "   " << sensor_fusion[v] << "\n";
-          // }
+          std::cout << "SENSOR FUSION ===-=-=--=-==-=-";
+          for (int v=0; v<sensor_fusion.size(); v++){
+            std::cout << sensor_fusion[v] << " ";
+          }
+          std::cout << "\n";
 
 
           json msgJson;
@@ -154,7 +156,11 @@ int main() {
             previous_path_y_.push_back(previous_path_y[ii]);
           }
 
-          prediction_obj.setPredctions(sensor_fusion_data, "CS");
+          std::cout << "\n\n\n";
+          std::cout << "#----------------------------------\n";
+          std::cout << "# Initiating New Tmestep\n";
+          std::cout << "#----------------------------------\n";
+          // prediction_obj.setPredctions(sensor_fusion_data, "CS");
           vehicle_obj.setVehicle(
             car_x,
             car_y,
@@ -164,7 +170,8 @@ int main() {
             car_speed,
             map_waypoints_s,
             map_waypoints_x,
-            map_waypoints_y
+            map_waypoints_y,
+            sensor_fusion_data
           );
           std::cout << "car_s " << car_s << "\n";
           std::cout << "car_d " << car_d << "\n";

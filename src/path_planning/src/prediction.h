@@ -23,7 +23,6 @@ struct Traffic {
 
 class Prediction {
 public:
-  vector<Traffic> prediction_trajectory;
   map<int, vector<Traffic>> predictions_dict;
 
   Prediction() {};
@@ -35,6 +34,8 @@ public:
   );
 
   map<int, vector<Traffic>> getPredictions();
+  Traffic getNearestVehicleAhead(double car_s, int car_lane);
+  Traffic getNearestVehicleBehind(double car_s, int car_lane);
 };
 
 #endif  // PREDICTION_H

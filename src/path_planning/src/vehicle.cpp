@@ -6,6 +6,8 @@
 #include "experiments.h"
 
 using std::vector;
+using std::min;
+using std::max;
 
 
 void Vehicle::setVehicle(
@@ -22,19 +24,21 @@ void Vehicle::setVehicle(
 ){
   // std::cout << "set s: " << s << "\n";
   // std::cout << "set d: " << d << "\n";
-  x_map = x;
-  y_map = y;
-  s_frn = s;
-  d_frn = d;
+  car_x = x;
+  car_y = y;
+  car_s = s;
+  car_d = d;
   car_yaw = yaw;
   car_speed = speed;
+  car_lane = getLane(car_d);
   waypoints_s_map = map_waypoints_s;
   waypoints_x_map = map_waypoints_x;
   waypoints_y_map = map_waypoints_y;
-  // std::cout << "set s_frn: " << s_frn << "\n";
-  // std::cout << "set d_frn: " << d_frn << "\n";
+  // std::cout << "set car_s: " << car_s << "\n";
+  // std::cout << "set car_d: " << car_d << "\n";
+  prediction_obj.setPredictions(sensor_fusion_data, "CS");
 
-  prediction_obj.setPredctions(sensor_fusion_data, "CS");
+
 }
 
 
@@ -42,60 +46,109 @@ vector<vector<double>> Vehicle::generateTrajectory(
   vector<double> previous_path_x,
   vector<double> previous_path_y
 ){
-  // std::cout << "set s_frn: " << s_frn << "\n";
-  // std::cout << "set d_frn: " << d_frn << "\n";
-  int car_lane = getLane(d_frn);
-  curr_velocity = getVelocity(
-    curr_velocity,
-    increment_velocity,
-    max_lane_velocity[car_lane]
-  );
+  // std::cout << "set car_s: " << car_s << "\n";
+  // std::cout << "set car_d: " << car_d << "\n";
 
-  std::cout << "Car ===========================>"
-  << "\n\t x_map \t" << x_map
-  << "\n\t y_map \t " << y_map
-  << "\n\t s_frn \t" << s_frn
-  << "\n\t d_frn \t" << d_frn
-  << "\n\t car_yaw degrees \t" << car_yaw
-  << "\n\t car_speed miles/hr \t" << car_speed
-  << "\n\t curr_velocity meter/sec \t" << curr_velocity
-  << "\n\t car_lane \t" << car_lane << "\n";
+  // std::cout << "My Car at timestep: t ===> x =  "<< car_x << " car_y = " << car_y << "\n";
+  // for (int i=0; i<previous_path_x.size(); i++){
+  //   std::cout << "\tprevx = " << previous_path_x[i] << "\tprevy = " << previous_path_y[i] << "\n";
+  // }
+
+  // car_v = getVelocity(
+  //   car_v,
+  //   increment_velocity,
+  //   max_lane_velocity[car_lane]
+  // );
+
+
+  car_v = get_kinematics();
 
   std::cout << "generateTrajectory \n"
-  << "\t curr_lane_velocity: " << curr_velocity
+  << "\t curr_lane_velocity: " << car_v
   << "\t max_lane_velocity:" << max_lane_velocity[car_lane]
   << "\n";
 
-  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-    s_frn,
-    car_lane
-  );
-
-  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
-    s_frn,
-    car_lane
-  );
-
   vector<vector<double>> trajectoryXY = keepLaneTrajectory(
-    curr_velocity,
+    car_v,
     previous_path_x,
     previous_path_y
   );
 
-  // std::cout << "s: " << s << "\n";
-  // vector<vector<double>> trajectoryXY_ = moveSmoothlyInOneLane(
-  //   s_frn,
-  //   d_frn,
-  //   waypoints_s_map,
-  //   waypoints_x_map,
-  //   waypoints_y_map
-  // );
+  std::cout << "Car ===========================>"
+  << "\n\t car_x \t" << car_x
+  << "\n\t car_y \t " << car_y
+  << "\n\t car_s \t" << car_s
+  << "\n\t car_d \t" << car_d
+  << "\n\t car_yaw degrees \t" << car_yaw
+  << "\n\t car_speed miles/hr \t" << car_speed
+  << "\n\t car_v meter/sec \t" << car_v
+  << "\n\t car_v_prev meter/sec \t" << car_v_prev
+  << "\n\t car_a meter/sec \t" << car_a
+  << "\n\t car_lane \t" << car_lane << "\n";
 
-
+  car_a = car_v - car_v_prev;         // acceleration = change_of_velocity/time
+  car_v_prev = car_v;
   return trajectoryXY;
 }
 
 
+double Vehicle::get_kinematics(){
+  /*
+    This module determines the velocity, acceleration and position of our vehicle given
+    the nearest vehicle ahead and behind
+
+    We need to implement stuff from Jerk Minimization
+    1. Jerk minimization equation: s is the s position in frenet system
+      s_i -> position
+      v_i -> velocity
+      a_i -> acceleration
+      Position: s(t) (goal) = s_i + v_i(t) + 0.5*a_i(t**2)
+  */
+  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
+    car_s,
+    car_lane
+  );
+
+  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
+    car_s,
+    car_lane
+  );
+
+  /* Vehicle ahead and Vehicle behind can still return vehicle not in our lane, in cases where there are no vhicle in our lane
+      So here we check that condition
+  */
+  double new_velocity = car_v;
+  double max_v_a = new_velocity + car_a_max;   // To avoid jerk
+  if (vehicle_ahead.lane == car_lane){
+    std::cout << "THERE IS A VEHICLE AHEAD =========> " << "\n";
+    std::cout << "vehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
+    std::cout << "my_vehicle:\t s = " <<  car_s << " a = " << car_a << "\n";
+    // If there is a vehicle behind make our car move with the speed that of the front
+    // if (vehicle_behind.lane == car_lane){
+    //   // Choose to follow the traffic velocity when there is a car ahead
+    //   std::cout << "THERE IS A VEHICLE BEHIND =========> " << "\n";
+    //   std::cout << "vehicle_behind:\t s = " <<  vehicle_behind.s << " v = " << vehicle_behind.v << "\n";
+    //   new_velocity = vehicle_ahead.v;
+    // }
+    // else{
+      // Assuming our goal is to reach the preffered position that is buffer_meters behind the car ahead, we use the
+      // Jerk minimization equation to calculate the preferend velocity the vehicle should given that we use the same acceleration
+      // goal s(t)(vehicle_ahead.s - buffer_distance) = car.s + (max_velocity_ahead - vehicle_ahead.v)*t + car.a*(t**2)
+
+
+      double max_velocity_ahead = vehicle_ahead.s - car_s - buffer_distance + vehicle_ahead.v - 0.5*car_a;
+      std::cout << "Fetch Kinematics: max_velocity_ahead = " << max_velocity_ahead << "\n";
+      new_velocity = min(max_velocity_ahead, max_lane_velocity[car_lane]);
+      new_velocity = min(new_velocity, max_v_a);
+    }
+  // }
+  else{
+    // When there are no cars ahead increments the cars velocity untill max permitted by lane
+    new_velocity = min(max_v_a, max_lane_velocity[car_lane]);
+  }
+  return new_velocity;
+
+}
 
 vector<vector<double>> Vehicle::keepLaneTrajectory(
   double curr_v,      // current velocity
@@ -119,7 +172,7 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
         step t-1 that were not used by the simulator to drive the car. So why not we add those
 
   */
-  // std::cout << "\t x_map = " << x_map << " y_map = " << y_map << " car_yaw = " << car_yaw << " s = " << s_frn << " d = " << d_frn << "\n";
+  // std::cout << "\t x_map = " << x_map << " y_map = " << y_map << " car_yaw = " << car_yaw << " s = " << car_s << " d = " << car_d << "\n";
   // std::cout << "\tlen(previous_path_x) = " << previous_path_x.size() << "\n";
   // std::cout << "\tcurrently velocity = " << curr_v << "\n";
   // std::cout << "\ttarget_trajectory_distance = " << target_trajectory_distance << "\n";
@@ -129,8 +182,8 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
   vector<double> anchor_points_x;
   vector<double> anchor_points_y;
 
-  double ref_x_map = x_map;
-  double ref_y_map = y_map;
+  double ref_x_map = car_x;
+  double ref_y_map = car_y;
   double ref_yaw = deg2rad(car_yaw);
 
   int prev_path_size = previous_path_x.size();
@@ -143,14 +196,14 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
       When we dont have any data on previous path we simple use the current
       car yaw to generate car position for t-m timesteps
     */
-    double prev_x_map = x_map - cos(car_yaw);
-    double prev_y_map = y_map - sin(car_yaw);
+    double prev_x_map = car_x - cos(car_yaw);
+    double prev_y_map = car_y - sin(car_yaw);
 
     anchor_points_x.push_back(prev_x_map);
-    anchor_points_x.push_back(x_map);
+    anchor_points_x.push_back(car_x);
 
     anchor_points_y.push_back(prev_y_map);
-    anchor_points_y.push_back(y_map);
+    anchor_points_y.push_back(car_y);
 
   }
   else{
@@ -173,14 +226,14 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
   }
 
   // Genreate few points in the future using CarPosiiton in Frenet Coordinate Frame
-  double next_d = 4*getLane(d_frn) + 2;
-  // std::cout << "\tlane num = " <<  getLane(d_frn) << "\n";
+  double next_d = 4*getLane(car_d) + 2;
+  // std::cout << "\tlane num = " <<  getLane(car_d) << "\n";
 
   vector<int> distances {30, 60, 90};
 
   for (int nxy=0; nxy<distances.size(); nxy++){
     vector<double> next_xy = getXY(
-      s_frn+distances[nxy],
+      car_s+distances[nxy],
       next_d,
       waypoints_s_map,
       waypoints_x_map,
@@ -188,14 +241,14 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
     );
     anchor_points_x.push_back(next_xy[0]);
     anchor_points_y.push_back(next_xy[1]);
-    std::cout << "\tdistance = " << distances[nxy] << " next_x = " << next_xy[0] << " nxt_y = " << next_xy[1] << "\n";
+    // std::cout << "\tdistance = " << distances[nxy] << " next_x = " << next_xy[0] << " nxt_y = " << next_xy[1] << "\n";
   }
 
   // Now we convert the points in map coordinate frame to vehicle coordinate
   // frame using the ref_x, ref_y and ref_yaw
-  for (int np=0; np<anchor_points_x.size(); np++){
-    std::cout << "\t-> Map Frame: x = " << anchor_points_x[np] << " y = " << anchor_points_y[np] << "\n";
-  }
+  // for (int np=0; np<anchor_points_x.size(); np++){
+  //   std::cout << "\t-> Map Frame: x = " << anchor_points_x[np] << " y = " << anchor_points_y[np] << "\n";
+  // }
   // std::cout << "\tref_x_map = " << ref_x_map << " ref_y_map = " << ref_y_map << "ref_yaw = " << ref_yaw << "\n";
 
   vector<vector<double>> transXY = transformMapToVehicleFrame(
@@ -231,6 +284,9 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
   double add_x = 0;
   vector<double> next_points_x_v;
   vector<double> next_points_y_v;
+  std::cout << "[Generate Tajectory]\t "
+  << " previous_path_size = " << prev_path_size
+  << " new_paths = " << target_trajectory_points-prev_path_size << "\n";
   for (int i=0; i<=target_trajectory_points-prev_path_size; i++){
     double x_point = add_x + (target_trajectory_distance/N);
     double y_point = spl(x_point);

@@ -237,6 +237,7 @@ inline vector<vector<double>> transformVehicleToMapFrame(
 
 inline int getLane(double d){
   int lane_num = ceil(d/4)-1;
+  // if 
   return lane_num;
 }
 
@@ -250,6 +251,9 @@ inline double getVelocity(
   double increment_v,
   double max_lane_v
 ){
+  /*
+    This velocity makes the car accelerate slowely with small increments.
+  */
   double next_velocity = curr_v + increment_v;
   return min(next_velocity, max_lane_v);
 }

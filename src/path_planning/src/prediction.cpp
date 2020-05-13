@@ -1,15 +1,16 @@
 #include <map>
 #include <vector>
-
+#include <cmath>
 #include "prediction.h"
 #include "utils.h"
+
 
 
 
 using std::vector;
 using std::map;
 
-void Prediction::setPredctions(
+void Prediction::setPredictions(
   vector<vector<double>> sensor_fusion_data,
   string state = "CS"
 ){
@@ -24,21 +25,26 @@ void Prediction::setPredctions(
     single_vehicle.vy = sensor_fusion_data[i][4];
     single_vehicle.s = sensor_fusion_data[i][5];
     single_vehicle.d = sensor_fusion_data[i][6];
+    single_vehicle.v = sqrt(
+      sensor_fusion_data[i][3]*sensor_fusion_data[i][3] +
+      sensor_fusion_data[i][4]*sensor_fusion_data[i][4]
+    );
     single_vehicle.state = state;
     single_vehicle.lane = getLane(sensor_fusion_data[i][6]);
     prediction_trajectory.push_back(single_vehicle);
     predictions_dict[i] = prediction_trajectory;
 
     std::cout << "Prediction \t\t "
-    << single_vehicle.id << " "
-    << single_vehicle.x << " "
-    << single_vehicle.y << " "
-    << single_vehicle.vx  << " "
-    << single_vehicle.vy << " "
-    << single_vehicle.s << " "
-    << single_vehicle.d << " "
-    << single_vehicle.state << " "
-    << single_vehicle.lane << "\n";
+    << "id = " << single_vehicle.id << " "
+    << "x = " << single_vehicle.x << " "
+    << "y = " << single_vehicle.y << " "
+    << "vx = " << single_vehicle.vx  << " "
+    << "vy = " << single_vehicle.vy << " "
+    << "v = " << single_vehicle.v << " "
+    << "s = " << single_vehicle.s << " "
+    << "d = " << single_vehicle.d << " "
+    << "state = " <<single_vehicle.state << " "
+    << "lane = " <<single_vehicle.lane << "\n";
   }
 
 }
@@ -118,23 +124,23 @@ Traffic Prediction::getNearestVehicleBehind(
   map<int, vector<Traffic>>::iterator it = predictions_dict.begin();
   while (it != predictions_dict.end()){
     Traffic curr_vehicle = it->second[0];
-    std::cout << "curr_vehicle_id \t\t " << it -> first
-    << curr_vehicle.id << " "
-    << curr_vehicle.x << " "
-    << curr_vehicle.y << " "
-    << curr_vehicle.vx  << " "
-    << curr_vehicle.vy << " "
-    << curr_vehicle.s << " "
-    << curr_vehicle.d << " "
-    << curr_vehicle.state << " "
-    << curr_vehicle.lane << "\n";
+    // std::cout << "curr_vehicle_id \t\t " << it -> first
+    // << curr_vehicle.id << " "
+    // << curr_vehicle.x << " "
+    // << curr_vehicle.y << " "
+    // << curr_vehicle.vx  << " "
+    // << curr_vehicle.vy << " "
+    // << curr_vehicle.s << " "
+    // << curr_vehicle.d << " "
+    // << curr_vehicle.state << " "
+    // << curr_vehicle.lane << "\n";
     // Check if the current car_s if < curr_vehicle.s
     if (car_s > curr_vehicle.s){
       if (counter_ == 0){
         nearest_vehicle = it -> second[0];
         nearest_vehicle_s = curr_vehicle.s;
         nearest_vehicle_id = it -> first;
-        std::cout << "------------------> Nearest_vehicle \n ";
+        // std::cout << "------------------> Nearest_vehicle \n ";
       }
       else{
         if (
@@ -144,7 +150,7 @@ Traffic Prediction::getNearestVehicleBehind(
             nearest_vehicle_s = curr_vehicle.s;
             nearest_vehicle = curr_vehicle;
             nearest_vehicle_id = it -> first;
-            std::cout << "------------------> Nearest_vehicle \n ";
+            // std::cout << "------------------> Nearest_vehicle \n ";
           }
       }
 
@@ -155,6 +161,9 @@ Traffic Prediction::getNearestVehicleBehind(
   }
   return nearest_vehicle;
 }
+
+
+
 
 /*
 TODOS:

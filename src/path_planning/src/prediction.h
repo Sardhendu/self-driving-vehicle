@@ -17,6 +17,7 @@ struct Traffic {
   double vy;
   double s;
   double d;
+  double v;
   int lane;
   string state = "CS";
 };
@@ -28,7 +29,7 @@ public:
   Prediction() {};
   ~Prediction() {};
 
-  void setPredctions(
+  void setPredictions(
     vector<vector<double>> sensor_fusion_data,
     string state
   );

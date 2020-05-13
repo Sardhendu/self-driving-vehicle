@@ -144,7 +144,8 @@ int main() {
               sensor_fusion[ii][2],
               sensor_fusion[ii][3],
               sensor_fusion[ii][4],
-              sensor_fusion[ii][5]
+              sensor_fusion[ii][5],
+              sensor_fusion[ii][6]
             };
             sensor_fusion_data.push_back(my_vector);
           }

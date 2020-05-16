@@ -82,12 +82,36 @@ vector<vector<double>> Vehicle::generateTrajectory(
   << "\t max_lane_velocity:" << max_lane_velocity[car_lane]
   << "\n";
 
+
+  // ------------------------------------------------------------------------
+  // Small Hack to test
+  // ------------------------------------------------------------------------
+  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
+    car_s, car_lane
+  );
+  int curr_lane;
+  std::cout << vehicle_ahead.lane << " " << car_lane << "\n";
+  if (vehicle_ahead.lane == car_lane){
+    if (vehicle_ahead.s - car_s <= collision_buffer_distance){
+      curr_lane = car_lane + 1;
+    }
+    else{
+      curr_lane = car_lane;
+    }
+  }
+  else{
+      curr_lane = car_lane;
+    }
+  // ------------------------------------------------------------------------
+
+  std::cout << "curr_lanecurr_lanecurr_lanecurr_lanecurr_lanecurr_lane  " << curr_lane << "\n";
   // curr_lane = getLane(car_d);
-  keepLaneTrajectory(
+  deque<Trajectory> trajectories = keepLaneTrajectory(
     car_v,
-    car_lane,
+    curr_lane,
     previous_path_x,
-    previous_path_y
+    previous_path_y,
+    final_trajectory
   );
 
   std::cout << "Car ===========================>"
@@ -105,10 +129,10 @@ vector<vector<double>> Vehicle::generateTrajectory(
   car_a = car_v - car_v_prev;         // acceleration = change_of_velocity/time
   car_v_prev = car_v;
 
-
+  final_trajectory = trajectories;
   vector<double> trajectory_x_points;
   vector<double> trajectory_y_points;
-  for (int i=0; i<trajectories.size(); i++){
+  for (int i=0; i<final_trajectory.size(); i++){
     trajectory_x_points.push_back(trajectories[i].x_map);
     trajectory_y_points.push_back(trajectories[i].y_map);
   }
@@ -215,14 +239,17 @@ double Vehicle::getKinematics(
   /* Vehicle ahead and Vehicle behind can still return vehicle not in our lane, in cases where there are no vhicle in our lane
       So here we check that condition
   */
-  double new_velocity = car_v;
-  double max_v_a = new_velocity + car_a_max;   // To avoid jerk
-  std::cout << "get_kinematics: \n"
-  << "\tcar_lane = " << car_lane << "\tvehicle_lane = " << vehicle_ahead.lane << "\n";
+  double new_velocity;
+  double max_v_a = car_v + car_a_max;   // To avoid jerk
+  std::cout << "\tintended_regular_velocity = " << max_v_a << "\n";
+  std::cout << "[getKinematics]: \n"
+  << "\tcar_lane = " << car_lane
+  << "\tvehicle_lane = " << vehicle_ahead.lane << "\n";
+
   if (vehicle_ahead.lane == car_lane){
-    std::cout << "THERE IS A VEHICLE AHEAD =========> " << "\n";
-    std::cout << "vehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
-    std::cout << "my_vehicle:\t s = " <<  car_s << " a = " << car_a << "\n";
+    std::cout << "\tTHERE IS A VEHICLE AHEAD =========> " << "\n";
+    std::cout << "\tvehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
+    std::cout << "\tmy_vehicle:\t s = " <<  car_s << " v = " << car_v << " a = " << car_a << "\n";
     // If there is a vehicle behind make our car move with the speed that of the front
     // if (vehicle_behind.lane == car_lane){
     //   // Choose to follow the traffic velocity when there is a car ahead
@@ -238,14 +265,16 @@ double Vehicle::getKinematics(
       goal s(t)(vehicle_ahead.s - buffer_distance) = car.s + (max_velocity_ahead - vehicle_ahead.v)*t + car.a*(t**2)
     */
       double max_velocity_ahead = vehicle_ahead.s - car_s - collision_buffer_distance + vehicle_ahead.v - 0.5*car_a;
-      std::cout << "Fetch Kinematics: max_velocity_ahead = " << max_velocity_ahead << "\n";
+      std::cout << "\tmax_velocity_ahead = " << max_velocity_ahead << "\n";
       new_velocity = min(max_velocity_ahead, max_lane_velocity[car_lane]);
       new_velocity = min(new_velocity, max_v_a);
+      std::cout << "\tnew_velocity = " << new_velocity << "\n";
     }
   // }
   else{
-    // When there are no cars ahead increments the cars velocity untill max permitted by lane
+    // When there are no cars ahead, increment the cars velocity untill max permitted by lane
     new_velocity = min(max_v_a, max_lane_velocity[car_lane]);
+    std::cout << "\new_velocity = " << new_velocity << "\n";
   }
   return new_velocity;
 
@@ -255,11 +284,12 @@ double Vehicle::getKinematics(
 // -----------------------------------------------------------------------------
 // Keep Lane Trajectory
 // -----------------------------------------------------------------------------
-void Vehicle::keepLaneTrajectory(
+deque<Trajectory> Vehicle::keepLaneTrajectory(
   double curr_v,      // current velocity
   int curr_lane,      // Required for proper trajectory
   vector<double> previous_path_x,
-  vector<double> previous_path_y
+  vector<double> previous_path_y,
+  deque<Trajectory> trajectories
 ){
   /*
   Idea: Here we use last t-m points from the previous path and use them to generate paths for t+n timesteps.
@@ -284,7 +314,7 @@ void Vehicle::keepLaneTrajectory(
   // std::cout << "\predict_distance = " << predict_distance << "\n";
   // std::cout << "\tsec_to_visit_next_point = " << sec_to_visit_next_point << "\n";
 
-
+  std::cout << "curr_lanecurr_lanecurr_lane : " << curr_lane << "\n";
   vector<double> anchor_points_x;
   vector<double> anchor_points_y;
 
@@ -435,13 +465,12 @@ void Vehicle::keepLaneTrajectory(
 
     Trajectory single_point;
     single_point.id = i;
-    single_point.lane = car_lane;
+    single_point.lane = curr_lane;
     single_point.x_map = next_points_xy_m[0][i];
     single_point.y_map = next_points_xy_m[1][i];
     single_point.v = car_v;
     single_point.a = car_a;
     single_point.state = car_state;
-    single_point.lane = car_lane;
     trajectories.push_back(single_point);
   }
   std::cout << "\tFinal Trajectory Length = "<< trajectories.size();
@@ -449,7 +478,7 @@ void Vehicle::keepLaneTrajectory(
   // for (int fp=0; fp<next_points_x_m.size(); fp++){
   //   std::cout << "\tFINAL VEHICLE: num = " << fp << " x =" << next_points_x_m[fp] << " y = " << next_points_y_m[fp] << "\n";
   // }
-// return trajectories; // trajectories;
+return trajectories; // trajectories;
 
 }
 

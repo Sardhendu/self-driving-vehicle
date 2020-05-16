@@ -36,7 +36,7 @@ public:
   // double increment_velocity = 0.2;
   double sec_to_visit_next_point = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
 
-  int collision_buffer_distance = 25; //Assuming we keep 10 m distance from any car ahead of us
+  int collision_buffer_distance = 35; //Assuming we keep 10 m distance from any car ahead of us
   int lane_change_vehicle_behind_buffer = 35;
 
   vector<int> poly_fit_distances = {30, 40, 90};  // In meters
@@ -55,7 +55,7 @@ public:
   vector<double> waypoints_x_map;
   vector<double> waypoints_y_map;
   vector<vector<double>> sensor_fusion_data;
-  deque<Trajectory> trajectories;
+  deque<Trajectory> final_trajectory;
 
   Vehicle() {};
   ~Vehicle() {};
@@ -83,11 +83,12 @@ public:
     // auto previous_path_y
   );
 
-void keepLaneTrajectory(
+deque<Trajectory> keepLaneTrajectory(
     double curr_v,      // current velocity
     int curr_lane,
     vector<double> previous_path_x,
-    vector<double> previous_path_y
+    vector<double> previous_path_y,
+    deque<Trajectory> trajectories
   );
 
   // -----------------------------------------------------------------------------

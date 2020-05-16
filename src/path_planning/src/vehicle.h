@@ -2,9 +2,11 @@
 #define VEHICLE_H
 #include <vector>
 #include <utility>
+#include <deque>
 #include "prediction.h"
 
 using std::vector;
+using std::deque;
 
 struct Kinematics {
   double velocity;
@@ -13,6 +15,7 @@ struct Kinematics {
 
 
 struct Trajectory {
+  int id;
   int lane;
   float x_map;
   float y_map;
@@ -38,7 +41,7 @@ public:
 
   vector<int> poly_fit_distances = {30, 40, 90};  // In meters
   int predict_distance = 30; // meters that the car should look ahead for trajectory generation
-  int trajectory_points = 50; // num of future points to generate in the trajectory
+  int trajectory_length = 50; // num of future points to generate in the trajectory
 
   double car_x;
   double car_y;
@@ -52,6 +55,7 @@ public:
   vector<double> waypoints_x_map;
   vector<double> waypoints_y_map;
   vector<vector<double>> sensor_fusion_data;
+  deque<Trajectory> trajectories;
 
   Vehicle() {};
   ~Vehicle() {};
@@ -79,7 +83,7 @@ public:
     // auto previous_path_y
   );
 
-  vector<vector<double>> keepLaneTrajectory(
+void keepLaneTrajectory(
     double curr_v,      // current velocity
     int curr_lane,
     vector<double> previous_path_x,
@@ -103,6 +107,7 @@ public:
   double getKinematics(Traffic vehicle_ahead, Traffic vehicle_behind);
   Kinematics keepLaneKinematics(int curr_lane);
   Kinematics laneChangeKinematics(string state, int curr_lane);
+  Kinematics prepareLaneChangeKinematics(string state, int curr_lane);
 
 
   // -----------------------------------------------------------------------------

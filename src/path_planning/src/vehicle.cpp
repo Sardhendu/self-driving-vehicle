@@ -5,6 +5,7 @@
 #include "spline.h"
 #include "experiments.h"
 
+
 using std::vector;
 using std::min;
 using std::max;
@@ -82,7 +83,7 @@ vector<vector<double>> Vehicle::generateTrajectory(
   << "\n";
 
   // curr_lane = getLane(car_d);
-  vector<vector<double>> trajectoryXY = keepLaneTrajectory(
+  keepLaneTrajectory(
     car_v,
     car_lane,
     previous_path_x,
@@ -103,41 +104,58 @@ vector<vector<double>> Vehicle::generateTrajectory(
 
   car_a = car_v - car_v_prev;         // acceleration = change_of_velocity/time
   car_v_prev = car_v;
-  return trajectoryXY;
+
+
+  vector<double> trajectory_x_points;
+  vector<double> trajectory_y_points;
+  for (int i=0; i<trajectories.size(); i++){
+    trajectory_x_points.push_back(trajectories[i].x_map);
+    trajectory_y_points.push_back(trajectories[i].y_map);
+  }
+  return {trajectory_x_points, trajectory_y_points};
 }
 
 
 // -----------------------------------------------------------------------------
 // Prepare Lane Change Kinematics
 // -----------------------------------------------------------------------------
-// double Vehicle::prepareLaneChangeKinematics(
-//   string state,
-//   int curr_lane,
-// ){
-//   int intended_lane;
-//   if (state == "PLCL"){
-//     intended_lane -= 1;
-//   }
-//   else{
-//     intended_lane += 1;
-//   }
-//
-//   Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-//     car_s, intended_lane
-//   );
-//
-//   Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
-//     car_s, intended_lane
-//   );
-//
-//   vector<double> v_kinematics;
-//   if (vehicle_behind.lane == intended_lane){
-//     if (car_s-vehicle_behind.s <= lane_change_vehicle_behind_buffer){
-//       v_kinematics = {curr_lane, }
-//     }
-//   }
-// }
+Kinematics Vehicle::prepareLaneChangeKinematics(
+  string state,
+  int curr_lane
+){
+  int intended_lane;
+  if (state == "PLCL"){
+    intended_lane -= 1;
+  }
+  else{
+    intended_lane += 1;
+  }
 
+  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
+    car_s, intended_lane
+  );
+
+  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
+    car_s, intended_lane
+  );
+
+  Kinematics PLCK;
+  if (vehicle_behind.lane == intended_lane){
+    if (car_s-vehicle_behind.s <= lane_change_vehicle_behind_buffer){
+      // Stay in current lane if there is a vehicle in the front in the intended lane
+      PLCK.lane = curr_lane;
+
+    }
+    double nw_v = getKinematics(vehicle_ahead, vehicle_behind);
+    PLCK.velocity = nw_v;
+
+  }
+  return PLCK;
+}
+
+// -----------------------------------------------------------------------------
+// Keep Lane Kinematics
+// -----------------------------------------------------------------------------
 Kinematics Vehicle::keepLaneKinematics(
   int curr_lane
 ){
@@ -157,7 +175,9 @@ Kinematics Vehicle::keepLaneKinematics(
   return KLK;
 }
 
-
+// -----------------------------------------------------------------------------
+// Lane Change Kinematics
+// -----------------------------------------------------------------------------
 Kinematics Vehicle::laneChangeKinematics(
   string state, int curr_lane
 ){
@@ -197,6 +217,8 @@ double Vehicle::getKinematics(
   */
   double new_velocity = car_v;
   double max_v_a = new_velocity + car_a_max;   // To avoid jerk
+  std::cout << "get_kinematics: \n"
+  << "\tcar_lane = " << car_lane << "\tvehicle_lane = " << vehicle_ahead.lane << "\n";
   if (vehicle_ahead.lane == car_lane){
     std::cout << "THERE IS A VEHICLE AHEAD =========> " << "\n";
     std::cout << "vehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
@@ -233,7 +255,7 @@ double Vehicle::getKinematics(
 // -----------------------------------------------------------------------------
 // Keep Lane Trajectory
 // -----------------------------------------------------------------------------
-vector<vector<double>> Vehicle::keepLaneTrajectory(
+void Vehicle::keepLaneTrajectory(
   double curr_v,      // current velocity
   int curr_lane,      // Required for proper trajectory
   vector<double> previous_path_x,
@@ -369,13 +391,13 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
   vector<double> next_points_y_v;
   std::cout << "[Generate Tajectory]\t "
   << " previous_path_size = " << prev_path_size
-  << " new_paths = " << trajectory_points-prev_path_size << "\n";
+  << " new_paths = " << trajectory_length-prev_path_size << "\n";
 
-  for (int i=0; i<=trajectory_points-prev_path_size; i++){
+
+  int new_points_count = trajectory_length-prev_path_size;
+  for (int i=0; i<new_points_count; i++){
     double x_point = add_x + (predict_distance/N);
     double y_point = spl(x_point);
-    // std::cout << "\tNext vals vehicle: x_point = " << x_point << " y_point = " << y_point << "\n";
-
     next_points_x_v.push_back(x_point);
     next_points_y_v.push_back(y_point);
 
@@ -390,24 +412,44 @@ vector<vector<double>> Vehicle::keepLaneTrajectory(
     next_points_y_v
   );
 
-  vector<double> next_points_x_m;
-  vector<double> next_points_y_m;
+  // vector<double> next_points_x_m;
+  // vector<double> next_points_y_m;
 
   // Add the points from previous trajectory and
-  for (int i=0; i<prev_path_size; i++){
-    next_points_x_m.push_back(previous_path_x[i]);
-    next_points_y_m.push_back(previous_path_y[i]);
-  }
+  // for (int i=0; i<prev_path_size; i++){
+  //   next_points_x_m.push_back(previous_path_x[i]);
+  //   next_points_y_m.push_back(previous_path_y[i]);
+  // }
 
-  for (int i=0; i<next_points_xy_m[0].size(); i++){
-    next_points_x_m.push_back(next_points_xy_m[0][i]);
-    next_points_y_m.push_back(next_points_xy_m[1][i]);
+  if (!trajectories.empty()){
+    for (int i=0; i<new_points_count; i++){
+        std::cout << "\tRemoving " << i << "\t " << "dat = " <<trajectories[0].id << "\t" << trajectories[0].x_map << "\t" << trajectories[0].y_map << "\n";
+        trajectories.pop_front();
+    }
   }
+  // Insert New trajectory points
+  for (int i=0; i<next_points_xy_m[0].size(); i++){
+    std::cout << "\tAdding: "<< i << "\t " << "dat = " << i << "\t" << next_points_xy_m[0][i] << "\t" << next_points_xy_m[1][i] << "\n";
+    // next_points_x_m.push_back(next_points_xy_m[0][i]);
+    // next_points_y_m.push_back(next_points_xy_m[1][i]);
+
+    Trajectory single_point;
+    single_point.id = i;
+    single_point.lane = car_lane;
+    single_point.x_map = next_points_xy_m[0][i];
+    single_point.y_map = next_points_xy_m[1][i];
+    single_point.v = car_v;
+    single_point.a = car_a;
+    single_point.state = car_state;
+    single_point.lane = car_lane;
+    trajectories.push_back(single_point);
+  }
+  std::cout << "\tFinal Trajectory Length = "<< trajectories.size();
   //
   // for (int fp=0; fp<next_points_x_m.size(); fp++){
   //   std::cout << "\tFINAL VEHICLE: num = " << fp << " x =" << next_points_x_m[fp] << " y = " << next_points_y_m[fp] << "\n";
   // }
-return {next_points_x_m, next_points_y_m};
+// return trajectories; // trajectories;
 
 }
 

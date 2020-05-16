@@ -126,6 +126,10 @@ int main() {
           auto sensor_fusion = j[1]["sensor_fusion"];
           // std::cout << "sensor_fusion : "<< "\n" << sensor_fusion << "\n";
           // std::cout << "TYPE: " << typeid(sensor_fusion).name() << endl;
+          std::cout << "\n\n\n";
+          std::cout << "#----------------------------------\n";
+          std::cout << "# Initiating New Tmestep\n";
+          std::cout << "#----------------------------------\n";
 
           std::cout << "SENSOR FUSION ===-=-=--=-==-=-";
           for (int v=0; v<sensor_fusion.size(); v++){
@@ -157,10 +161,7 @@ int main() {
             previous_path_y_.push_back(previous_path_y[ii]);
           }
 
-          std::cout << "\n\n\n";
-          std::cout << "#----------------------------------\n";
-          std::cout << "# Initiating New Tmestep\n";
-          std::cout << "#----------------------------------\n";
+
           // prediction_obj.setPredctions(sensor_fusion_data, "CS");
           vehicle_obj.setVehicle(
             car_x,

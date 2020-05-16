@@ -54,6 +54,9 @@ public:
   vector<double> waypoints_s_map;
   vector<double> waypoints_x_map;
   vector<double> waypoints_y_map;
+  double goal_s;
+  double goal_d;
+  double distance_to_goal;
   vector<vector<double>> sensor_fusion_data;
   deque<Trajectory> final_trajectory;
 
@@ -70,7 +73,9 @@ public:
     vector<double> map_waypoints_s,
     vector<double> map_waypoints_x,
     vector<double> map_waypoints_y,
-    vector<vector<double>> sensor_fusion_data
+    vector<vector<double>> sensor_fusion_data,
+    double end_path_s,
+    double end_path_d
   );
 
   // -----------------------------------------------------------------------------

@@ -21,7 +21,9 @@ void Vehicle::setVehicle(
   vector<double> map_waypoints_s,
   vector<double> map_waypoints_x,
   vector<double> map_waypoints_y,
-  vector<vector<double>> sensor_fusion_data
+  vector<vector<double>> sensor_fusion_data,
+  double end_path_s,
+  double end_path_d
 ){
   // std::cout << "set s: " << s << "\n";
   // std::cout << "set d: " << d << "\n";
@@ -35,6 +37,13 @@ void Vehicle::setVehicle(
   waypoints_s_map = map_waypoints_s;
   waypoints_x_map = map_waypoints_x;
   waypoints_y_map = map_waypoints_y;
+  // goal_s = end_path_s;
+  // goal_d = end_path_d;
+  // distance_to_goal = distanceCalculate(goal_d, goal_s, car_d, car_s);
+  // std::cout << "Distance to goal ================= " << distance_to_goal << "\n";
+  // std::cout << "\tcar_s = " << car_s << " goal_s " << goal_s << "\n";
+  // std::cout << "\tcar_d = " << car_d << " goal_d " << goal_d << "\n";
+
   // std::cout << "set car_s: " << car_s << "\n";
   // std::cout << "set car_d: " << car_d << "\n";
   prediction_obj.setPredictions(sensor_fusion_data, "CS");
@@ -45,47 +54,34 @@ vector<vector<double>> Vehicle::generateTrajectory(
   vector<double> previous_path_x,
   vector<double> previous_path_y
 ){
-  // std::cout << "set car_s: " << car_s << "\n";
-  // std::cout << "set car_d: " << car_d << "\n";
-
-  // std::cout << "My Car at timestep: t ===> x =  "<< car_x << " car_y = " << car_y << "\n";
-  // for (int i=0; i<previous_path_x.size(); i++){
-  //   std::cout << "\tprevx = " << previous_path_x[i] << "\tprevy = " << previous_path_y[i] << "\n";
-  // }
-
-  // car_v = getVelocity(
-  //   car_v,
-  //   increment_velocity,
-  //   max_lane_velocity[car_lane]
-  // );
 
   vector<string> future_states = getNextStates(car_state);
+  // srd::cout << "future_states ................" << future_states << "\n";
+  // std::cout << "\n[Future_states kinematics] = " << "\n" ;
   // for (int i=0; i<future_states.size(); i++){
-  //     std::cout << "\nFuture States: " << future_states[i] << "\n";
+  //   if future_states[i] == "KL"{
+  //     Kinematics KLK_ = keepLaneKinematics(car_lane);
+  //     car_v = KLK_.velocity;
+  //     car_lane = KLK_.lane;
+  //     std::cout <
+  //   }
+  //
+  //
+  //
+  //
   // }
-  //
-  // Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-  //   car_s, car_lane
-  // );
-  //
-  // Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
-  //   car_s, car_lane
-  // );
-  // car_v = getKinematics(vehicle_ahead, vehicle_behind);
-
   Kinematics KLK_ = keepLaneKinematics(car_lane);
   car_v = KLK_.velocity;
   car_lane = KLK_.lane;
-
   std::cout << "generateTrajectory \n"
   << "\t curr_lane_velocity: " << car_v
   << "\t max_lane_velocity:" << max_lane_velocity[car_lane]
   << "\n";
 
 
-  // ------------------------------------------------------------------------
-  // Small Hack to test
-  // ------------------------------------------------------------------------
+  // // ------------------------------------------------------------------------
+  // // Small Hack to test
+  // // ------------------------------------------------------------------------
   Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
     car_s, car_lane
   );
@@ -102,9 +98,9 @@ vector<vector<double>> Vehicle::generateTrajectory(
   else{
       curr_lane = car_lane;
     }
-  // ------------------------------------------------------------------------
+  // // ------------------------------------------------------------------------
 
-  std::cout << "curr_lanecurr_lanecurr_lanecurr_lanecurr_lanecurr_lane  " << curr_lane << "\n";
+  // std::cout << "curr_lanecurr_lanecurr_lanecurr_lanecurr_lanecurr_lane  " << curr_lane << "\n";
   // curr_lane = getLane(car_d);
   deque<Trajectory> trajectories = keepLaneTrajectory(
     car_v,
@@ -138,6 +134,11 @@ vector<vector<double>> Vehicle::generateTrajectory(
   }
   return {trajectory_x_points, trajectory_y_points};
 }
+
+
+// void trajectoryCost(deque<Trajectory> trajectory){
+//   duble total_distance_to_goal
+// }
 
 
 // -----------------------------------------------------------------------------
@@ -505,5 +506,10 @@ vector<string> Vehicle::getNextStates(string current_state){
   else{
     states_vector = {"KL"};
   }
+
+  for (int i=0; i<states_vector.size(); i++){
+    std::cout << " Future State = " << states_vector[i] << " " ;
+  }
+  std::cout << "\n";
   return states_vector;
 }

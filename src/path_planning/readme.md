@@ -58,18 +58,19 @@ About the Dataset:
    * Column 3:      s position of waypoint in frenet coordinate.
    * Column 4 & 5:  d position vector of waypoint in frenet coordinate. (the d vector has a magnitude of 1)
               the d vector can be used to calculate the lane number
-          ```python
-              * each lane is 4 meters wide
-                 l1  l2  l3   l4  l5  l6
-                |   |   |   ||   |   |   |
-                |   |   |   ||   |   |   |
-                |-12| -8|-4 ||  4|  8| 12|
-                |   |   |   ||   |   |   |
-                |   |   |   ||   |   |   |
-              * To be in the center of a particular lane say l6 in map coordinate. we simple do,
-              * (l6x, l6y) = ((x, y) + (d1, s2)) * (8 + 2) , 8-> distance of l6 from center, 2->to reach the center of the lane
 
-         ```
+  ```python
+      * each lane is 4 meters wide
+         l1  l2  l3   l4  l5  l6
+        |   |   |   ||   |   |   |
+        |   |   |   ||   |   |   |
+        |-12| -8|-4 ||  4|  8| 12|
+        |   |   |   ||   |   |   |
+        |   |   |   ||   |   |   |
+      * To be in the center of a particular lane say l6 in map coordinate. we simple do,
+      * (l6x, l6y) = ((x, y) + (d1, s2)) * (8 + 2) , 8-> distance of l6 from center, 2->to reach the center of the lane
+
+ ```
 
 
 2. Data from the Simulator:

@@ -121,6 +121,7 @@ int main() {
           double end_path_s = j[1]["end_path_s"];
           double end_path_d = j[1]["end_path_d"];
 
+
           // Sensor Fusion Data, a list of all other cars on the same side
           //   of the road.
           auto sensor_fusion = j[1]["sensor_fusion"];
@@ -173,7 +174,9 @@ int main() {
             map_waypoints_s,
             map_waypoints_x,
             map_waypoints_y,
-            sensor_fusion_data
+            sensor_fusion_data,
+            end_path_s,
+            end_path_d
           );
           std::cout << "car_s " << car_s << "\n";
           std::cout << "car_d " << car_d << "\n";

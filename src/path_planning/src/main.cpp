@@ -132,11 +132,11 @@ int main() {
           std::cout << "# Initiating New Tmestep\n";
           std::cout << "#----------------------------------\n";
 
-          std::cout << "SENSOR FUSION ===-=-=--=-==-=-";
-          for (int v=0; v<sensor_fusion.size(); v++){
-            std::cout << sensor_fusion[v] << " ";
-          }
-          std::cout << "\n";
+          // std::cout << "SENSOR FUSION ===-=-=--=-==-=-";
+          // for (int v=0; v<sensor_fusion.size(); v++){
+          //   std::cout << sensor_fusion[v] << " ";
+          // }
+          // std::cout << "\n";
 
 
           json msgJson;

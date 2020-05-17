@@ -36,11 +36,11 @@ public:
   // double increment_velocity = 0.2;
   double sec_to_visit_next_point = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
 
-  int collision_buffer_distance = 35; //Assuming we keep 10 m distance from any car ahead of us
-  int lane_change_vehicle_behind_buffer = 35;
+  int collision_buffer_distance = 20; // 35 Assuming we keep 10 m distance from any car ahead of us
+  int lane_change_vehicle_behind_buffer = 10;
 
   vector<int> poly_fit_distances = {30, 40, 90};  // In meters
-  int predict_distance = 30; // meters that the car should look ahead for trajectory generation
+  int predict_distance = 40; // meters that the car should look ahead for trajectory generation
   int trajectory_length = 50; // num of future points to generate in the trajectory
 
   double car_x;
@@ -110,7 +110,11 @@ deque<Trajectory> keepLaneTrajectory(
       a_i -> acceleration
       Position: s(t) (goal) = s_i + v_i(t) + 0.5*a_i(t**2)
   */
-  double getKinematics(Traffic vehicle_ahead, Traffic vehicle_behind);
+  double getKinematics(
+    Traffic vehicle_ahead,
+    Traffic vehicle_behind,
+    int intended_lane
+  );
   Kinematics keepLaneKinematics(int curr_lane);
   Kinematics laneChangeKinematics(string state, int curr_lane);
   Kinematics prepareLaneChangeKinematics(string state, int curr_lane);

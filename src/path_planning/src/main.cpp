@@ -54,7 +54,7 @@ int main() {
   double max_s = 6945.554;
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
-
+  int num_record=0;
   string line;
   while (getline(in_map_, line)) {
     std::istringstream iss(line);
@@ -79,6 +79,7 @@ int main() {
   Vehicle vehicle_obj;
   h.onMessage([
     // &prediction_obj,
+    &num_record,
     &vehicle_obj,
     &map_waypoints_x,
     &map_waypoints_y,
@@ -95,7 +96,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     if (length && length > 2 && data[0] == '4' && data[1] == '2') {
-
+      num_record += 1;
       auto s = hasData(data);
 
       if (s != "") {
@@ -129,7 +130,7 @@ int main() {
           // std::cout << "TYPE: " << typeid(sensor_fusion).name() << endl;
           std::cout << "\n\n\n";
           std::cout << "#----------------------------------\n";
-          std::cout << "# Initiating New Tmestep\n";
+          std::cout << "# Initiating New Tmestep ------>  " << num_record << "\n";
           std::cout << "#----------------------------------\n";
 
           // std::cout << "SENSOR FUSION ===-=-=--=-==-=-";

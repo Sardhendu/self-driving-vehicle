@@ -11,6 +11,7 @@ using std::deque;
 struct Kinematics {
   double velocity;
   int lane;
+  double max_velocity;
 };
 
 
@@ -32,16 +33,16 @@ public:
   double car_v_prev = 0;
   double car_v = 0.2;
   double car_a = 0.2;
-  double car_a_max = 0.224;               // maximum acceleration permitted
+  double MAXIMUM_ACCELERATION = 0.224;               // maximum acceleration permitted
+  double MAXIMUM_DECCELERATION = 0.224;
   // double increment_velocity = 0.2;
-  double sec_to_visit_next_point = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
-
-  int collision_buffer_distance = 20; // 35 Assuming we keep 10 m distance from any car ahead of us
-  int lane_change_vehicle_behind_buffer = 10;
-
-  vector<int> poly_fit_distances = {30, 40, 90};  // In meters
-  int predict_distance = 40; // meters that the car should look ahead for trajectory generation
-  int trajectory_length = 50; // num of future points to generate in the trajectory
+  double SEC_TO_VISIT_NEXT_POINT = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
+  int VEHICLE_AHEAD_BUFFER = 30; // 35 Assuming we keep 10 m distance from any car ahead of us
+  int LC_VEHICLE_BEHIND_BUFFER = 10;
+  vector<int> POLY_FIT_DISTANCES = {30, 60, 90};  // In meters
+  int PREDICT_DISTANCE = 30; // meters that the car should look ahead for trajectory generation
+  int TRAJECTORY_LENGTH = 50; // num of future points to generate in the trajectory
+  int HACK = 5;
 
   double car_x;
   double car_y;
@@ -49,7 +50,7 @@ public:
   double car_d;
   double car_yaw;
   double car_speed;
-  int car_lane;
+  int car_lane=1;
   string car_state = "KL";
   vector<double> waypoints_s_map;
   vector<double> waypoints_x_map;
@@ -58,7 +59,7 @@ public:
   double goal_d;
   double distance_to_goal;
   vector<vector<double>> sensor_fusion_data;
-  deque<Trajectory> final_trajectory;
+  deque<Trajectory> FINAL_TRAJECTORY;
 
   Vehicle() {};
   ~Vehicle() {};
@@ -88,13 +89,17 @@ public:
     // auto previous_path_y
   );
 
-deque<Trajectory> keepLaneTrajectory(
-    double curr_v,      // current velocity
-    int curr_lane,
-    vector<double> previous_path_x,
-    vector<double> previous_path_y,
-    deque<Trajectory> trajectories
-  );
+  deque<Trajectory> generateTrajectoryForState(
+      double curr_v,      // current velocity
+      int curr_lane,
+      vector<double> previous_path_x,
+      vector<double> previous_path_y,
+      deque<Trajectory> trajectories
+    );
+
+  // deque<Trajectory> generateTrajectoryForState(
+  //     string state, vector<double> previous_path_x, vector<double> previous_path_y
+  //   )
 
   // -----------------------------------------------------------------------------
   // Get kinematics
@@ -110,7 +115,7 @@ deque<Trajectory> keepLaneTrajectory(
       a_i -> acceleration
       Position: s(t) (goal) = s_i + v_i(t) + 0.5*a_i(t**2)
   */
-  double getKinematics(
+  vector<double> getKinematics(
     Traffic vehicle_ahead,
     Traffic vehicle_behind,
     int intended_lane
@@ -118,6 +123,11 @@ deque<Trajectory> keepLaneTrajectory(
   Kinematics keepLaneKinematics(int curr_lane);
   Kinematics laneChangeKinematics(string state, int curr_lane);
   Kinematics prepareLaneChangeKinematics(string state, int curr_lane);
+  int getOptimalTrajectoryNum(
+    vector<deque<Trajectory>> list_of_trajectories,
+    vector<Kinematics> list_of_kinematics,
+    vector<string> list_of_states
+  );
 
 
   // -----------------------------------------------------------------------------

@@ -27,28 +27,19 @@ void Vehicle::setVehicle(
   double end_path_s,
   double end_path_d
 ){
-  // std::cout << "set s: " << s << "\n";
-  // std::cout << "set d: " << d << "\n";
   car_x = x;
   car_y = y;
   car_s = s;
   car_d = d;
   car_yaw = yaw;
   car_speed = speed;
-  car_lane = getLane(car_d);
+  // car_lane = getLane(car_d);
   waypoints_s_map = map_waypoints_s;
   waypoints_x_map = map_waypoints_x;
   waypoints_y_map = map_waypoints_y;
   std::cout << "Fuckin Car Lane ====> " << car_lane << "\n";
   // goal_s = end_path_s;
   // goal_d = end_path_d;
-  // distance_to_goal = distanceCalculate(goal_d, goal_s, car_d, car_s);
-  // std::cout << "Distance to goal ================= " << distance_to_goal << "\n";
-  // std::cout << "\tcar_s = " << car_s << " goal_s " << goal_s << "\n";
-  // std::cout << "\tcar_d = " << car_d << " goal_d " << goal_d << "\n";
-
-  // std::cout << "set car_s: " << car_s << "\n";
-  // std::cout << "set car_d: " << car_d << "\n";
   prediction_obj.setPredictions(sensor_fusion_data, "CS");
 }
 
@@ -58,214 +49,45 @@ vector<vector<double>> Vehicle::generateTrajectory(
   vector<double> previous_path_y
 ){
   std::cout << "Fuckin Car Lane MotherFucker ====> " << car_lane << "\n";
-  vector<string> future_states = getNextStates(car_state);
-  // srd::cout << "future_states ................" << future_states << "\n";
+  vector<string> list_of_future_states = getNextStates(car_state);
 
   // ------------------------------------------------------------------------
   // Get Future State Kinematics
   // ------------------------------------------------------------------------
-  string selected_state = "KL";
-  Kinematics KLK;
-  Kinematics PLCLK;
-  Kinematics PLCRK;
-  Kinematics LCLK;
-  Kinematics LCRK;
-  deque<Trajectory> KLK_TRAJECTORY;
-  deque<Trajectory> PLCLK_TRAJECTORY;
-  deque<Trajectory> PLCRK_TRAJECTORY;
-  deque<Trajectory> LCLK_TRAJECTORY;
-  deque<Trajectory> LCRK_TRAJECTORY;
-
-  map<string, double> state_velocity;
   std::cout << "\n[Future_states kinematics] = ..............................................................." << "\n" ;
   std::cout << "Car Lane = " << car_lane << " car_state " << car_state << "\n";
 
-  for (int i=0; i<future_states.size(); i++){
-    std::cout << "[Future State] = ............." << future_states[i]  << "\n";
+  Kinematics KN;
+  deque<Trajectory> TJ;
+  vector<deque<Trajectory>> list_of_trajectories;
+  vector<Kinematics> list_of_kinematics;
 
-    if (future_states[i] == "KL"){
-      KLK = keepLaneKinematics(car_lane);
-
-
-      KLK_TRAJECTORY = keepLaneTrajectory(
-        KLK.velocity,
-        KLK.lane,
-        previous_path_x,
-        previous_path_y,
-        final_trajectory
-      );
-
-      double total_velocity = 0;
-      double total_acceleration = 0;
-      for (int i =0; i<KLK_TRAJECTORY.size(); i++){
-        total_velocity += KLK_TRAJECTORY[i].v;
-        total_acceleration += KLK_TRAJECTORY[i].a;
-      }
-      state_velocity[future_states[i]] = total_velocity;
-      std::cout << "\tKL:\t"
-      << "car_v = " << KLK.velocity
-      << " intended_lane = " << KLK.lane
-      << " total_velocity = " << total_velocity
-      << " total_acceleration = " << total_acceleration << "\n";
+  for (int i=0; i<list_of_future_states.size(); i++){
+    std::cout << "[Future State] = ............." << list_of_future_states[i]  << "\n";
+    if (list_of_future_states[i] == "KL"){
+      KN = keepLaneKinematics(car_lane);
     }
-
-    if (future_states[i] == "PLCL"){
-      PLCLK = prepareLaneChangeKinematics(future_states[i], car_lane);
-      std::cout << "\tPLCL:\t" << "car_v = " << PLCLK.velocity << " intended_lane = " << PLCLK.lane << "\n";
-
-      PLCLK_TRAJECTORY = keepLaneTrajectory(
-        PLCLK.velocity,
-        PLCLK.lane,
-        previous_path_x,
-        previous_path_y,
-        final_trajectory
-      );
-
-      double total_velocity = 0;
-      double total_acceleration = 0;
-      for (int i =0; i<PLCLK_TRAJECTORY.size(); i++){
-        total_velocity += PLCLK_TRAJECTORY[i].v;
-        total_acceleration += PLCLK_TRAJECTORY[i].a;
-      }
-
-      state_velocity[future_states[i]] = total_velocity;
-
-      std::cout << "\tPLCL:\t"
-      << "car_v = " << PLCLK.velocity
-      << " intended_lane = " << PLCLK.lane
-      << " total_velocity = " << total_velocity
-      << " total_acceleration = " << total_acceleration << "\n";
-
+    if (list_of_future_states[i] == "PLCL" || list_of_future_states[i] == "PLCR"){
+      KN = prepareLaneChangeKinematics(list_of_future_states[i], car_lane);
     }
-
-    if (future_states[i] == "PLCR"){
-      PLCRK = prepareLaneChangeKinematics(future_states[i], car_lane);
-      std::cout << "\tPLCR:\t" << "car_v = " << PLCRK.velocity << " intended_lane = " << PLCRK.lane << "\n";
-      PLCRK_TRAJECTORY = keepLaneTrajectory(
-        PLCRK.velocity,
-        PLCRK.lane,
-        previous_path_x,
-        previous_path_y,
-        final_trajectory
-      );
-
-      double total_velocity = 0;
-      double total_acceleration = 0;
-      for (int i =0; i<PLCRK_TRAJECTORY.size(); i++){
-        total_velocity += PLCRK_TRAJECTORY[i].v;
-        total_acceleration += PLCRK_TRAJECTORY[i].a;
-      }
-      state_velocity[future_states[i]] = total_velocity;
-
-      std::cout << "\tPLCR:\t"
-      << "car_v = " << PLCRK.velocity
-      << " intended_lane = " << PLCRK.lane
-      << " total_velocity = " << total_velocity
-      << " total_acceleration = " << total_acceleration << "\n";
+    if (list_of_future_states[i] == "LCL" || list_of_future_states[i] == "LCR"){
+      KN = laneChangeKinematics(list_of_future_states[i], car_lane);
     }
+    std::cout << "\t" << list_of_future_states[i] << ":\t" << "car_v = " << KN.velocity << " intended_lane = " << KN.lane << "\n";
 
-    if (future_states[i] == "LCL"){
-      LCLK = laneChangeKinematics(future_states[i], car_lane);
-      std::cout << "\tLCL:\t" << "car_v = " << LCLK.velocity << " intended_lane = " << LCLK.lane << "\n";
+    TJ = generateTrajectoryForState(KN.velocity, KN.lane, previous_path_x, previous_path_y, FINAL_TRAJECTORY);
+    list_of_kinematics.push_back(KN);
+    list_of_trajectories.push_back(TJ);
 
-      LCLK_TRAJECTORY = keepLaneTrajectory(
-        LCLK.velocity,
-        LCLK.lane,
-        previous_path_x,
-        previous_path_y,
-        final_trajectory
-      );
-
-      double total_velocity = 0;
-      double total_acceleration = 0;
-      for (int i =0; i<LCLK_TRAJECTORY.size(); i++){
-        total_velocity += LCLK_TRAJECTORY[i].v;
-        total_acceleration += LCLK_TRAJECTORY[i].a;
-      }
-      state_velocity[future_states[i]] = total_velocity;
-
-      std::cout << "\tLCL:\t"
-      << "car_v = " << LCLK.velocity
-      << " intended_lane = " << LCLK.lane
-      << " total_velocity = " << total_velocity
-      << " total_acceleration = " << total_acceleration << "\n";
-    }
-
-    if (future_states[i] == "LCR"){
-      LCRK = laneChangeKinematics(future_states[i], car_lane);
-      std::cout << "\tLCR:\t" << "car_v = " << LCRK.velocity << " intended_lane = " << LCRK.lane << "\n";
-
-      LCRK_TRAJECTORY = keepLaneTrajectory(
-        LCRK.velocity,
-        LCRK.lane,
-        previous_path_x,
-        previous_path_y,
-        final_trajectory
-      );
-      double total_velocity = 0;
-      double total_acceleration = 0;
-      for (int i =0; i<LCRK_TRAJECTORY.size(); i++){
-        total_velocity += LCRK_TRAJECTORY[i].v;
-        total_acceleration += LCRK_TRAJECTORY[i].a;
-      }
-      state_velocity[future_states[i]] = total_velocity;
-      std::cout << "\tLCR:\t"
-      << "car_v = " << LCRK.velocity
-      << " intended_lane = " << LCRK.lane
-      << " total_velocity = " << total_velocity
-      << " total_acceleration = " << total_acceleration << "\n";
-
-    }
   }
-  std::cout << "\n............................................................................................" << "\n" ;
-
-
-  std::cout <<"\nstate_velocity DIct "<< "\n";
-  double max_velocity_ = -10000;
-  for (auto& t: state_velocity){
-    std::cout << "\t" << t.first << " " << t.second << "\n";
-    if (t.second > max_velocity_){
-      max_velocity_ = t.second;
-      car_state = t.first;
-    }
-  }
-
-  std::cout  << "[Selected State] ..........................." <<  car_state << "\n";
-  if (car_state == "KL"){
-    car_v = KLK.velocity;
-    car_lane = KLK.lane;
-    final_trajectory = KLK_TRAJECTORY;
-    std::cout << "\t car_state = " << car_state << " car_v = " << car_v << " car_lane = " << car_lane << "\n";
-  }
-  else if (car_state == "PLCL"){
-    car_v = PLCLK.velocity;
-    car_lane = PLCLK.lane;
-    final_trajectory = PLCLK_TRAJECTORY;
-    std::cout << "\t car_state = " << car_state << " car_v = " << car_v << " car_lane = " << car_lane << "\n";
-  }
-  else if (car_state == "PLCR"){
-    car_v = PLCRK.velocity;
-    car_lane = PLCRK.lane;
-    final_trajectory = PLCRK_TRAJECTORY;
-    std::cout << "\t car_state = " << car_state << " car_v = " << car_v << " car_lane = " << car_lane << "\n";
-  }
-  else if (car_state == "LCL"){
-    car_v = LCLK.velocity;
-    car_lane = LCLK.lane;
-    final_trajectory = LCLK_TRAJECTORY;
-    std::cout << "\t car_state = " << car_state << " car_v = " << car_v << " car_lane = " << car_lane << "\n";
-  }
-  else if (car_state == "LCR"){
-    car_v = LCRK.velocity;
-    car_lane = LCRK.lane;
-    final_trajectory = LCRK_TRAJECTORY;
-    std::cout << "\t car_state = " << car_state << " car_v = " << car_v << " car_lane = " << car_lane << "\n";
-  }
-  else{
-    // std::cout << "[prepareLaneChangeKinematics] Provided state = " << state << " Excepted = PLCL and PLCR" << "\n";
-    exit (EXIT_FAILURE);
-  }
-
+  std::cout << "\n[Optimal State Kinematics].........................................................." << "\n" ;
+  int op_num = getOptimalTrajectoryNum(list_of_trajectories, list_of_kinematics, list_of_future_states);
+  std::cout << "\toptimal num = " << op_num << "\n";
+  car_v = list_of_kinematics[op_num].velocity;
+  car_lane = list_of_kinematics[op_num].lane;
+  FINAL_TRAJECTORY = list_of_trajectories[op_num];
+  car_state = list_of_future_states[op_num];
+  std::cout << "\t[Optimal] car_state = " << car_state << " car_v = " << car_v << " car_lane = " << car_lane << "\n";
 
   std::cout << "generateTrajectory \n"
   << "\t curr_lane_velocity: " << car_v
@@ -291,18 +113,62 @@ vector<vector<double>> Vehicle::generateTrajectory(
 
   vector<double> trajectory_x_points;
   vector<double> trajectory_y_points;
-  for (int i=0; i<final_trajectory.size(); i++){
-    trajectory_x_points.push_back(final_trajectory[i].x_map);
-    trajectory_y_points.push_back(final_trajectory[i].y_map);
+  for (int i=0; i<FINAL_TRAJECTORY.size(); i++){
+    trajectory_x_points.push_back(FINAL_TRAJECTORY[i].x_map);
+    trajectory_y_points.push_back(FINAL_TRAJECTORY[i].y_map);
   }
   return {trajectory_x_points, trajectory_y_points};
 }
 
 
 
-// void trajectoryCost(deque<Trajectory> trajectory){
-//   duble total_distance_to_goal
-// }
+// -----------------------------------------------------------------------------
+// Optimal Trajectory
+// -----------------------------------------------------------------------------
+int Vehicle::getOptimalTrajectoryNum(
+  vector<deque<Trajectory>> list_of_trajectories,
+  vector<Kinematics> list_of_kinematics,
+  vector<string> list_of_states
+){
+
+  vector<double> insufficiency_cost;
+  for (int i=0; i<list_of_trajectories.size(); i++){
+    deque<Trajectory> trajectory_ = list_of_trajectories[i];
+    Kinematics kinematics_ = list_of_kinematics[i];
+    string state_ = list_of_states[i];
+
+    // std::cout << " iiiiiiiiiiiii " << i << " "<<state_ <<"\n";
+
+    double total_velocity = 0;
+    double total_acceleration = 0;
+    for (int j =0; j<trajectory_.size(); j++){
+      total_velocity += trajectory_[j].v;
+      total_acceleration += trajectory_[j].a;
+    }
+
+    insufficiency_cost.push_back(total_velocity);
+
+    std::cout << "\t" << state_ << ":\t"
+    << "car_v = " << kinematics_.velocity
+    << " intended_lane = " << kinematics_.lane
+    << " max_velocity = " << kinematics_.max_velocity
+    << " total_velocity = " << total_velocity
+    << " total_acceleration = " << total_acceleration << "\n";
+  }
+
+  // std::cout << " wpoeriopweiropwe "  << insufficiency_cost.size() << "\n";
+  int optimial_trajectory_num = 0;
+  double max_veclocity = -9999;
+  for (int i=0; i<insufficiency_cost.size(); i++){
+    // std::cout << " kkkkkkkkkkkkk " << i << " " << insufficiency_cost[i] << "\n";
+    if (insufficiency_cost[i] > max_veclocity && insufficiency_cost[i]>insufficiency_cost[0]+0.2){
+        optimial_trajectory_num = i;
+    }
+  }
+
+  return optimial_trajectory_num;
+}
+
 
 
 // -----------------------------------------------------------------------------
@@ -335,12 +201,16 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
     car_s, intended_lane
   );
 
-  double nw_v = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
+  vector<double> v_k = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
+  double nw_v = v_k[0];
+  double max_v = v_k[1];
+
 
   Kinematics PLCK;
   PLCK.velocity = nw_v;
+  PLCK.max_velocity = max_v;
   if (vehicle_behind.lane == intended_lane){
-    if (car_s-vehicle_behind.s <= lane_change_vehicle_behind_buffer){
+    if (car_s-vehicle_behind.s <= LC_VEHICLE_BEHIND_BUFFER){
       // Stay in current lane if there is a vehicle in the front in the intended lane
       PLCK.lane = curr_lane;
     }
@@ -370,11 +240,15 @@ Kinematics Vehicle::keepLaneKinematics(
     car_s, curr_lane
   );
 
-  double nw_v = getKinematics(vehicle_ahead, vehicle_behind, curr_lane);
+  vector<double> v_k  = getKinematics(vehicle_ahead, vehicle_behind, curr_lane);
+  double nw_v = v_k[0];
+  double max_v = v_k[1];
+
 
   Kinematics KLK;
   KLK.velocity = nw_v;
   KLK.lane = curr_lane;
+  KLK.max_velocity = max_v;
   return KLK;
 }
 
@@ -406,10 +280,13 @@ Kinematics Vehicle::laneChangeKinematics(
     car_s, intended_lane
   );
 
-  double nw_v = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
+  vector<double> v_k  = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
+  double nw_v = v_k[0];
+  double max_v = v_k[1];
 
   Kinematics LCK;
   LCK.velocity = nw_v;
+  LCK.max_velocity = max_v;
   LCK.lane = intended_lane;
   return LCK;
 }
@@ -418,7 +295,7 @@ Kinematics Vehicle::laneChangeKinematics(
 // -----------------------------------------------------------------------------
 // Get kinematics
 // -----------------------------------------------------------------------------
-double Vehicle::getKinematics(
+vector<double> Vehicle::getKinematics(
   Traffic vehicle_ahead, Traffic vehicle_behind, int intended_lane
 ){
   /* Vehicle ahead and Vehicle behind can still return vehicle not in our lane, in cases where there are no vhicle in our lane
@@ -428,7 +305,7 @@ double Vehicle::getKinematics(
         1. The output Kinematics is highly dependent on whether the vehicle ahead is in the same lane as our vehicle.
           What if a vehicle tries to cut in abruptly into our lane. Hence the velocity kinematics should depend on d value not lane
             To think:
-              1. Use collision_buffer_distance to understand if a vehicle is trying to cut in.
+              1. Use VEHICLE_AHEAD_BUFFER to understand if a vehicle is trying to cut in.
                   If distance out_vehcicle to vehicle_in_front is << 35 it means the vehicle is cutting in.
               2. A much better way is to track every vehicle within a certain distance and
                   -> USe s and d in normalized coordinate system to understand our distance from the vehicle
@@ -438,16 +315,19 @@ double Vehicle::getKinematics(
           and their distance from our car
   */
   double new_velocity;
-  double max_v_a = car_v + car_a_max;   // To avoid jerk
-  std::cout << "\tintended_regular_velocity = " << max_v_a << "\n";
+  double max_v_a;   // To avoid jerk
+  max_v_a = car_v + MAXIMUM_ACCELERATION;
+
   std::cout << "\t[getKinematics]: \n"
   << "\t\tcar_lane = " << car_lane
   << "\t\tvehicle_lane = " << vehicle_ahead.lane << "\n";
 
+  std::cout << "\tprevious_velocity = " << car_v << "\n";
+  std::cout << "\tintended_velocity = " << max_v_a << "\n";
+
+  double max_velocity_ahead = -10000;
   if (vehicle_ahead.lane == intended_lane){
-    std::cout << "\t\tTHERE IS A VEHICLE AHEAD =========> " << "\n";
-    std::cout << "\t\tvehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
-    std::cout << "\t\tmy_vehicle:\t s = " <<  car_s << " v = " << car_v << " a = " << car_a << "\n";
+
     // If there is a vehicle behind make our car move with the speed that of the front
     // if (vehicle_behind.lane == car_lane){
     //   // Choose to follow the traffic velocity when there is a car ahead
@@ -462,21 +342,29 @@ double Vehicle::getKinematics(
       Jerk minimization equation to calculate the preferend velocity the vehicle should given that we use the same acceleration
       goal s(t)(vehicle_ahead.s - buffer_distance) = car.s + (max_velocity_ahead - vehicle_ahead.v)*t + car.a*(t**2)
     */
-      double max_velocity_ahead = vehicle_ahead.s - car_s - collision_buffer_distance + vehicle_ahead.v - 0.5*car_a;
+      std::cout << "\t\tDistance:\t buffer = " <<  vehicle_ahead.s - car_s << "\n";
+      std::cout << "\t\tvehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
+      std::cout << "\t\tmy_vehicle:\t s = " <<  car_s << " v = " << car_v << " a = " << car_a << "\n";
+      if (VEHICLE_AHEAD_BUFFER >= vehicle_ahead.s - car_s){
+        std::cout << "\t\tTHERE IS A VEHICLE AHEAD IN BUFFER =========> " << "\n";
+        max_v_a = car_v - MAXIMUM_ACCELERATION;
+        std::cout << "\t\tactual_velocity = " << max_v_a << "\n";
+      }
+      max_velocity_ahead = vehicle_ahead.s - car_s - VEHICLE_AHEAD_BUFFER + vehicle_ahead.v - 0.5*car_a;
       std::cout << "\t\tmax_velocity_ahead = " << max_velocity_ahead << "\n";
-      new_velocity = min(max_velocity_ahead, max_lane_velocity[car_lane]);
-      new_velocity = min(new_velocity, max_v_a);
-      std::cout << "\t\tnew_velocity = " << new_velocity << "\n";
+      new_velocity = min(max_velocity_ahead, max_v_a);
     }
   // }
   else{
     // When there are no cars ahead, increment the cars velocity untill max permitted by lane
     // new_velocity = min(max_v_a, max_lane_velocity[car_lane]);
-    new_velocity = min(car_v+0.2, max_lane_velocity[car_lane]);
-    std::cout << "\t\tnew_velocity = " << new_velocity << "\n";
+    new_velocity = max_v_a;
+    max_velocity_ahead = 99999;
   }
 
-  return new_velocity;
+  std::cout << "\t\tnew_velocity = " << new_velocity << "\n";
+  new_velocity = min(new_velocity, max_lane_velocity[car_lane]);
+  return {new_velocity, max_velocity_ahead};
 
 }
 
@@ -484,7 +372,7 @@ double Vehicle::getKinematics(
 // -----------------------------------------------------------------------------
 // Keep Lane Trajectory
 // -----------------------------------------------------------------------------
-deque<Trajectory> Vehicle::keepLaneTrajectory(
+deque<Trajectory> Vehicle::generateTrajectoryForState(
   double curr_v,      // current velocity
   int curr_lane,      // Required for proper trajectory
   vector<double> previous_path_x,
@@ -511,8 +399,8 @@ deque<Trajectory> Vehicle::keepLaneTrajectory(
   // std::cout << "\t x_map = " << x_map << " y_map = " << y_map << " car_yaw = " << car_yaw << " s = " << car_s << " d = " << car_d << "\n";
   // std::cout << "\tlen(previous_path_x) = " << previous_path_x.size() << "\n";
   // std::cout << "\tcurrently velocity = " << curr_v << "\n";
-  // std::cout << "\predict_distance = " << predict_distance << "\n";
-  // std::cout << "\tsec_to_visit_next_point = " << sec_to_visit_next_point << "\n";
+  // std::cout << "\PREDICT_DISTANCE = " << PREDICT_DISTANCE << "\n";
+  // std::cout << "\tSEC_TO_VISIT_NEXT_POINT = " << SEC_TO_VISIT_NEXT_POINT << "\n";
   vector<double> anchor_points_x;
   vector<double> anchor_points_y;
 
@@ -564,9 +452,9 @@ deque<Trajectory> Vehicle::keepLaneTrajectory(
   // std::cout << "\tlane num = " <<  getLane(car_d) << "\n";
 
 
-  for (int nxy=0; nxy<poly_fit_distances.size(); nxy++){
+  for (int nxy=0; nxy<POLY_FIT_DISTANCES.size(); nxy++){
     vector<double> next_xy = getXY(
-      car_s+poly_fit_distances[nxy],
+      car_s+POLY_FIT_DISTANCES[nxy],
       next_d,
       waypoints_s_map,
       waypoints_x_map,
@@ -574,7 +462,7 @@ deque<Trajectory> Vehicle::keepLaneTrajectory(
     );
     anchor_points_x.push_back(next_xy[0]);
     anchor_points_y.push_back(next_xy[1]);
-    // std::cout << "\tdistance = " << poly_fit_distances[nxy] << " next_x = " << next_xy[0] << " nxt_y = " << next_xy[1] << "\n";
+    // std::cout << "\tdistance = " << POLY_FIT_DISTANCES[nxy] << " next_x = " << next_xy[0] << " nxt_y = " << next_xy[1] << "\n";
   }
 
   // Now we convert the points in map coordinate frame to vehicle coordinate
@@ -603,9 +491,9 @@ deque<Trajectory> Vehicle::keepLaneTrajectory(
   // ----------------------------------------------------------------------
   tk::spline spl;
   spl.set_points(anchor_points_x_v, anchor_points_y_v);
-  double target_y = spl(predict_distance);
+  double target_y = spl(PREDICT_DISTANCE);
   double target_hypoteneous = sqrt(
-    (predict_distance*predict_distance) +
+    (PREDICT_DISTANCE*PREDICT_DISTANCE) +
     (target_y * target_y)
   );
 
@@ -613,18 +501,18 @@ deque<Trajectory> Vehicle::keepLaneTrajectory(
   // ----------------------------------------------------------------------
   // Step 3: n-step Trajectory Generation
   // ----------------------------------------------------------------------
-  double N = target_hypoteneous/(curr_v*sec_to_visit_next_point);
+  double N = target_hypoteneous/(curr_v*SEC_TO_VISIT_NEXT_POINT);
   double add_x = 0;
   vector<double> next_points_x_v;
   vector<double> next_points_y_v;
   std::cout << "\t[Generate Tajectory]\t "
   << " previous_path_size = " << prev_path_size
-  << " new_paths = " << trajectory_length-prev_path_size << "\n";
+  << " new_paths = " << TRAJECTORY_LENGTH-prev_path_size << "\n";
 
 
-  int new_points_count = trajectory_length-prev_path_size;
+  int new_points_count = TRAJECTORY_LENGTH-prev_path_size;
   for (int i=0; i<new_points_count; i++){
-    double x_point = add_x + (predict_distance/N);
+    double x_point = add_x + (PREDICT_DISTANCE/N);
     double y_point = spl(x_point);
     next_points_x_v.push_back(x_point);
     next_points_y_v.push_back(y_point);
@@ -733,7 +621,7 @@ vector<string> Vehicle::getNextStates(string current_state){
   // int curr_lane;
   // std::cout << vehicle_ahead.lane << " " << car_lane << "\n";
   // if (vehicle_ahead.lane == car_lane){
-  //   if (vehicle_ahead.s - car_s <= collision_buffer_distance){
+  //   if (vehicle_ahead.s - car_s <= VEHICLE_AHEAD_BUFFER){
   //     curr_lane = car_lane + 1;
   //   }
   //   else{

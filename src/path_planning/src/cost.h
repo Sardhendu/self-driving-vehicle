@@ -3,7 +3,7 @@
 
 using std::abs
 
-double goalDistanceCost(
+inline double goalDistanceCost(
   int goal_lane, int car_lane, int intended_car_lane, doule distance_to_goal
 ){
   /*

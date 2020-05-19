@@ -121,7 +121,7 @@ public:
     Traffic vehicle_behind,
     int intended_lane
   );
-  
+
   Kinematics keepLaneKinematics(
     int curr_lane,
     map<int, vector<Traffic>> traffic_ahead,
@@ -142,7 +142,8 @@ public:
   int getOptimalTrajectoryNum(
     vector<deque<Trajectory>> list_of_trajectories,
     vector<Kinematics> list_of_kinematics,
-    vector<string> list_of_states
+    vector<string> list_of_states,
+    vector<double> list_of_lane_cost
   );
 
 

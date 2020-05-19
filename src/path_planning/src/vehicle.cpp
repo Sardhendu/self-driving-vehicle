@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "spline.h"
 #include "experiments.h"
-
+#include "cost.h"
 #include <stdlib.h>
 
 
@@ -97,10 +97,18 @@ vector<vector<double>> Vehicle::generateTrajectory(
     TJ = generateTrajectoryForState(KN.velocity, KN.lane, previous_path_x, previous_path_y, FINAL_TRAJECTORY);
     list_of_kinematics.push_back(KN);
     list_of_trajectories.push_back(TJ);
-
   }
+
+
+  vector<double> list_of_lane_cost = laneCost(traffic_ahead, car_s);
+
   std::cout << "\n[Optimal State Kinematics].........................................................." << "\n" ;
-  int op_num = getOptimalTrajectoryNum(list_of_trajectories, list_of_kinematics, list_of_future_states);
+  int op_num = getOptimalTrajectoryNum(
+    list_of_trajectories,
+    list_of_kinematics,
+    list_of_future_states,
+    list_of_lane_cost
+  );
   std::cout << "\toptimal num = " << op_num << "\n";
   car_v = list_of_kinematics[op_num].velocity;
   car_lane = list_of_kinematics[op_num].lane;
@@ -145,7 +153,8 @@ vector<vector<double>> Vehicle::generateTrajectory(
 int Vehicle::getOptimalTrajectoryNum(
   vector<deque<Trajectory>> list_of_trajectories,
   vector<Kinematics> list_of_kinematics,
-  vector<string> list_of_states
+  vector<string> list_of_states,
+  vector<double> list_of_lane_cost
 ){
 
   vector<double> insufficiency_cost;
@@ -179,6 +188,11 @@ int Vehicle::getOptimalTrajectoryNum(
     }
   }
 
+  std::cout << "\t" << "Lane cost \t";
+  for (int i=0; i<list_of_lane_cost.size(); i++){
+    std::cout << " Lane: " << i <<  " = " << list_of_lane_cost[i];
+  }
+  std::cout<<"\n";
   return optimial_trajectory_num;
 }
 

@@ -62,6 +62,14 @@ vector<vector<double>> Vehicle::generateTrajectory(
   std::cout << "Fuckin Car Lane MotherFucker ====> " << car_lane << "\n";
   vector<string> list_of_future_states = getNextStates(car_state);
 
+
+  // ------------------------------------------------------------------------
+  // Get Traffic Ahead and Behind
+  // ------------------------------------------------------------------------
+  vector<map<int, vector<Traffic>>> traffic_ = prediction_obj.getTraffic(car_s);
+  map<int, vector<Traffic>> traffic_ahead = traffic_[0];
+  map<int, vector<Traffic>> traffic_behind = traffic_[1];
+
   // ------------------------------------------------------------------------
   // Get Future State Kinematics
   // ------------------------------------------------------------------------
@@ -76,13 +84,13 @@ vector<vector<double>> Vehicle::generateTrajectory(
   for (int i=0; i<list_of_future_states.size(); i++){
     std::cout << "[Future State] = ............." << list_of_future_states[i]  << "\n";
     if (list_of_future_states[i] == "KL"){
-      KN = keepLaneKinematics(car_lane);
+      KN = keepLaneKinematics(car_lane, traffic_ahead, traffic_behind);
     }
     if (list_of_future_states[i] == "PLCL" || list_of_future_states[i] == "PLCR"){
-      KN = prepareLaneChangeKinematics(list_of_future_states[i], car_lane);
+      KN = prepareLaneChangeKinematics(list_of_future_states[i], car_lane, traffic_ahead, traffic_behind);
     }
     if (list_of_future_states[i] == "LCL" || list_of_future_states[i] == "LCR"){
-      KN = laneChangeKinematics(list_of_future_states[i], car_lane);
+      KN = laneChangeKinematics(list_of_future_states[i], car_lane, traffic_ahead, traffic_behind);
     }
     std::cout << "\t" << list_of_future_states[i] << ":\t" << "car_v = " << KN.velocity << " intended_lane = " << KN.lane << "\n";
 
@@ -177,11 +185,44 @@ int Vehicle::getOptimalTrajectoryNum(
 
 
 // -----------------------------------------------------------------------------
+// Keep Lane Kinematics
+// -----------------------------------------------------------------------------
+Kinematics Vehicle::keepLaneKinematics(
+  int curr_lane,
+  map<int, vector<Traffic>> traffic_ahead,
+  map<int, vector<Traffic>> traffic_behind
+){
+  std::cout << "[keepLaneKinematics] " << "\n";
+
+  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAheadInLane(
+    traffic_ahead, curr_lane
+  );
+
+  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehindInLane(
+    traffic_behind, curr_lane
+  );
+
+  vector<double> v_k  = getKinematics(vehicle_ahead, vehicle_behind, curr_lane);
+  double nw_v = v_k[0];
+  double max_v = v_k[1];
+
+
+  Kinematics KLK;
+  KLK.velocity = nw_v;
+  KLK.lane = curr_lane;
+  KLK.max_velocity = max_v;
+  return KLK;
+}
+
+
+// -----------------------------------------------------------------------------
 // Prepare Lane Change Kinematics
 // -----------------------------------------------------------------------------
 Kinematics Vehicle::prepareLaneChangeKinematics(
   string state,
-  int curr_lane
+  int curr_lane,
+  map<int, vector<Traffic>> traffic_ahead,
+  map<int, vector<Traffic>> traffic_behind
 ){
 
   int intended_lane;
@@ -198,12 +239,12 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
 
   std::cout << "[prepareLaneChangeKinematics] " << "state: " <<state<<" curr_lane: "<<curr_lane << " intended_lane: " << intended_lane << "\n";
 
-  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-    car_s, intended_lane
+  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAheadInLane(
+    traffic_ahead, intended_lane
   );
 
-  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
-    car_s, intended_lane
+  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehindInLane(
+    traffic_behind, intended_lane
   );
 
   vector<double> v_k = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
@@ -234,41 +275,14 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
   return PLCK;
 }
 
-// -----------------------------------------------------------------------------
-// Keep Lane Kinematics
-// -----------------------------------------------------------------------------
-Kinematics Vehicle::keepLaneKinematics(
-  int curr_lane
-){
-  std::cout << "[keepLaneKinematics] " << "\n";
-
-  map<int, vector<Traffic>> bangu = prediction_obj.getTrafficAhead();
-
-  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-    car_s, curr_lane
-  );
-
-  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
-    car_s, curr_lane
-  );
-
-  vector<double> v_k  = getKinematics(vehicle_ahead, vehicle_behind, curr_lane);
-  double nw_v = v_k[0];
-  double max_v = v_k[1];
-
-
-  Kinematics KLK;
-  KLK.velocity = nw_v;
-  KLK.lane = curr_lane;
-  KLK.max_velocity = max_v;
-  return KLK;
-}
 
 // -----------------------------------------------------------------------------
 // Lane Change Kinematics
 // -----------------------------------------------------------------------------
 Kinematics Vehicle::laneChangeKinematics(
-  string state, int curr_lane
+  string state, int curr_lane,
+  map<int, vector<Traffic>> traffic_ahead,
+  map<int, vector<Traffic>> traffic_behind
 ){
   int intended_lane;
   if (state == "LCL"){
@@ -284,12 +298,12 @@ Kinematics Vehicle::laneChangeKinematics(
 
   std::cout << "[laneChangeKinematics]" << " state: " <<state<<" curr_lane: "<<curr_lane << " intended_lane: " << intended_lane << "\n";
 
-  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-    car_s, intended_lane
+  Traffic vehicle_ahead = prediction_obj.getNearestVehicleAheadInLane(
+    traffic_ahead, intended_lane
   );
 
-  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehind(
-    car_s, intended_lane
+  Traffic vehicle_behind = prediction_obj.getNearestVehicleBehindInLane(
+    traffic_behind, intended_lane
   );
 
   vector<double> v_k  = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
@@ -335,7 +349,7 @@ vector<double> Vehicle::getKinematics(
   << "\n\t\tOther vehicle_lane = " << vehicle_ahead.lane << "\n";
 
   double max_velocity_ahead = -10000;
-  if (vehicle_ahead.lane == intended_lane){
+  if (vehicle_ahead.lane == intended_lane && vehicle_ahead.id != -1){
     /*
       Assuming our goal is to reach the preffered position that is buffer_meters behind the car ahead, we use the
       Jerk minimization equation to calculate the preferend velocity the vehicle should given that we use the same acceleration

@@ -121,9 +121,24 @@ public:
     Traffic vehicle_behind,
     int intended_lane
   );
-  Kinematics keepLaneKinematics(int curr_lane);
-  Kinematics laneChangeKinematics(string state, int curr_lane);
-  Kinematics prepareLaneChangeKinematics(string state, int curr_lane);
+  
+  Kinematics keepLaneKinematics(
+    int curr_lane,
+    map<int, vector<Traffic>> traffic_ahead,
+    map<int, vector<Traffic>> traffic_behind
+  );
+  Kinematics laneChangeKinematics(
+    string state, int curr_lane,
+    map<int, vector<Traffic>> traffic_ahead,
+    map<int, vector<Traffic>> traffic_behind
+  );
+
+  Kinematics prepareLaneChangeKinematics(
+    string state, int curr_lane,
+    map<int, vector<Traffic>> traffic_ahead,
+    map<int, vector<Traffic>> traffic_behind
+  );
+
   int getOptimalTrajectoryNum(
     vector<deque<Trajectory>> list_of_trajectories,
     vector<Kinematics> list_of_kinematics,

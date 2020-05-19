@@ -51,10 +51,6 @@ void Prediction::setPredictions(
     prediction_trajectory.push_back(single_vehicle);
     predictions_dict[i] = prediction_trajectory;
   }
-
-
-
-
 }
 
 
@@ -67,130 +63,75 @@ map<int, vector<Traffic>> Prediction::getPredictions(){
 }
 
 
-Traffic Prediction::getNearestVehicleAhead(
-  double car_s,
-  int car_lane
+Traffic Prediction::getNearestVehicleAheadInLane(
+  map<int, vector<Traffic>> traffic_ahead, int curr_lane
 ){
-
-  Traffic nearest_vehicle;
-  double nearest_vehicle_s;
-  int nearest_vehicle_id;
-  int counter_ = 0;
-
-  map<int, vector<Traffic>>::iterator it = predictions_dict.begin();
-  while (it != predictions_dict.end()){
-    Traffic curr_vehicle = it->second[0];
-    // std::cout << "curr_vehicle_id \t\t " << it -> first
-    // << curr_vehicle.id << " "
-    // << curr_vehicle.x << " "
-    // << curr_vehicle.y << " "
-    // << curr_vehicle.vx  << " "
-    // << curr_vehicle.vy << " "
-    // << curr_vehicle.s << " "
-    // << curr_vehicle.d << " "
-    // << curr_vehicle.state << " "
-    // << curr_vehicle.lane << "\n";
-    // Check if the current car_s if < curr_vehicle.s
-    if (car_s < curr_vehicle.s){
-      if (counter_ == 0){
-        nearest_vehicle = it -> second[0];
-        nearest_vehicle_s = curr_vehicle.s;
-        nearest_vehicle_id = it -> first;
-        // std::cout << "------------------> Nearest_vehicle \n ";
-      }
-      else{
-        if (
-          curr_vehicle.s < nearest_vehicle_s &&
-          car_lane == curr_vehicle.lane
-        ){
-            nearest_vehicle_s = curr_vehicle.s;
-            nearest_vehicle = curr_vehicle;
-            nearest_vehicle_id = it -> first;
-            // std::cout << "------------------> Nearest_vehicle \n ";
-          }
+  std::cout << "\t[Traffic Ahead]" << "\n";
+  Traffic nearest_vehicle_ahead;
+  if (traffic_ahead.count(curr_lane) > 0){
+    int idx;
+    double min_s_value = 999999;
+    vector<Traffic> traffic_ahead_in_lane = traffic_ahead[curr_lane];
+    for (int i=0; i<traffic_ahead_in_lane.size(); i++){
+        std::cout << "\t\tVehicle Ahead in lane = " << curr_lane << " " << traffic_ahead_in_lane[i].s << " " << traffic_ahead_in_lane[i].d << " " << traffic_ahead_in_lane[i].lane << " " << traffic_ahead_in_lane[i].speed << "\n";
+        if (traffic_ahead_in_lane[i].s <= min_s_value){
+          nearest_vehicle_ahead = traffic_ahead_in_lane[i];
+          min_s_value = traffic_ahead_in_lane[i].s;
+        }
       }
 
-      counter_ += 1;
+    }
+    std::cout << "\t\t[NEAREST] Vehicle Ahead in lane = " << curr_lane << " "<< nearest_vehicle_ahead.s << " " << nearest_vehicle_ahead.d << " " << nearest_vehicle_ahead.lane << " " << nearest_vehicle_ahead.speed << "\n";
+
+    return nearest_vehicle_ahead;
+  }
+
+
+
+Traffic Prediction::getNearestVehicleBehindInLane(
+  map<int, vector<Traffic>> traffic_behind, int curr_lane
+){
+  std::cout << "\t[Traffic Behind]" << "\n";
+  Traffic nearest_vehicle_behind;
+  if (traffic_behind.count(curr_lane) > 0){
+    int idx;
+    double max_s_value = -999999;
+    vector<Traffic> traffic_behind_in_lane = traffic_behind[curr_lane];
+    for (int i=0; i<traffic_behind_in_lane.size(); i++){
+        std::cout << "\t\tVehicle Behind in lane = " << curr_lane << " " << traffic_behind_in_lane[i].s << " " << traffic_behind_in_lane[i].d << " " << traffic_behind_in_lane[i].lane << " " << traffic_behind_in_lane[i].speed << "\n";
+        if (traffic_behind_in_lane[i].s >= max_s_value){
+          nearest_vehicle_behind = traffic_behind_in_lane[i];
+          max_s_value = traffic_behind_in_lane[i].s;
+        }
+      }
     }
 
-    it++;
+    std::cout << "\t\t[NEAREST] Vehicle Behind in lane = " << curr_lane << " " << nearest_vehicle_behind.s << " " << nearest_vehicle_behind.d << " " << nearest_vehicle_behind.lane<< " " << nearest_vehicle_behind.speed << "\n";
+    return nearest_vehicle_behind;
   }
-  return nearest_vehicle;
-}
 
 
-Traffic Prediction::getNearestVehicleBehind(
-  double car_s,
-  int car_lane
-){
-
-  Traffic nearest_vehicle;
-  double nearest_vehicle_s;
-  int nearest_vehicle_id;
-  int counter_ = 0;
-
-  map<int, vector<Traffic>>::iterator it = predictions_dict.begin();
-  while (it != predictions_dict.end()){
-    Traffic curr_vehicle = it->second[0];
-    // std::cout << "curr_vehicle_id \t\t " << it -> first
-    // << curr_vehicle.id << " "
-    // << curr_vehicle.x << " "
-    // << curr_vehicle.y << " "
-    // << curr_vehicle.vx  << " "
-    // << curr_vehicle.vy << " "
-    // << curr_vehicle.s << " "
-    // << curr_vehicle.d << " "
-    // << curr_vehicle.state << " "
-    // << curr_vehicle.lane << "\n";
-    // Check if the current car_s if < curr_vehicle.s
-    if (car_s > curr_vehicle.s){
-      if (counter_ == 0){
-        nearest_vehicle = it -> second[0];
-        nearest_vehicle_s = curr_vehicle.s;
-        nearest_vehicle_id = it -> first;
-        // std::cout << "------------------> Nearest_vehicle \n ";
-      }
-      else{
-        if (
-          curr_vehicle.s > nearest_vehicle_s &&
-          car_lane == curr_vehicle.lane
-        ){
-            nearest_vehicle_s = curr_vehicle.s;
-            nearest_vehicle = curr_vehicle;
-            nearest_vehicle_id = it -> first;
-            // std::cout << "------------------> Nearest_vehicle \n ";
-          }
-      }
-
-      counter_ += 1;
-    }
-
-    it++;
-  }
-  return nearest_vehicle;
-}
-
-
-map<int, vector<Traffic>> Prediction::getTrafficAhead(){
-
+vector<map<int, vector<Traffic>>> Prediction::getTraffic(double car_s){
   map<int, vector<Traffic>> traffic_ahead;
+  map<int, vector<Traffic>> traffic_behind;
   map<int, vector<Traffic>>::iterator it = predictions_dict.begin();
   while (it != predictions_dict.end()){
     Traffic curr_vehicle = it->second[0];
     if (curr_vehicle.lane >=0 && curr_vehicle.lane <=2){
-      traffic_ahead[curr_vehicle.lane].push_back(curr_vehicle);
+      // std::cout << "curr_vehicle.lane === " << curr_vehicle.lane << " " << car_s << " " << curr_vehicle.s << "\n";
+      if (car_s < curr_vehicle.s){
+        traffic_ahead[curr_vehicle.lane].push_back(curr_vehicle);
+      }
+      else if (car_s >= curr_vehicle.s){
+        traffic_behind[curr_vehicle.lane].push_back(curr_vehicle);
+      }
+
     }
     it++;
   }
 
-  vector<Traffic> example = traffic_ahead[0];
-  for (int i=0; i<=example.size(); i++){
-    std::cout << "Traffic Ahead: " << example[i].s << " " << example[i].d << " " << example[i].lane << "\n";
-  }
-  return traffic_ahead;
+  return {traffic_ahead, traffic_behind};
 }
-
-
 
 
 /*

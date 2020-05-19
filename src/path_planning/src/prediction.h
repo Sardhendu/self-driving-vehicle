@@ -21,6 +21,21 @@ struct Traffic {
   int lane;
   double speed;
   string state = "CS";
+
+Traffic(){
+  id = -1;
+  x = -1.0;
+  y = -1.0;
+  vx = -1.0;
+  vy = -1.0;
+  s = -1.0;
+  d = -1.0;
+  v = -1.0;
+  lane = -1;
+  speed = -1.0;
+  string state = "NA";
+};
+
 };
 
 class Prediction {
@@ -38,9 +53,12 @@ public:
   );
 
   map<int, vector<Traffic>> getPredictions();
-  map<int, vector<Traffic>> getTrafficAhead();
+  vector<map<int, vector<Traffic>>> getTraffic(double car_s);
   Traffic getNearestVehicleAhead(double car_s, int car_lane);
   Traffic getNearestVehicleBehind(double car_s, int car_lane);
+  Traffic getNearestVehicleAheadInLane(map<int, vector<Traffic>> traffic_ahead, int curr_lane);
+  Traffic getNearestVehicleBehindInLane(map<int, vector<Traffic>> traffic_behind, int curr_lane);
+
 };
 
 #endif  // PREDICTION_H

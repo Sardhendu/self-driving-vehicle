@@ -5,13 +5,12 @@
 #include "utils.h"
 
 
-
-
 using std::vector;
 using std::map;
 
 void Prediction::setPredictions(
   vector<vector<double>> sensor_fusion_data,
+  int prev_trajectory_size,
   string state = "CS"
 ){
   predictions_dict.clear();
@@ -25,27 +24,36 @@ void Prediction::setPredictions(
     single_vehicle.vy = sensor_fusion_data[i][4];
     single_vehicle.s = sensor_fusion_data[i][5];
     single_vehicle.d = sensor_fusion_data[i][6];
-    single_vehicle.v = sqrt(
+    single_vehicle.speed = sqrt(
       sensor_fusion_data[i][3]*sensor_fusion_data[i][3] +
       sensor_fusion_data[i][4]*sensor_fusion_data[i][4]
     );
     single_vehicle.state = state;
     single_vehicle.lane = getLane(sensor_fusion_data[i][6]);
-    prediction_trajectory.push_back(single_vehicle);
-    predictions_dict[i] = prediction_trajectory;
 
-    std::cout << "Prediction \t\t "
+    std::cout << "Prediction   " << " "
     << "id = " << single_vehicle.id << " "
     << "x = " << single_vehicle.x << " "
     << "y = " << single_vehicle.y << " "
     << "vx = " << single_vehicle.vx  << " "
     << "vy = " << single_vehicle.vy << " "
-    << "v = " << single_vehicle.v << " "
     << "s = " << single_vehicle.s << " "
     << "d = " << single_vehicle.d << " "
+    << "speed = " << single_vehicle.speed << " "
     << "state = " <<single_vehicle.state << " "
-    << "lane = " <<single_vehicle.lane << "\n";
+    << "lane = " <<single_vehicle.lane << " ";
+
+    // Estimate the Car s in future using its velocity in xy direction
+    single_vehicle.s += ((double)prev_trajectory_size*SEC_TO_VISIT_NEXT_POINT*single_vehicle.speed);
+
+    std::cout << "s_future = " << single_vehicle.s << "\n";
+
+    prediction_trajectory.push_back(single_vehicle);
+    predictions_dict[i] = prediction_trajectory;
   }
+
+
+
 
 }
 
@@ -160,6 +168,26 @@ Traffic Prediction::getNearestVehicleBehind(
     it++;
   }
   return nearest_vehicle;
+}
+
+
+map<int, vector<Traffic>> Prediction::getTrafficAhead(){
+
+  map<int, vector<Traffic>> traffic_ahead;
+  map<int, vector<Traffic>>::iterator it = predictions_dict.begin();
+  while (it != predictions_dict.end()){
+    Traffic curr_vehicle = it->second[0];
+    if (curr_vehicle.lane >=0 && curr_vehicle.lane <=2){
+      traffic_ahead[curr_vehicle.lane].push_back(curr_vehicle);
+    }
+    it++;
+  }
+
+  vector<Traffic> example = traffic_ahead[0];
+  for (int i=0; i<=example.size(); i++){
+    std::cout << "Traffic Ahead: " << example[i].s << " " << example[i].d << " " << example[i].lane << "\n";
+  }
+  return traffic_ahead;
 }
 
 

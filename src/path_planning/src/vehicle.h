@@ -37,8 +37,8 @@ public:
   double MAXIMUM_DECCELERATION = 0.224;
   // double increment_velocity = 0.2;
   double SEC_TO_VISIT_NEXT_POINT = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
-  int VEHICLE_AHEAD_BUFFER = 30; // 35 Assuming we keep 10 m distance from any car ahead of us
-  int LC_VEHICLE_BEHIND_BUFFER = 10;
+  int VEHICLE_AHEAD_BUFFER = 20; // 35 Assuming we keep 10 m distance from any car ahead of us
+  int LC_VEHICLE_BEHIND_BUFFER = 15;
   vector<int> POLY_FIT_DISTANCES = {30, 60, 90};  // In meters
   int PREDICT_DISTANCE = 30; // meters that the car should look ahead for trajectory generation
   int TRAJECTORY_LENGTH = 50; // num of future points to generate in the trajectory
@@ -75,8 +75,9 @@ public:
     vector<double> map_waypoints_x,
     vector<double> map_waypoints_y,
     vector<vector<double>> sensor_fusion_data,
-    double end_path_s,
-    double end_path_d
+    double end_path_s,                            // the s value of the most future trajectory
+    double end_path_d,                            // the d value of the most future trajectory
+    int prev_trajectory_size
   );
 
   // -----------------------------------------------------------------------------

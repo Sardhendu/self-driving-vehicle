@@ -25,7 +25,8 @@ void Vehicle::setVehicle(
   vector<double> map_waypoints_y,
   vector<vector<double>> sensor_fusion_data,
   double end_path_s,
-  double end_path_d
+  double end_path_d,
+  int prev_trajectory_size
 ){
   car_x = x;
   car_y = y;
@@ -33,14 +34,24 @@ void Vehicle::setVehicle(
   car_d = d;
   car_yaw = yaw;
   car_speed = speed;
-  // car_lane = getLane(car_d);
+  std::cout << "Actual car position in Frenet coordinate synstem: \n" << "\ts = " << car_s << "\td = "<< car_d << "\n";
   waypoints_s_map = map_waypoints_s;
   waypoints_x_map = map_waypoints_x;
   waypoints_y_map = map_waypoints_y;
+
+  if (prev_trajectory_size > 0){
+    /*
+      This is an important step. In order to avoid collision (mostly due to unforeseen behavious
+      of other vehicles) we should use the most future trajectory point to estimate the next car position.
+    */
+    car_s = end_path_s;
+    car_d = end_path_d;
+  }
+  std::cout << "Future car position in Frenet coordinate synstem: \n" << "\ts = " << car_s << "\td = "<< car_d << "\n";
   std::cout << "Fuckin Car Lane ====> " << car_lane << "\n";
-  // goal_s = end_path_s;
-  // goal_d = end_path_d;
-  prediction_obj.setPredictions(sensor_fusion_data, "CS");
+  std::cout << "prev_trajectory_size ====> " << prev_trajectory_size << "\n";
+
+  prediction_obj.setPredictions(sensor_fusion_data, prev_trajectory_size, "CS");
 }
 
 
@@ -94,8 +105,6 @@ vector<vector<double>> Vehicle::generateTrajectory(
   << "\t max_lane_velocity:" << max_lane_velocity[car_lane]
   << "\n";
 
-
-
   std::cout << "Car ===========================>"
   << "\n\t car_x \t" << car_x
   << "\n\t car_y \t " << car_y
@@ -137,8 +146,6 @@ int Vehicle::getOptimalTrajectoryNum(
     Kinematics kinematics_ = list_of_kinematics[i];
     string state_ = list_of_states[i];
 
-    // std::cout << " iiiiiiiiiiiii " << i << " "<<state_ <<"\n";
-
     double total_velocity = 0;
     double total_acceleration = 0;
     for (int j =0; j<trajectory_.size(); j++){
@@ -156,11 +163,9 @@ int Vehicle::getOptimalTrajectoryNum(
     << " total_acceleration = " << total_acceleration << "\n";
   }
 
-  // std::cout << " wpoeriopweiropwe "  << insufficiency_cost.size() << "\n";
   int optimial_trajectory_num = 0;
   double max_veclocity = -9999;
   for (int i=0; i<insufficiency_cost.size(); i++){
-    // std::cout << " kkkkkkkkkkkkk " << i << " " << insufficiency_cost[i] << "\n";
     if (insufficiency_cost[i] > max_veclocity && insufficiency_cost[i]>insufficiency_cost[0]+0.2){
         optimial_trajectory_num = i;
     }
@@ -205,12 +210,17 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
   double nw_v = v_k[0];
   double max_v = v_k[1];
 
+  std::cout << "\t\t[Vehicle Behind]: "
+  << " s = " << vehicle_behind.s
+  << " speed = " << vehicle_behind.speed
+  << " distance = " << car_s -vehicle_behind.s << "\n";
 
   Kinematics PLCK;
   PLCK.velocity = nw_v;
   PLCK.max_velocity = max_v;
   if (vehicle_behind.lane == intended_lane){
     if (car_s-vehicle_behind.s <= LC_VEHICLE_BEHIND_BUFFER){
+      std::cout << "\t\tTHERE IS A VEHICLE BEHIND IN BUFFER =========> " << "\n";
       // Stay in current lane if there is a vehicle in the front in the intended lane
       PLCK.lane = curr_lane;
     }
@@ -231,6 +241,8 @@ Kinematics Vehicle::keepLaneKinematics(
   int curr_lane
 ){
   std::cout << "[keepLaneKinematics] " << "\n";
+
+  map<int, vector<Traffic>> bangu = prediction_obj.getTrafficAhead();
 
   Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
     car_s, curr_lane
@@ -319,38 +331,27 @@ vector<double> Vehicle::getKinematics(
   max_v_a = car_v + MAXIMUM_ACCELERATION;
 
   std::cout << "\t[getKinematics]: \n"
-  << "\t\tcar_lane = " << car_lane
-  << "\t\tvehicle_lane = " << vehicle_ahead.lane << "\n";
-
-  std::cout << "\tprevious_velocity = " << car_v << "\n";
-  std::cout << "\tintended_velocity = " << max_v_a << "\n";
+  << "\t\tMy car_lane = " << car_lane << " car_old_speed = " << car_v << " car_new_speed = " << max_v_a
+  << "\n\t\tOther vehicle_lane = " << vehicle_ahead.lane << "\n";
 
   double max_velocity_ahead = -10000;
   if (vehicle_ahead.lane == intended_lane){
-
-    // If there is a vehicle behind make our car move with the speed that of the front
-    // if (vehicle_behind.lane == car_lane){
-    //   // Choose to follow the traffic velocity when there is a car ahead
-    //   std::cout << "THERE IS A VEHICLE BEHIND =========> " << "\n";
-    //   std::cout << "vehicle_behind:\t s = " <<  vehicle_behind.s << " v = " << vehicle_behind.v << "\n";
-    //   new_velocity = vehicle_ahead.v;
-    // }
-    // else{
-
     /*
       Assuming our goal is to reach the preffered position that is buffer_meters behind the car ahead, we use the
       Jerk minimization equation to calculate the preferend velocity the vehicle should given that we use the same acceleration
       goal s(t)(vehicle_ahead.s - buffer_distance) = car.s + (max_velocity_ahead - vehicle_ahead.v)*t + car.a*(t**2)
     */
-      std::cout << "\t\tDistance:\t buffer = " <<  vehicle_ahead.s - car_s << "\n";
-      std::cout << "\t\tvehicle_ahead:\t s = " <<  vehicle_ahead.s << " v = " << vehicle_ahead.v << "\n";
-      std::cout << "\t\tmy_vehicle:\t s = " <<  car_s << " v = " << car_v << " a = " << car_a << "\n";
+      std::cout << "\t\t[Vehicle Ahead]: "
+      << " s = " << vehicle_ahead.s
+      << " speed = " << vehicle_ahead.speed
+      << " distance = " << vehicle_ahead.s - car_s << "\n";
+
       if (VEHICLE_AHEAD_BUFFER >= vehicle_ahead.s - car_s){
         std::cout << "\t\tTHERE IS A VEHICLE AHEAD IN BUFFER =========> " << "\n";
         max_v_a = car_v - MAXIMUM_ACCELERATION;
         std::cout << "\t\tactual_velocity = " << max_v_a << "\n";
       }
-      max_velocity_ahead = vehicle_ahead.s - car_s - VEHICLE_AHEAD_BUFFER + vehicle_ahead.v - 0.5*car_a;
+      max_velocity_ahead = vehicle_ahead.s - car_s - VEHICLE_AHEAD_BUFFER + vehicle_ahead.speed - 0.5*car_a;
       std::cout << "\t\tmax_velocity_ahead = " << max_velocity_ahead << "\n";
       new_velocity = min(max_velocity_ahead, max_v_a);
     }
@@ -429,6 +430,8 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
 
   }
   else{
+    // Change the reference to the most future point of the previous trajectory because we use
+    // car_s not as the vehicle is currently but where the vehicle will be in the future using trajectory
     ref_x_map = previous_path_x[prev_path_size-1];
     ref_y_map = previous_path_y[prev_path_size-1];
 
@@ -571,16 +574,20 @@ return trajectories; // trajectories;
 
 
 vector<string> Vehicle::getNextStates(string current_state){
+  std::cout << "FUCKING CAR LANE ========== " << car_lane << "\n";
   vector<string> states_vector;
   if (current_state == "KL"){
-     if(car_lane == 0){
+    if(car_lane == 0){
       states_vector = {"KL", "PLCR"};
     }
     else if(car_lane == 2){
       states_vector = {"KL", "PLCL"};
     }
-    else{
+    else if(car_lane == 1){
       states_vector = {"KL", "PLCL", "PLCR"};
+    }
+    else{
+      exit (EXIT_FAILURE);
     }
 
   }

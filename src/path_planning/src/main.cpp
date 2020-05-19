@@ -177,7 +177,8 @@ int main() {
             map_waypoints_y,
             sensor_fusion_data,
             end_path_s,
-            end_path_d
+            end_path_d,
+            previous_path_y_.size()
           );
           std::cout << "car_s " << car_s << "\n";
           std::cout << "car_d " << car_d << "\n";

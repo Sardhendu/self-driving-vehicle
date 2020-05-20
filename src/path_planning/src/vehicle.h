@@ -29,12 +29,10 @@ struct Trajectory {
 class Vehicle {
 
 public:
-  vector<double> max_lane_velocity = {49.5/2.24, 49.5/2.24, 49.5/2.24}; // In meters/sec
-  double car_v_prev = 0;
-  double car_v = 0.2;
-  double car_a = 0.2;
-  double MAXIMUM_ACCELERATION = 0.224;               // maximum acceleration permitted
-  double MAXIMUM_DECCELERATION = 0.224;
+  vector<double> MAX_LANE_VELOCITY = {49.5/2.24, 49.5/2.24, 49.5/2.24}; // In meters/sec
+
+  double MAXIMUM_ACCELERATION = 0.124;               // maximum acceleration permitted
+  double MAXIMUM_DECCELERATION = 0.124;
   // double increment_velocity = 0.2;
   double SEC_TO_VISIT_NEXT_POINT = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
   int VEHICLE_AHEAD_BUFFER = 30; // 35 Assuming we keep 10 m distance from any car ahead of us
@@ -46,12 +44,16 @@ public:
   vector<int> LANES = {0, 1, 2};
   double INSUFFICIENCY_COST_WEIGHT = 0.7;
   double LANE_TRAFFIC_COST_WEIGHT = 0.3;
+  double LANE_WIDTH = 4.0;
 
   double car_x;
   double car_y;
   double car_s;
   double car_d;
   double car_yaw;
+  double car_v_prev = 0;
+  double car_v = 0.2;
+  double car_a = 0.2;
   double car_speed;
   int car_lane=1;
   string car_state = "KL";

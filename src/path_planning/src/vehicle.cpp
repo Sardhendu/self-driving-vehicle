@@ -117,7 +117,7 @@ vector<vector<double>> Vehicle::generateTrajectory(
 
   std::cout << "generateTrajectory \n"
   << "\t curr_lane_velocity: " << car_v
-  << "\t max_lane_velocity:" << max_lane_velocity[car_lane]
+  << "\t MAX_LANE_VELOCITY:" << MAX_LANE_VELOCITY[car_lane]
   << "\n";
 
   std::cout << "Car ===========================>"
@@ -425,19 +425,24 @@ vector<double> Vehicle::getKinematics(
         std::cout << "\t\tactual_velocity = " << max_v_a << "\n";
       }
       max_velocity_ahead = vehicle_ahead.s - car_s - VEHICLE_AHEAD_BUFFER + vehicle_ahead.speed - 0.5*car_a;
+      if (max_velocity_ahead<0){
+        std::cout<<"232323423423432 " << vehicle_ahead.s << "  " << car_s << "  " << VEHICLE_AHEAD_BUFFER << "  " << vehicle_ahead.speed << "  " << car_a <<"\n";
+        // exit (EXIT_FAILURE);
+        max_velocity_ahead = vehicle_ahead.speed;
+      }
       std::cout << "\t\tmax_velocity_ahead = " << max_velocity_ahead << "\n";
       new_velocity = min(max_velocity_ahead, max_v_a);
     }
   // }
   else{
     // When there are no cars ahead, increment the cars velocity untill max permitted by lane
-    // new_velocity = min(max_v_a, max_lane_velocity[car_lane]);
+    // new_velocity = min(max_v_a, MAX_LANE_VELOCITY[car_lane]);
     new_velocity = max_v_a;
     max_velocity_ahead = 99999;
   }
 
   std::cout << "\t\tnew_velocity = " << new_velocity << "\n";
-  new_velocity = min(new_velocity, max_lane_velocity[car_lane]);
+  new_velocity = min(new_velocity, MAX_LANE_VELOCITY[car_lane]);
   return {new_velocity, max_velocity_ahead};
 
 }
@@ -470,11 +475,6 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
         step t-1 that were not used by the simulator to drive the car. So why not we add those
 
   */
-  // std::cout << "\t x_map = " << x_map << " y_map = " << y_map << " car_yaw = " << car_yaw << " s = " << car_s << " d = " << car_d << "\n";
-  // std::cout << "\tlen(previous_path_x) = " << previous_path_x.size() << "\n";
-  // std::cout << "\tcurrently velocity = " << curr_v << "\n";
-  // std::cout << "\PREDICT_DISTANCE = " << PREDICT_DISTANCE << "\n";
-  // std::cout << "\tSEC_TO_VISIT_NEXT_POINT = " << SEC_TO_VISIT_NEXT_POINT << "\n";
   vector<double> anchor_points_x;
   vector<double> anchor_points_y;
 
@@ -524,8 +524,7 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
   }
 
   // Genreate few points in the future using CarPosiiton in Frenet Coordinate Frame
-  double next_d = 4*curr_lane + 2;
-  // std::cout << "\tlane num = " <<  getLane(car_d) << "\n";
+  double next_d = LANE_WIDTH*curr_lane + 2;
 
 
   for (int nxy=0; nxy<POLY_FIT_DISTANCES.size(); nxy++){
@@ -538,16 +537,9 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
     );
     anchor_points_x.push_back(next_xy[0]);
     anchor_points_y.push_back(next_xy[1]);
-    // std::cout << "\tdistance = " << POLY_FIT_DISTANCES[nxy] << " next_x = " << next_xy[0] << " nxt_y = " << next_xy[1] << "\n";
   }
 
   // Now we convert the points in map coordinate frame to vehicle coordinate
-  // frame using the ref_x, ref_y and ref_yaw
-  // for (int np=0; np<anchor_points_x.size(); np++){
-  //   std::cout << "\t-> Map Frame: x = " << anchor_points_x[np] << " y = " << anchor_points_y[np] << "\n";
-  // }
-  // std::cout << "\tref_x_map = " << ref_x_map << " ref_y_map = " << ref_y_map << "ref_yaw = " << ref_yaw << "\n";
-
   vector<vector<double>> transXY = transformMapToVehicleFrame(
     ref_x_map,
     ref_y_map,
@@ -604,27 +596,13 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
     next_points_y_v
   );
 
-  // vector<double> next_points_x_m;
-  // vector<double> next_points_y_m;
-
-  // Add the points from previous trajectory and
-  // for (int i=0; i<prev_path_size; i++){
-  //   next_points_x_m.push_back(previous_path_x[i]);
-  //   next_points_y_m.push_back(previous_path_y[i]);
-  // }
-
   if (!trajectories.empty()){
     for (int i=0; i<new_points_count; i++){
-        // std::cout << "\tRemoving " << i << "\t " << "dat = " <<trajectories[0].id << "\t" << trajectories[0].x_map << "\t" << trajectories[0].y_map << "\n";
         trajectories.pop_front();
     }
   }
   // Insert New trajectory points
   for (int i=0; i<next_points_xy_m[0].size(); i++){
-    // std::cout << "\tAdding: "<< i << "\t " << "dat = " << i << "\t" << next_points_xy_m[0][i] << "\t" << next_points_xy_m[1][i] << "\n";
-    // next_points_x_m.push_back(next_points_xy_m[0][i]);
-    // next_points_y_m.push_back(next_points_xy_m[1][i]);
-
     Trajectory single_point;
     single_point.id = i;
     single_point.lane = curr_lane;

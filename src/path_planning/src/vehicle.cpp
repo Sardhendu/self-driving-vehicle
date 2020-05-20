@@ -688,30 +688,3 @@ vector<string> Vehicle::getNextStates(string current_state){
   std::cout << "\n";
   return states_vector;
 }
-
-
-
-
-  // // ------------------------------------------------------------------------
-  // // Small Hack to test
-  // // ------------------------------------------------------------------------
-  // Traffic vehicle_ahead = prediction_obj.getNearestVehicleAhead(
-  //   car_s, car_lane
-  // );
-  // int curr_lane;
-  // std::cout << vehicle_ahead.lane << " " << car_lane << "\n";
-  // if (vehicle_ahead.lane == car_lane){
-  //   if (vehicle_ahead.s - car_s <= VEHICLE_AHEAD_BUFFER){
-  //     curr_lane = car_lane + 1;
-  //   }
-  //   else{
-  //     curr_lane = car_lane;
-  //   }
-  // }
-  // else{
-  //     curr_lane = car_lane;
-  //   }
-  // // ------------------------------------------------------------------------
-
-  // std::cout << "curr_lanecurr_lanecurr_lanecurr_lanecurr_lanecurr_lane  " << curr_lane << "\n";
-  // curr_lane = getLane(car_d);

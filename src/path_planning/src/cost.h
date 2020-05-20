@@ -10,7 +10,17 @@ inline double logistic(double x){
   return 2.0 / (1 + exp(-x)) - 1.0;
 }
 
+inline vector<double> normalize(vector<double> values){
+  double total_sum = 0;
+  for (int i=0; i<values.size(); i++){
+    total_sum  += values[i];
+  }
 
+  for (int i=0; i<values.size(); i++){
+    values[i] /= total_sum;
+  }
+  return values;
+}
 // inline double goalDistanceCost(
 //   int goal_lane, int car_lane, int intended_car_lane, doule distance_to_goal
 // ){
@@ -41,7 +51,7 @@ inline double logistic(double x){
 // }
 
 
-inline vector<double> laneCost(
+inline map<int, double> laneCost(
   map<int, vector<Traffic>> traffic_ahead, double car_s
 ){
   std::cout << "[LANE TRAFFIC COST]" <<"\n";
@@ -52,6 +62,7 @@ inline vector<double> laneCost(
   std::cout << "\ttraffic_distance = "<<LANE_DISTANCE_FOR_TRAFFIC << "\n";
 
   vector<int> lanes = {0, 1, 2};
+
   vector<double> lane_traffic_time;
   vector<double> lane_priors_score = {1.0, 1.0, 1.0};
   double total_time = 0;
@@ -61,24 +72,36 @@ inline vector<double> laneCost(
   for (int i =0 ; i<lanes.size(); i++){
     int curr_lane = lanes[i];
     double avg_speed = 0;
-    // double max_dist = -9999;
     double lane_traffic = 1;
 
+    // If there is traffic agead in the lane
     if (traffic_ahead.count(curr_lane) > 0){
       vector<Traffic> traffic_ahead_in_lane = traffic_ahead[curr_lane];
 
       double nearest_vehicle_s = 99999;
       for (int i=0; i<traffic_ahead_in_lane.size(); i++){
-        avg_speed += traffic_ahead_in_lane[i].speed;
+        // Check if the vehicle ahead is in the range on Lane Traffic
+        if (traffic_ahead_in_lane[i].s <= LANE_DISTANCE_FOR_TRAFFIC){
+          avg_speed += traffic_ahead_in_lane[i].speed;
 
-        if (traffic_ahead_in_lane[i].s < nearest_vehicle_s){
-          nearest_vehicle_s = traffic_ahead_in_lane[i].s;
+          if (traffic_ahead_in_lane[i].s < nearest_vehicle_s){
+            nearest_vehicle_s = traffic_ahead_in_lane[i].s;
+          }
         }
+
       }
-      avg_speed /= traffic_ahead_in_lane.size();
-      double time_ = (LANE_DISTANCE_FOR_TRAFFIC - nearest_vehicle_s) / avg_speed;
-      total_time += time_;
-      lane_traffic_time.push_back(time_);
+
+      if (nearest_vehicle_s != 99999){
+        avg_speed /= traffic_ahead_in_lane.size();
+        double time_ = (LANE_DISTANCE_FOR_TRAFFIC - nearest_vehicle_s) / avg_speed;
+        total_time += time_;
+        lane_traffic_time.push_back(time_);
+      }
+      else{
+        // When the vehicle is not in the traffic range then the cost for that lane is 0
+        lane_traffic_time.push_back(0);
+      }
+
     }
     else{
       // When no traffic we can drive with full speed and assume we reach in 0 time
@@ -86,12 +109,12 @@ inline vector<double> laneCost(
     }
   }
 
-
+  map<int, double> lane_cost_dict;
   for (int i=0 ; i<lane_traffic_time.size(); i++){
     std::cout << "\tlane_num = " << i << " total_cost = "<< lane_traffic_time[i] << " norm_cost = "<< lane_traffic_time[i] << "\n";
-    lane_traffic_time[i] /= (total_time+0.0000001);
+    lane_cost_dict[i] = lane_traffic_time[i] / (total_time+0.0000001);
   }
-  return lane_traffic_time;
+  return lane_cost_dict;
 }
 
 // double inefficiencyCost(

@@ -54,8 +54,6 @@ public:
 
   map<int, vector<Traffic>> getPredictions();
   vector<map<int, vector<Traffic>>> getTraffic(double car_s);
-  Traffic getNearestVehicleAhead(double car_s, int car_lane);
-  Traffic getNearestVehicleBehind(double car_s, int car_lane);
   Traffic getNearestVehicleAheadInLane(map<int, vector<Traffic>> traffic_ahead, int curr_lane);
   Traffic getNearestVehicleBehindInLane(map<int, vector<Traffic>> traffic_behind, int curr_lane);
 

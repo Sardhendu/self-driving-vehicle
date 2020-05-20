@@ -6,7 +6,7 @@
 #include "experiments.h"
 #include "cost.h"
 #include <stdlib.h>
-
+#include <assert.h>
 
 using std::vector;
 using std::min;
@@ -59,7 +59,6 @@ vector<vector<double>> Vehicle::generateTrajectory(
   vector<double> previous_path_x,
   vector<double> previous_path_y
 ){
-  std::cout << "Fuckin Car Lane MotherFucker ====> " << car_lane << "\n";
   vector<string> list_of_future_states = getNextStates(car_state);
 
 
@@ -100,14 +99,14 @@ vector<vector<double>> Vehicle::generateTrajectory(
   }
 
 
-  vector<double> list_of_lane_cost = laneCost(traffic_ahead, car_s);
+  map<int, double> lane_traffic_cost = laneCost(traffic_ahead, car_s);
 
   std::cout << "\n[Optimal State Kinematics].........................................................." << "\n" ;
   int op_num = getOptimalTrajectoryNum(
     list_of_trajectories,
     list_of_kinematics,
     list_of_future_states,
-    list_of_lane_cost
+    lane_traffic_cost
   );
   std::cout << "\toptimal num = " << op_num << "\n";
   car_v = list_of_kinematics[op_num].velocity;
@@ -154,7 +153,7 @@ int Vehicle::getOptimalTrajectoryNum(
   vector<deque<Trajectory>> list_of_trajectories,
   vector<Kinematics> list_of_kinematics,
   vector<string> list_of_states,
-  vector<double> list_of_lane_cost
+  map<int, double> lane_traffic_cost
 ){
 
   vector<double> insufficiency_cost;
@@ -182,18 +181,51 @@ int Vehicle::getOptimalTrajectoryNum(
 
   int optimial_trajectory_num = 0;
   double max_veclocity = -9999;
+
   for (int i=0; i<insufficiency_cost.size(); i++){
     if (insufficiency_cost[i] > max_veclocity && insufficiency_cost[i]>insufficiency_cost[0]+0.2){
         optimial_trajectory_num = i;
     }
   }
 
+
+  vector<double> norm_velocity = normalize(insufficiency_cost);
+  for (int i=0; i<norm_velocity.size(); i++){
+    insufficiency_cost[i] = 1 - norm_velocity[i];
+  }
+
   std::cout << "\t" << "Lane cost \t";
-  for (int i=0; i<list_of_lane_cost.size(); i++){
-    std::cout << " Lane: " << i <<  " = " << list_of_lane_cost[i];
+  for (int i=0; i<LANES.size(); i++){
+    std::cout << " Lane: " << i <<  " = " << lane_traffic_cost[i];
   }
   std::cout<<"\n";
-  return optimial_trajectory_num;
+
+  // Find the best lane given state velocity and lane traffic
+  int minimum_cost_trajectory = 0;
+  double minimum_cost = 99999;
+
+  std::cout << "[Cumulative Cost] ";
+  for (int i=0; i<insufficiency_cost.size(); i++){
+    int lane = list_of_kinematics[i].lane;
+
+    std::cout << "\tstate = " << list_of_states[i]
+    << "\n\t\tlane = " << list_of_kinematics[i].lane;
+
+    assert (lane >= 0);
+    assert (lane <= 2);
+    double cumulative_cost = INSUFFICIENCY_COST_WEIGHT*insufficiency_cost[i] + LANE_TRAFFIC_COST_WEIGHT*lane_traffic_cost[lane];
+
+    std::cout << "\n\t\tinsufficiency_cost = " << insufficiency_cost[i]
+    << "\n\t\tlane_traffic_cost = " << lane_traffic_cost[lane]
+    << "\n\t\tweighted_cumulative_cost = " << cumulative_cost << "\n";
+    if (cumulative_cost < minimum_cost){
+        minimum_cost = cumulative_cost;
+        minimum_cost_trajectory = i;
+    }
+  }
+  std::cout << "MINIMUM COST TRAJECTORY NUM = " << minimum_cost_trajectory << "\n";
+
+  return minimum_cost_trajectory;
 }
 
 
@@ -261,6 +293,16 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
     traffic_behind, intended_lane
   );
 
+
+  //Assert to ensure
+  if (vehicle_ahead.id != -1){
+    assert(vehicle_ahead.lane == intended_lane);
+  }
+
+  if (vehicle_behind.id != -1){
+    assert(vehicle_behind.lane == intended_lane);
+  }
+  // assert(vehicle_behind.lane)
   vector<double> v_k = getKinematics(vehicle_ahead, vehicle_behind, intended_lane);
   double nw_v = v_k[0];
   double max_v = v_k[1];
@@ -273,7 +315,8 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
   Kinematics PLCK;
   PLCK.velocity = nw_v;
   PLCK.max_velocity = max_v;
-  if (vehicle_behind.lane == intended_lane){
+
+  if (vehicle_behind.id != -1){
     if (car_s-vehicle_behind.s <= LC_VEHICLE_BEHIND_BUFFER){
       std::cout << "\t\tTHERE IS A VEHICLE BEHIND IN BUFFER =========> " << "\n";
       // Stay in current lane if there is a vehicle in the front in the intended lane
@@ -284,8 +327,10 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
     }
   }
   else{
-    PLCK.lane = intended_lane;
+    PLCK.lane = intended_lane;;
   }
+
+
   return PLCK;
 }
 
@@ -602,7 +647,7 @@ return trajectories; // trajectories;
 
 
 vector<string> Vehicle::getNextStates(string current_state){
-  std::cout << "FUCKING CAR LANE ========== " << car_lane << "\n";
+  std::cout << "[getNextStates]\t" << "car_lane = "<< car_lane << " car_state = " << current_state << "\n";
   vector<string> states_vector;
   if (current_state == "KL"){
     if(car_lane == 0){
@@ -628,7 +673,7 @@ vector<string> Vehicle::getNextStates(string current_state){
   }
   else if (current_state == "PLCR"){
     states_vector.push_back("KL");
-    if (car_lane != 1){
+    if (car_lane != 2){
       states_vector.push_back("PLCR");
       states_vector.push_back("LCR");
     }

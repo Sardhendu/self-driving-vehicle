@@ -37,12 +37,15 @@ public:
   double MAXIMUM_DECCELERATION = 0.224;
   // double increment_velocity = 0.2;
   double SEC_TO_VISIT_NEXT_POINT = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
-  int VEHICLE_AHEAD_BUFFER = 20; // 35 Assuming we keep 10 m distance from any car ahead of us
-  int LC_VEHICLE_BEHIND_BUFFER = 15;
+  int VEHICLE_AHEAD_BUFFER = 30; // 35 Assuming we keep 10 m distance from any car ahead of us
+  int LC_VEHICLE_BEHIND_BUFFER = 30;
   vector<int> POLY_FIT_DISTANCES = {30, 60, 90};  // In meters
   int PREDICT_DISTANCE = 30; // meters that the car should look ahead for trajectory generation
   int TRAJECTORY_LENGTH = 50; // num of future points to generate in the trajectory
   int HACK = 5;
+  vector<int> LANES = {0, 1, 2};
+  double INSUFFICIENCY_COST_WEIGHT = 0.7;
+  double LANE_TRAFFIC_COST_WEIGHT = 0.3;
 
   double car_x;
   double car_y;
@@ -143,7 +146,7 @@ public:
     vector<deque<Trajectory>> list_of_trajectories,
     vector<Kinematics> list_of_kinematics,
     vector<string> list_of_states,
-    vector<double> list_of_lane_cost
+    map<int, double> lane_traffic_cost
   );
 
 

@@ -107,6 +107,7 @@ Traffic Prediction::getNearestVehicleBehindInLane(
     }
 
     std::cout << "\t\t[NEAREST] Vehicle Behind in lane = " << curr_lane << " " << nearest_vehicle_behind.s << " " << nearest_vehicle_behind.d << " " << nearest_vehicle_behind.lane<< " " << nearest_vehicle_behind.speed << "\n";
+
     return nearest_vehicle_behind;
   }
 

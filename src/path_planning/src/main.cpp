@@ -180,8 +180,8 @@ int main() {
             end_path_d,
             previous_path_y_.size()
           );
-          std::cout << "car_s " << car_s << "\n";
-          std::cout << "car_d " << car_d << "\n";
+          // std::cout << "car_s " << car_s << "\n";
+          // std::cout << "car_d " << car_d << "\n";
           vector<vector<double>> trajectoryXY = vehicle_obj.generateTrajectory(
             previous_path_x_,
             previous_path_y_

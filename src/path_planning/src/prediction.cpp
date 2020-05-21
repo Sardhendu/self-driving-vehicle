@@ -31,22 +31,22 @@ void Prediction::setPredictions(
     single_vehicle.state = state;
     single_vehicle.lane = getLane(sensor_fusion_data[i][6]);
 
-    std::cout << "Prediction   " << " "
-    << "id = " << single_vehicle.id << " "
-    << "x = " << single_vehicle.x << " "
-    << "y = " << single_vehicle.y << " "
-    << "vx = " << single_vehicle.vx  << " "
-    << "vy = " << single_vehicle.vy << " "
-    << "s = " << single_vehicle.s << " "
-    << "d = " << single_vehicle.d << " "
-    << "speed = " << single_vehicle.speed << " "
-    << "state = " <<single_vehicle.state << " "
-    << "lane = " <<single_vehicle.lane << " ";
+    // std::cout << "Prediction   " << " "
+    // << "id = " << single_vehicle.id << " "
+    // << "x = " << single_vehicle.x << " "
+    // << "y = " << single_vehicle.y << " "
+    // << "vx = " << single_vehicle.vx  << " "
+    // << "vy = " << single_vehicle.vy << " "
+    // << "s = " << single_vehicle.s << " "
+    // << "d = " << single_vehicle.d << " "
+    // << "speed = " << single_vehicle.speed << " "
+    // << "state = " <<single_vehicle.state << " "
+    // << "lane = " <<single_vehicle.lane << " ";
 
     // Estimate the Car s in future using its velocity in xy direction
     single_vehicle.s += ((double)prev_trajectory_size*SEC_TO_VISIT_NEXT_POINT*single_vehicle.speed);
 
-    std::cout << "s_future = " << single_vehicle.s << "\n";
+    // std::cout << "s_future = " << single_vehicle.s << "\n";
 
     prediction_trajectory.push_back(single_vehicle);
     predictions_dict[i] = prediction_trajectory;

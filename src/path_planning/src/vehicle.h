@@ -29,7 +29,7 @@ struct Trajectory {
 class Vehicle {
 
 public:
-  vector<double> MAX_LANE_VELOCITY = {49.5/2.24, 49.5/2.24, 49.5/2.24}; // In meters/sec
+  vector<double> MAX_LANE_VELOCITY = {49/2.24, 49/2.24, 49/2.24}; // In meters/sec
 
   double MAXIMUM_ACCELERATION = 0.124;               // maximum acceleration permitted
   double MAXIMUM_DECCELERATION = 0.124;
@@ -42,8 +42,9 @@ public:
   int TRAJECTORY_LENGTH = 50; // num of future points to generate in the trajectory
   int HACK = 5;
   vector<int> LANES = {0, 1, 2};
-  double INSUFFICIENCY_COST_WEIGHT = 0.7;
-  double LANE_TRAFFIC_COST_WEIGHT = 0.3;
+  double INSUFFICIENCY_COST_WEIGHT = 0.50;
+  double LANE_TRAFFIC_COST_WEIGHT = 0.15;
+  double LANE_CHANGE_COST_WEIGHT = 0.35;
   double LANE_WIDTH = 4.0;
 
   double car_x;
@@ -148,7 +149,8 @@ public:
     vector<deque<Trajectory>> list_of_trajectories,
     vector<Kinematics> list_of_kinematics,
     vector<string> list_of_states,
-    map<int, double> lane_traffic_cost
+    map<int, double> lane_traffic_cost,
+    map<int, double> lane_change_cost
   );
 
 

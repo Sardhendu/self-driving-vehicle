@@ -4,13 +4,13 @@ This project is aimed to build a particle filter in C++ to localize a vehicle in
 
 
 ### Output Video sneak peek
- 
+
 ![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/sneak_peak.gif)
 
 ### Installation and Local run:
 --------------
 ```bash
-cd src/p article_filter
+cd src/particle_filter
 docker build -t pfilter .
 docker run -v ./particle_filter:/particle_filter -it pfilter bash
 chmod u+x install-ubuntu.sh
@@ -48,9 +48,9 @@ Included are some dataset that can help run/debug the algorithm before testing i
    - **parser.cpp**: Code to read/write data and some helper functions.
    - **run.cpp**: Helper code to run/debug the algorithm with simulator (used data from ./files/*).
    - **main.cpp**: The main functions that call the uWebSocket to communicate with the simulator.
-   
 
-### Goal: 
+
+### Goal:
 --------------------
    - We have to localize/find the vehicle position in the map/real-world coordinate frame.
 
@@ -81,14 +81,14 @@ The idea is pretty simple, think of generating 100's of point that represents pa
     - Points are sampled from gaussian distribution with mean = GPS location and a standard deviation of say 20-50 meters or something like that.
 
 2. **Prediction Step / Move**:
-    - Here we use the velocity and yaw_rate from sensors to move the car or find new states for particle using particle information from previous timestep. 
+    - Here we use the velocity and yaw_rate from sensors to move the car or find new states for particle using particle information from previous timestep.
     - In this step we simply predict the current car/particle location in vehicle-frame using sensor readings and previous state of particle.
     - Though velocity and theta are measured by vehicle, they dont have direct dependency on positions in the vehicle frame. As we are multiplying the velocity and yaw_rate to particles position and as long as we are consistent in our implementation the filter would learn the correct particle position.
 
 3. **Update**:
     * *Transformation*:
        - For each particle we transform all landmark observations to map-frame.
-    * *Data Association**: Here we associate each transformed landmark to their nearest landmark in map-frame. This is done by nearest neighbor method. 
+    * *Data Association**: Here we associate each transformed landmark to their nearest landmark in map-frame. This is done by nearest neighbor method.
     * *Update*:
        - We have,
           - *Transformed landmarks*: Estimated landmark in map-frame
@@ -105,8 +105,3 @@ The idea is pretty simple, think of generating 100's of point that represents pa
 -------------------
 
 ![analysis_plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/gt_prediction_plot.png)
-
-
-
-
-

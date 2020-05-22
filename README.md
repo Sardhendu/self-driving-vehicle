@@ -29,6 +29,6 @@ Project 5: Sensor Fusion (Extended Kalman Filter) [*Link*](https://github.com/Sa
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/sneak_peak.gif)
 
 
-Project 6: Particle Filter [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/localization)
+Project 6: Localization (Particle Filter) [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/localization)
 ------------
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/localization/images/sneak_peak.gif)

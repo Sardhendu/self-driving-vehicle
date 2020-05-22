@@ -1,4 +1,4 @@
-### Project: Particle Filter in C++
+### Project: Localization (Particle Filter) in C++
 
 This project is aimed to build a particle filter in C++ to localize a vehicle in the real-worlds.
 

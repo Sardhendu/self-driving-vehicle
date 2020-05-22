@@ -1,8 +1,8 @@
-# Extended Kalman Filter:
+# Sensor Fusion (Extended Kalman Filter):
 
 ### Output Video sneak peek
 
-![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/sneak_peak.gif)
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/sneak_peak.gif)
 
 
 # What do the Files do:
@@ -19,7 +19,7 @@
 1. git clone https://github.com/Sardhendu/self-driving-vehicle.git
 2. cd src/extended_kalman_filter
 3. docker build -t ekf .
-4. docker run -v ../extended_kalman_filters:/extended_kalman_filters -it ekf bash
+4. docker run -v ../sensor_fusion:/sensor_fusion -it ekf bash
 5. mkdir data
 6. ### Copy the data file from Udacity's repository
 7. cd src
@@ -69,22 +69,22 @@ We observe that **LIDAR** alone is adept at solving the problem with a very low 
 
 
 #### LIDAR: We can see in the below plots the LIDAR measurements and prediction are aligned very well
-![LIDAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/lidar_plot.png)
+![LIDAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/lidar_plot.png)
 
 #### RADAR: The Radar plot has intermittent spikes, which hints on lower accuracy on RADAR.
-![RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/radar_plot.png)
+![RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/radar_plot.png)
 
 The **bearning (phi)** in radar can take values between (-pi, pi) and so the error is contraint to be between (-pi, pi). We add this contraint to smooth the noise in the radar signal and get an improved version of the radar. However, the RMSE values are still very large, and RADAR alone was seen incompetent in solving the Problem. The improved **RADAR** distribution plot is shown below.
 
-![IMPROVED-RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/radar_improved.png)
+![IMPROVED-RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/radar_improved.png)
 
 #### Fusion: Fusing RADAR and LIDAR, where the prediction were both taken and applied to both LIDAR and RADAR worked in smoothing the noise in RADAR. The Fusion algorithm also was able to achieve the required RMSE value and altogether solving the problem. Below are the distribution plot of the Fused algorithm.
 
 **LIDAR**
-![FUSION-LIDAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/fusion_lidar.png)
+![FUSION-LIDAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/fusion_lidar.png)
 
 **RADAR** (Looks much cleaner)
-![FUSION-RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/fusion_radar.png)
+![FUSION-RADAR-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/fusion_radar.png)
 
 
 #### TODO:
@@ -95,4 +95,4 @@ The **bearning (phi)** in radar can take values between (-pi, pi) and so the err
 
 
 ##### Output RMSE and Tracking path:
-![Ouptut-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/extended_kalman_filters/images/output_png.png)
+![Ouptut-Plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/output_png.png)

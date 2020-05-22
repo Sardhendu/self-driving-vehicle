@@ -5,14 +5,14 @@ This project is aimed to build a particle filter in C++ to localize a vehicle in
 
 ### Output Video sneak peek
 
-![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/sneak_peak.gif)
+![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/localization/images/sneak_peak.gif)
 
 ### Installation and Local run:
 --------------
 ```bash
-cd src/particle_filter
+cd src/localization
 docker build -t pfilter .
-docker run -v ./particle_filter:/particle_filter -it pfilter bash
+docker run -v ./localization:/localization -it pfilter bash
 chmod u+x install-ubuntu.sh
 ./install-ubuntu.sh
 g++ -std=c++11 run.cpp particle_filter.cpp -o run
@@ -104,4 +104,4 @@ The idea is pretty simple, think of generating 100's of point that represents pa
 ### Prediction Plot
 -------------------
 
-![analysis_plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/particle_filter/images/gt_prediction_plot.png)
+![analysis_plot](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/localization/images/gt_prediction_plot.png)

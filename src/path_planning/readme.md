@@ -126,9 +126,7 @@ In this project, we learn to drive a car in a highway. Path planning by itself i
      * Do your math of building out the polynomials or whatever.
      * Transform back the xy point to map coordinate frame using the same transformation.
 
-
-
-####Common isssues while installing:
+#### Common isssues while installing:
 
    When you see this error:
    ld: cannot link directly with dylib/framework, your binary is not an allowed client of /usr/lib/libcrypto.dylib for architecture x86_64

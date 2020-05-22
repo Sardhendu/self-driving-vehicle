@@ -326,7 +326,7 @@ Kinematics Vehicle::prepareLaneChangeKinematics(
   if (vehicle_behind.id != -1){
     if (car_s-vehicle_behind.s <= LC_VEHICLE_BEHIND_BUFFER){
       std::cout << "\t\tTHERE IS A VEHICLE BEHIND IN BUFFER =========> " << "\n";
-      // Stay in current lane if there is a vehicle in the front in the intended lane
+      // Stay in current lane if there is a vehicle behind in the intended lane
       PLCK.lane = curr_lane;
     }
     else{
@@ -428,7 +428,7 @@ vector<double> Vehicle::getKinematics(
 
       if (VEHICLE_AHEAD_BUFFER >= vehicle_ahead.s - car_s){
         // std::cout << "\t\tTHERE IS A VEHICLE AHEAD IN BUFFER =========> " << "\n";
-        max_v_a = car_v - MAXIMUM_ACCELERATION;
+        max_v_a = car_v - MAXIMUM_ACCELERATION*2;
         // std::cout << "\t\tactual_velocity = " << max_v_a << "\n";
       }
       max_velocity_ahead = vehicle_ahead.s - car_s - VEHICLE_AHEAD_BUFFER + vehicle_ahead.speed - 0.5*car_a;
@@ -557,12 +557,8 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
   vector<double> anchor_points_x_v = transXY[0];
   vector<double> anchor_points_y_v = transXY[1];
 
-  // for (int np=0; np<anchor_points_x_v.size(); np++){
-  //   std::cout << "\t-> Vehicle Frame: x = " << anchor_points_x_v[np] << " y = " << anchor_points_y_v[np] << "\n";
-  // }
-
   // ----------------------------------------------------------------------
-  // Step 2: Fit peicewise polynomial function to anchor points using spline
+  // Step 2: Fit peicewise polynomial function to anchor/waypoint points using spline
   // ----------------------------------------------------------------------
   tk::spline spl;
   spl.set_points(anchor_points_x_v, anchor_points_y_v);
@@ -574,9 +570,9 @@ deque<Trajectory> Vehicle::generateTrajectoryForState(
 
 
   // ----------------------------------------------------------------------
-  // Step 3: n-step Trajectory Generation
+  // Step 3: n-step Trajectory Generation:
   // ----------------------------------------------------------------------
-  double N = target_hypoteneous/(curr_v*SEC_TO_VISIT_NEXT_POINT);
+  double N = target_hypoteneous/(curr_v*SEC_TO_VISIT_NEXT_POINT); // Space the points laond the polynomial such that our car moves at the desired speed. This help in minimizing the Jerk
   double add_x = 0;
   vector<double> next_points_x_v;
   vector<double> next_points_y_v;

@@ -43,9 +43,9 @@ public:
   int TRAJECTORY_LENGTH = 50; // num of future points to generate in the trajectory
   int HACK = 5;
   vector<int> LANES = {0, 1, 2};
-  double INSUFFICIENCY_COST_WEIGHT = 0.50;
-  double LANE_TRAFFIC_COST_WEIGHT = 0.05;
-  double LANE_CHANGE_COST_WEIGHT = 0.45;
+  double INSUFFICIENCY_COST_WEIGHT = 0.52;
+  double LANE_TRAFFIC_COST_WEIGHT = 0.08;
+  double LANE_CHANGE_COST_WEIGHT = 0.40;
   double LANE_WIDTH = 4.0;
 
   double car_x;

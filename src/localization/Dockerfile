@@ -23,4 +23,4 @@ RUN apt-get update && apt-get install -y \
   vim
 
 
-WORKDIR /particle_filter
+WORKDIR /localization

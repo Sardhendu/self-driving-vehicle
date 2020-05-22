@@ -30,6 +30,7 @@ class Vehicle {
 
 public:
   vector<double> MAX_LANE_VELOCITY = {49/2.24, 49/2.24, 49/2.24}; // In meters/sec
+  vector<double> MIN_LANE_VELOCITY = {0.124, 0.124, 0.124};
 
   double MAXIMUM_ACCELERATION = 0.124;               // maximum acceleration permitted
   double MAXIMUM_DECCELERATION = 0.124;
@@ -43,8 +44,8 @@ public:
   int HACK = 5;
   vector<int> LANES = {0, 1, 2};
   double INSUFFICIENCY_COST_WEIGHT = 0.50;
-  double LANE_TRAFFIC_COST_WEIGHT = 0.15;
-  double LANE_CHANGE_COST_WEIGHT = 0.35;
+  double LANE_TRAFFIC_COST_WEIGHT = 0.05;
+  double LANE_CHANGE_COST_WEIGHT = 0.45;
   double LANE_WIDTH = 4.0;
 
   double car_x;

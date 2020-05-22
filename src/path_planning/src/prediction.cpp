@@ -73,7 +73,7 @@ Traffic Prediction::getNearestVehicleAheadInLane(
     double min_s_value = 999999;
     vector<Traffic> traffic_ahead_in_lane = traffic_ahead[curr_lane];
     for (int i=0; i<traffic_ahead_in_lane.size(); i++){
-        std::cout << "\t\tVehicle Ahead in lane = " << curr_lane << " " << traffic_ahead_in_lane[i].s << " " << traffic_ahead_in_lane[i].d << " " << traffic_ahead_in_lane[i].lane << " " << traffic_ahead_in_lane[i].speed << "\n";
+//        std::cout << "\t\tVehicle Ahead in lane = " << curr_lane << " " << traffic_ahead_in_lane[i].s << " " << traffic_ahead_in_lane[i].d << " " << traffic_ahead_in_lane[i].lane << " " << traffic_ahead_in_lane[i].speed << "\n";
         if (traffic_ahead_in_lane[i].s <= min_s_value){
           nearest_vehicle_ahead = traffic_ahead_in_lane[i];
           min_s_value = traffic_ahead_in_lane[i].s;
@@ -81,7 +81,9 @@ Traffic Prediction::getNearestVehicleAheadInLane(
       }
 
     }
-    std::cout << "\t\t[NEAREST] Vehicle Ahead in lane = " << curr_lane << " "<< nearest_vehicle_ahead.s << " " << nearest_vehicle_ahead.d << " " << nearest_vehicle_ahead.lane << " " << nearest_vehicle_ahead.speed << "\n";
+    std::cout << "\t\t[NEAREST VH_AHEAD]"
+    << "\tcar_lane = "<< curr_lane << "\tvh_id = " << nearest_vehicle_ahead.id << "\tvh_s = "<< nearest_vehicle_ahead.s << "\tvh_d = "
+    << nearest_vehicle_ahead.d << "\tvh_lane" << nearest_vehicle_ahead.lane << "\tvh_speed = " << nearest_vehicle_ahead.speed<<"\n";
 
     return nearest_vehicle_ahead;
   }
@@ -98,7 +100,7 @@ Traffic Prediction::getNearestVehicleBehindInLane(
     double max_s_value = -999999;
     vector<Traffic> traffic_behind_in_lane = traffic_behind[curr_lane];
     for (int i=0; i<traffic_behind_in_lane.size(); i++){
-        std::cout << "\t\tVehicle Behind in lane = " << curr_lane << " " << traffic_behind_in_lane[i].s << " " << traffic_behind_in_lane[i].d << " " << traffic_behind_in_lane[i].lane << " " << traffic_behind_in_lane[i].speed << "\n";
+//        std::cout << "\t\tVehicle Behind in lane = " << curr_lane << " " << traffic_behind_in_lane[i].s << " " << traffic_behind_in_lane[i].d << " " << traffic_behind_in_lane[i].lane << " " << traffic_behind_in_lane[i].speed << "\n";
         if (traffic_behind_in_lane[i].s >= max_s_value){
           nearest_vehicle_behind = traffic_behind_in_lane[i];
           max_s_value = traffic_behind_in_lane[i].s;
@@ -106,7 +108,9 @@ Traffic Prediction::getNearestVehicleBehindInLane(
       }
     }
 
-    std::cout << "\t\t[NEAREST] Vehicle Behind in lane = " << curr_lane << " " << nearest_vehicle_behind.s << " " << nearest_vehicle_behind.d << " " << nearest_vehicle_behind.lane<< " " << nearest_vehicle_behind.speed << "\n";
+    std::cout << "\t\t[NEAREST VH_BEHIND]"
+    << "\tcar_lane = "<< curr_lane << "\tvh_id = " << nearest_vehicle_behind.id << "\tvh_s = "<< nearest_vehicle_behind.s << "\tvh_d = "
+    << nearest_vehicle_behind.d << "\tvh_lane" << nearest_vehicle_behind.lane << "\tvh_speed = " << nearest_vehicle_behind.speed << "\n";
 
     return nearest_vehicle_behind;
   }
@@ -133,19 +137,3 @@ vector<map<int, vector<Traffic>>> Prediction::getTraffic(double car_s){
 
   return {traffic_ahead, traffic_behind};
 }
-
-
-
-
-/*
-TODOS:
-
-1. write a funciton to get the attributes of the nearest vehicle in the lane forward and backward. Use this to generate new vehicle kinematics
- -> prediction:
-    1. get_nearest_vehicle_ahead
-    2. get_nearest_vehicle_behind
-
- -> Vehicle:
-    1. get_kinematics: Generates kinematics for each trjectory points in the futures using information from vehile ahead and behind.
-
-*/

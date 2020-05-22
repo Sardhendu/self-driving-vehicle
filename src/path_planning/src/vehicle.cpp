@@ -128,16 +128,16 @@ vector<vector<double>> Vehicle::generateTrajectory(
   << "\n";
 
   std::cout << "Car ===========================>"
-  << "\n\t car_x \t" << car_x
-  << "\n\t car_y \t " << car_y
-  << "\n\t car_s \t" << car_s
-  << "\n\t car_d \t" << car_d
-  << "\n\t car_yaw degrees \t" << car_yaw
-  << "\n\t car_speed miles/hr \t" << car_speed
-  << "\n\t car_v meter/sec \t" << car_v
-  << "\n\t car_v_prev meter/sec \t" << car_v_prev
-  << "\n\t car_a meter/sec \t" << car_a
-  << "\n\t car_lane \t" << car_lane << "\n";
+  << "\n\t car_x = " << car_x
+  << "\t car_y = " << car_y
+  << "\t car_s = " << car_s
+  << "\t car_d = " << car_d
+  << "\t car_yaw = " << car_yaw
+  << "\n\t car_speed =" << car_speed
+  << "\t car_v = " << car_v
+  << "\t car_v_prev = " << car_v_prev
+  << "\t car_a = " << car_a
+  << "\t car_lane = " << car_lane << "\n";
 
   car_a = car_v - car_v_prev;         // acceleration = change_of_velocity/time
   car_v_prev = car_v;
@@ -449,6 +449,7 @@ vector<double> Vehicle::getKinematics(
 
   std::cout << "\t\tnew_velocity = " << new_velocity << "\n";
   new_velocity = min(new_velocity, MAX_LANE_VELOCITY[car_lane]);
+  new_velocity = max(new_velocity, MIN_LANE_VELOCITY[car_lane]);
   return {new_velocity, max_velocity_ahead};
 
 }

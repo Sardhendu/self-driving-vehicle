@@ -7,7 +7,7 @@ A PID controller is a process/system that output the steering angle that a car s
 
 ![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/pid_controller/images/sneak_peak.gif)
 
-Installation:
+## Installation:
 
 1. Download the simulator from [here](https://github.com/udacity/self-driving-car-sim/releases)
 2. Convert it into binary

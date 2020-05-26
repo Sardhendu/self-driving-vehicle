@@ -33,7 +33,6 @@ Project 7: Path Planning [*Link*](https://github.com/Sardhendu/self-driving-vehi
 ------------
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/path_planning/images/sneak_peak.gif)
 
-![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/path_planning/images/sneak_peak.gif)
 
 Project 8: PID-Controller [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/pid_controller)
 ------------

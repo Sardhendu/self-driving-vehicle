@@ -1,8 +1,14 @@
 
-# Project 6 Path Planning:
+# Project 7: Path Planning:
 ----------------
 
 In this project, we learn to drive a car in a highway. Path planning by itself is a difficult problem. It consumes data from all other segments of self-driving car such as **Localization (car in car is in real world)**, **Sensor fusion (tracking other vehicles)** and **Behaviour planning (finite state machines)**
+
+
+### Output Video sneak peek
+
+![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/path_planning/images/sneak_peak.gif)
+
 
 ## Installation
 1. Install Term-3 Simulator [here](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2)
@@ -153,3 +159,11 @@ In this project, we learn to drive a car in a highway. Path planning by itself i
   10. Create the link
     sudo ln -s libssl.1.1.dylib libssl.dylib
     sudo ln -s libcrypto.1.1.dylib libcrypto.dylib
+
+
+#### TODO: Some cases to add
+1. The lane Traffic cost helps the car to understand the best lane 150m ahead, however if sometimes if the car is driving at lane 0 and it reaches the lane 3 following teh finite state shift such as KL->KL->KL->PLCR->PLCR->PLCR->LCR. In such a case, where the car doesn't have many (say 5-6) trajectory in PLCR, the car sometimes exceeds the max_acceleration. The best way to avoid this would be to penalize if the model does remain in a state for atleast 5-7 consecutive points.
+
+2. Case not handled: At this time we handle the case where we check for other vehicle prediction position mostly in the lane they are currently driving. However, we dont check for abrupt behaviour. Say, a vehicle cuts in abruptly to a lane that we prepare to go to. In this case, there may be a collision. A simple but affective way would be to monitor the states of other vehicles for few iterations and only make a move when its safe. i.e predict all possible positions in all lanes where the nearby vehicles can land with a small standard deviation, say a distribution N(mu=pos, std=0.1). Then observe, if our predicted position has some buffer to all the nearby position. Put a penalty based on how close our vehicle is to that buffer. 
+
+  * Note : this case can sometimes result in vehicle not changing lane even when its safe to, therefore its important to penalize vehicles based on how unpredictable there behaviour could be. 

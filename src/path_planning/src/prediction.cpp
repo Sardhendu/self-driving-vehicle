@@ -66,7 +66,7 @@ map<int, vector<Traffic>> Prediction::getPredictions(){
 Traffic Prediction::getNearestVehicleAheadInLane(
   map<int, vector<Traffic>> traffic_ahead, int curr_lane
 ){
-  std::cout << "\t[Traffic Ahead]" << "\n";
+//  std::cout << "\t[Traffic Ahead]" << "\n";
   Traffic nearest_vehicle_ahead;
   if (traffic_ahead.count(curr_lane) > 0){
     int idx;
@@ -81,9 +81,10 @@ Traffic Prediction::getNearestVehicleAheadInLane(
       }
 
     }
-    std::cout << "\t\t[NEAREST VH_AHEAD]"
-    << "\tcar_lane = "<< curr_lane << "\tvh_id = " << nearest_vehicle_ahead.id << "\tvh_s = "<< nearest_vehicle_ahead.s << "\tvh_d = "
-    << nearest_vehicle_ahead.d << "\tvh_lane" << nearest_vehicle_ahead.lane << "\tvh_speed = " << nearest_vehicle_ahead.speed<<"\n";
+//    std::cout << "\t\t[NEAREST VH_AHEAD]"
+//    << "\tcar_lane = "<< curr_lane << "\tvh_id = " << nearest_vehicle_ahead.id << "\tvh_s = "<< nearest_vehicle_ahead.s << "\tvh_d = "
+//    << nearest_vehicle_ahead.d << "\tvh_lane" << nearest_vehicle_ahead.lane << "\tvh_speed = " << nearest_vehicle_ahead.speed
+//    << "\tdist = "<< nearest_vehicle_ahead.s - car_s << "\n";
 
     return nearest_vehicle_ahead;
   }
@@ -93,7 +94,7 @@ Traffic Prediction::getNearestVehicleAheadInLane(
 Traffic Prediction::getNearestVehicleBehindInLane(
   map<int, vector<Traffic>> traffic_behind, int curr_lane
 ){
-  std::cout << "\t[Traffic Behind]" << "\n";
+//  std::cout << "\t[Traffic Behind]" << "\n";
   Traffic nearest_vehicle_behind;
   if (traffic_behind.count(curr_lane) > 0){
     int idx;
@@ -108,9 +109,12 @@ Traffic Prediction::getNearestVehicleBehindInLane(
       }
     }
 
-    std::cout << "\t\t[NEAREST VH_BEHIND]"
-    << "\tcar_lane = "<< curr_lane << "\tvh_id = " << nearest_vehicle_behind.id << "\tvh_s = "<< nearest_vehicle_behind.s << "\tvh_d = "
-    << nearest_vehicle_behind.d << "\tvh_lane" << nearest_vehicle_behind.lane << "\tvh_speed = " << nearest_vehicle_behind.speed << "\n";
+//    std::cout << "\t\t[NEAREST] Vehicle Behind in lane = " << curr_lane << " " << nearest_vehicle_behind.s << " " << nearest_vehicle_behind.d << " " << nearest_vehicle_behind.lane<< " " << nearest_vehicle_behind.speed << "\n";
+//
+//    std::cout << "\t\t[NEAREST VH_BEHIND]"
+//    << "\tcar_lane = "<< curr_lane << "\tvh_id = " << nearest_vehicle_behind.id << "\tvh_s = "<< nearest_vehicle_behind.s << "\tvh_d = "
+//    << nearest_vehicle_behind.d << "\tvh_lane" << nearest_vehicle_behind.lane << "\tvh_speed = " << nearest_vehicle_behind.speed
+//    << "\tdist = "<< car_s  - nearest_vehicle_ahead.s << "\n";
 
     return nearest_vehicle_behind;
   }

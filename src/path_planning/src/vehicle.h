@@ -30,10 +30,10 @@ class Vehicle {
 
 public:
   vector<double> MAX_LANE_VELOCITY = {49/2.24, 49/2.24, 49/2.24}; // In meters/sec
-  vector<double> MIN_LANE_VELOCITY = {0.124, 0.124, 0.124};
+  vector<double> MIN_LANE_VELOCITY = {0.224, 0.224, 0.224};  // keeps the car accelerating
 
-  double MAXIMUM_ACCELERATION = 0.124;               // maximum acceleration permitted
-  double MAXIMUM_DECCELERATION = 0.124;
+  double MAXIMUM_ACCELERATION = 0.2;               // maximum acceleration permitted
+  double MAXIMUM_DECCELERATION = 0.2;
   // double increment_velocity = 0.2;
   double SEC_TO_VISIT_NEXT_POINT = 0.02; // how many seconds should the car take to visit the next point (px, py at t+1, when the car is at t)
   int VEHICLE_AHEAD_BUFFER = 30; // 35 Assuming we keep 10 m distance from any car ahead of us
@@ -44,8 +44,8 @@ public:
   int HACK = 5;
   vector<int> LANES = {0, 1, 2};
   double INSUFFICIENCY_COST_WEIGHT = 0.52;
-  double LANE_TRAFFIC_COST_WEIGHT = 0.08;
-  double LANE_CHANGE_COST_WEIGHT = 0.40;
+  double LANE_TRAFFIC_COST_WEIGHT = 0.13;
+  double LANE_CHANGE_COST_WEIGHT = 0.35;
   double LANE_WIDTH = 4.0;
 
   double car_x;

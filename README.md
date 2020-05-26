@@ -29,10 +29,11 @@ Project 5: Sensor Fusion (Extended Kalman Filter) [*Link*](https://github.com/Sa
 ![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/sensor_fusion/images/sneak_peak.gif)
 
 
-Project 6: Localization (Particle Filter) [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/localization)
+Project 7: Path Planning [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/path_planning)
 ------------
-![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/localization/images/sneak_peak.gif)
+![](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/path_planning/images/sneak_peak.gif)
 
+![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/path_planning/images/sneak_peak.gif)
 
 Project 8: PID-Controller [*Link*](https://github.com/Sardhendu/self-driving-vehicle/tree/master/src/pid_controller)
 ------------

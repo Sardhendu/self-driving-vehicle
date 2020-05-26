@@ -180,11 +180,11 @@ def write_gif(video_path, subclip_from, subclip_to, resize, speedx, save_path):
     
     
 if __name__ == "__main__":
-    out_dir = "/Users/sardhendu/workspace/self-driving-vehicle/src/pid_controller/images"
+    out_dir = "/Users/sardhendu/workspace/self-driving-vehicle/src/path_planning/images"
     write_gif(
-            video_path="/Users/sardhendu/Desktop/Screen Recording 2020-05-25 at 8.38.11 PM.mov",
-            subclip_from=25,
-            subclip_to=40,
+            video_path="/Users/sardhendu/Desktop/Screen Recording 2020-05-25 at 11.11.04 PM.mov",
+            subclip_from=10,
+            subclip_to=30,
             resize=0.2,
             speedx=5.0,
             save_path=f"{out_dir}/sneak_peak.gif")

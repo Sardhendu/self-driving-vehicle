@@ -33,12 +33,12 @@ inline map<int, double> laneTrafficCost(
   Uses Sensor data for about 200m ahead
   */
 
-  std::cout << "[LANE TRAFFIC COST]" <<"\n";
+//  std::cout << "[LANE TRAFFIC COST]" <<"\n";
 
   int LANE_DISTANCE_FOR_TRAFFIC = car_s + 150; // Basically we look 150 m ahead to see which lane has least traffic
   double MAX_SPEED = 22;
 
-  std::cout << "\ttraffic_distance = "<<LANE_DISTANCE_FOR_TRAFFIC << "\n";
+//  std::cout << "\ttraffic_distance = "<<LANE_DISTANCE_FOR_TRAFFIC << "\n";
 
   vector<int> lanes = {0, 1, 2};
 
@@ -90,12 +90,12 @@ inline map<int, double> laneTrafficCost(
 
   map<int, double> lane_cost_dict;
   for (int i=0 ; i<lane_traffic_time.size(); i++){
-    std::cout << "\tlane_num = " << i << " total_cost = "<< lane_traffic_time[i] << " norm_cost = "<< lane_traffic_time[i] << "\n";
+//    std::cout << "\tlane_num = " << i << " total_cost = "<< lane_traffic_time[i] << " norm_cost = "<< lane_traffic_time[i] << "\n";
     lane_cost_dict[i] = lane_traffic_time[i] / (total_time+0.0000001);
   }
 
-  std::cout<< "\t[FINAL COST]\tlane=0 = " << lane_cost_dict[0] << "\tlane=1 = "<< lane_cost_dict[1] << "\tlane=2 = " << lane_cost_dict[2] << "\n";
-  std::cout<<"\n";
+//  std::cout<< "\t[FINAL COST]\tlane=0 = " << lane_cost_dict[0] << "\tlane=1 = "<< lane_cost_dict[1] << "\tlane=2 = " << lane_cost_dict[2] << "\n";
+//  std::cout<<"\n";
   return lane_cost_dict;
 }
 
@@ -122,19 +122,22 @@ inline map<int, double> laneChangeCost(
       So we want to penalize such occasions
     */
 
-  std::cout<<"[LANE CHANGE COST] ";
-  int NEAREST_VEHICLE_BUFFER = 50;  // looking 50
+//  std::cout<<"[LANE CHANGE COST] ";
+  int NEAREST_VEHICLE_AHEAD_BUFFER_ = 40;  // looking 50
+  int NEAREST_VEHICLE_BEHIND_BUFFER_ = 15;
+  int NEAREST_VEHICLE_BUFFER;
   vector<int> lanes = {0, 1, 2};
 
 
   vector<Traffic> nearest_vehicle;
+  map<int, string> check_with;
   for (int i =0 ; i<lanes.size(); i++){
     int curr_lane = lanes[i];
     double nearest_vehicle_s = 99999;
     Traffic nearest_vehicle_in_lane;
 
     // Run only when there is traffic behind
-    std::cout << "\n\t[nearest_vehicle_behind]";
+//    std::cout << "\n\t[nearest_vehicle_behind]";
     if (traffic_behind.count(curr_lane) > 0){
       // Find the vehicle that is most closest to us
       vector<Traffic> traffic_behind_in_lane = traffic_behind[curr_lane];
@@ -145,13 +148,14 @@ inline map<int, double> laneChangeCost(
         if (vehicle_dist < nearest_vehicle_s){
           nearest_vehicle_s = vehicle_dist;
           nearest_vehicle_in_lane = traffic_behind_in_lane[j];
-           std::cout << "\t\tvehicle_s = " << nearest_vehicle_s << " dist = " << vehicle_dist << "\n";
+          check_with[i] = "behind";
+//          std::cout << "\t\tvehicle_s = " << nearest_vehicle_s << " dist = " << vehicle_dist << "\n";
         }
       }
     }
 
     // Run only when there is traffic ahead
-    std::cout << "\t[nearest_vehicle_ahead]";
+//    std::cout << "\t[nearest_vehicle_ahead]";
     if (traffic_ahead.count(curr_lane) > 0){
       vector<Traffic> traffic_ahead_in_lane = traffic_ahead[curr_lane];
       for (int j=0; j<traffic_ahead_in_lane.size(); j++){
@@ -160,14 +164,15 @@ inline map<int, double> laneChangeCost(
         if (vehicle_dist < nearest_vehicle_s){
           nearest_vehicle_s = vehicle_dist;
           nearest_vehicle_in_lane = traffic_ahead_in_lane[j];
-          std::cout << "\t\tvehicle_s = " << nearest_vehicle_s << " dist = " << vehicle_dist << "\n";
+          check_with[i] = "ahead";
+//          std::cout << "\t\tvehicle_s = " << nearest_vehicle_s << " dist = " << vehicle_dist << "\n";
         }
       }
     }
     nearest_vehicle.push_back(nearest_vehicle_in_lane);
   }
 
-  double total_time = 0;
+  double total_dist = 0;
   map<int, double> lane_change_cost;
   for (int i=0; i<nearest_vehicle.size(); i++){
     // Only if the vehicle is in the range
@@ -175,28 +180,36 @@ inline map<int, double> laneChangeCost(
     double relative_speed = abs(nearest_vehicle[i].speed - car_v);
     // Only when there is a vehicle in the lane
     if (nearest_vehicle[i].id != -1){
-      if (relative_dist <= NEAREST_VEHICLE_BUFFER){
-        lane_change_cost[i] = relative_dist;  ///(relative_speed+0.000001);
-        total_time += lane_change_cost[i];
-        std::cout<< "\n\t[lane]= " << lanes[i] << " nearest_vehicle: id = "<< nearest_vehicle[i].id << "\ts = " << nearest_vehicle[i].s << "\tdist = " << relative_dist << "\tspeed = " << relative_speed << "\tcost = "<< lane_change_cost[i] <<"\n";
-
+      if (check_with.count(i) > 0){
+        if (check_with[i] == "ahead"){
+          NEAREST_VEHICLE_BUFFER = NEAREST_VEHICLE_AHEAD_BUFFER_;
+        }
+        else if (check_with[i] == "behind"){
+          NEAREST_VEHICLE_BUFFER = NEAREST_VEHICLE_BEHIND_BUFFER_;
+        }
+        else{
+           exit (EXIT_FAILURE);
+        }
+        if (relative_dist <= NEAREST_VEHICLE_BUFFER){
+            lane_change_cost[i] = relative_dist;  ///(relative_speed+0.000001);
+            total_dist += lane_change_cost[i];
+//            std::cout<< "\n\t[lane]= " << lanes[i] << " nearest_vehicle: id = "<< nearest_vehicle[i].id << "\ts = " << nearest_vehicle[i].s << "\tdist = " << relative_dist << "\tspeed = " << relative_speed << "\tcost = "<< lane_change_cost[i] <<"\n";
+        }
       }
     }
   }
 
 
   // Normalize the values
-  double total_sum = 0;
-  if (total_time > 0){
+  double total_cost = 0;
+  if (total_dist > 0){
     for (int i=0; i<lanes.size(); i++){
       int curr_lane = lanes[i];
         if (lane_change_cost.count(curr_lane) > 0){
-          std::cout << "\n\tlane = " << lanes[i] << " time_to_reach = "<< lane_change_cost[i] << " ";
-          lane_change_cost[i] /= total_time;
-          std::cout << " normed_time = " << lane_change_cost[i] << " ";
-          lane_change_cost[i] = 1 - lane_change_cost[i];
-          std::cout << " cost = " << lane_change_cost[i] << " ";
-          total_sum += lane_change_cost[i];
+//          std::cout << "\n\tlane = " << lanes[i] << " distance = "<< lane_change_cost[i] << " ";
+          lane_change_cost[i] = 1 - ((total_dist - lane_change_cost[i]) / total_dist);
+//          std::cout << " cost_on_distance = " << lane_change_cost[i] << " ";
+          total_cost += lane_change_cost[i];
         }
         else{
           // When no vehicle in lane the cost is 0
@@ -205,13 +218,12 @@ inline map<int, double> laneChangeCost(
       }
   }
 
-
   for (int i=0; i<lanes.size(); i++){
-      lane_change_cost[i] /= (total_sum+0.000001);
+      lane_change_cost[i] /= (total_cost+0.000001);
   }
 
 
-  std::cout<< "\n\t[FINAL COST]\tlane=0 = " << lane_change_cost[0] << "\tlane=1 = "<< lane_change_cost[1] << "\tlane=2 = " << lane_change_cost[2] << "\n";
+//  std::cout<< "\n\t[FINAL COST]\tlane=0 = " << lane_change_cost[0] << "\tlane=1 = "<< lane_change_cost[1] << "\tlane=2 = " << lane_change_cost[2] << "\n";
   return lane_change_cost;
 
 }

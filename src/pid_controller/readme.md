@@ -1,15 +1,19 @@
-# Project 8: PID controller
+# Project 7: PID controller
 -----------
 
 A PID controller is a process/system that output the steering angle that a car should take while following a trajectory. In the project **behaviour_planning** we used a deep-neural network to generate the steering angle to make the vehicle move in a track. 
 
+### Output Video sneak peek
+
+![output-video](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/pid_controller/images/sneak_peak.gif)
 
 Installation:
 
 1. Download the simulator from [here](https://github.com/udacity/self-driving-car-sim/releases)
 2. Convert it into binary
    * chmod +x /location_of_unzip_file/term2_sim.app/Contents/MacOS/term2_sim_mac
-3. 
+3. ./build.sh
+3. Start the simulator
 
 
 ## Dataset from the simulator:
@@ -32,7 +36,7 @@ PID controller stands for Proportional Integral and differential.
 
 * **Proportional-Differential (PD-controller)**:  The differential part of a PD controller removes the oscillating behaviour of a P controller. The idea is the put a differential penalty to the P-controller for larger increment and decrement in the value. This removes the oscillating behaviour but the PD-controlled takes more time to converge to the trejectory. However when converged it remains closer to the trajectory.
 
-    * Below is a plot for PD-controller with/without drift using params: tau_p=0.3, tau_d=3.0
+    * Below is a plot for PD-controller with and without drift using params: tau_p=0.3, tau_d=3.0
 
 ![PD-Controller Oscillating with/without drift](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/pid_controller/images/pd_controller.png)
 
@@ -45,5 +49,7 @@ PID controller stands for Proportional Integral and differential.
 ![PID-Controller](https://github.com/Sardhendu/self-driving-vehicle/blob/master/src/pid_controller/images/pid_controller.png)
 
 ## Tuning PID coefficients:
- * The parameters **tau_p** and **tau_i** and **tau_d** can be decided empirically with trial and error. While many different variations can work, it is recommended to empirically find the initial parameters and then run algorithms like **Twiddle**, **Stocastic Gradient Descent** or other optimization method to find the optimal values. In our experiments we use Twiddle to find the optimal param values.   
+The parameters **tau_p** and **tau_i** and **tau_d** can be decided empirically with trial and error. While many different variations can work, it is recommended to empirically find the initial parameters and then run algorithms like **Twiddle**, **Stocastic Gradient Descent** or other optimization method to find the optimal values. In our experiments we use Twiddle to find the optimal param values. 
+ 
+ * **Experiment**: In our experiment we first start with the empirical param coefficient of **tau_p=0.05, tau_d=1.5, tau_i=0.0005** After twiddling it and with some more experimenting we settle at **tau_p=0.062, tau_d=1.3, tau_i=0.0003** 
 

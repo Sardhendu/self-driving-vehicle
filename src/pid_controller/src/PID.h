@@ -52,10 +52,10 @@ class PID {
 
   /**
    * PID Coefficients
-   */ 
-  double Kp=0.05;
-  double Ki=0.0001;
-  double Kd=1.5;
+   */
+  double Kp=0.062;
+  double Ki=0.0003;
+  double Kd=1.3;
   int param_index = 2;
 
   /*
@@ -75,6 +75,9 @@ class PID {
   double least_error = 99999;
   double total_cte = 0;
   /**/
+
+
+  bool twiddle_it = false;
 
 };
 

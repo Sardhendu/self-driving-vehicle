@@ -20,13 +20,14 @@ class PID {
    * Initialize PID.
    * @param (Kp_, Ki_, Kd_) The initial PID coefficients
    */
-  void Init(double Kp_, double Ki_, double Kd_);
+//  void Init(double Kp_, double Ki_, double Kd_);
 
   /**
    * Update the PID error variables given cross track error.
    * @param cte The current cross track error
    */
   void UpdateError(double cte);
+  vector<double> getParams();
 
   /**
    * Calculate the total PID error.
@@ -37,8 +38,10 @@ class PID {
     /*
     calculateSteeringValue: Calculate the ste
     */
+
     double calculateSteeringValue();
     vector<double> twiddleIt(double param, double delta);
+
  private:
   /**
    * PID Errors
@@ -50,16 +53,17 @@ class PID {
   /**
    * PID Coefficients
    */ 
-  double Kp=0.2;
-  double Ki=0.0004;
-  double Kd=3;
+  double Kp=0.05;
+  double Ki=0.0001;
+  double Kd=1.5;
+  int param_index = 2;
 
   /*
   * Parameter Updates:
   */
-  double dkp = 1;
-  double dki = 1;
-  double dkd = 1;
+  double dkp = 0.1;
+  double dki = 0.1;
+  double dkd = 0.1;
 
   int tried_incrementing = 0;
   int tried_decrementing = 0;

@@ -105,6 +105,7 @@ int main(){
     double highest_weight = -1.0;
     Particle best_particle;
     double weight_sum = 0.0;
+
     for (int i = 0; i < num_particles; ++i) {
       if (particles[i].weight > highest_weight) {
         highest_weight = particles[i].weight;
@@ -130,9 +131,7 @@ int main(){
       min_gt_theta = gt[t].theta;
     }
 
-    if (t == 0){
-      out_gt_prediction_file << "gt_x,gt_y,gt_theta,pr_id,pr_x,pr_y,pr_theta,pr_weight,pr_avg_weight" << "\n";
-    }
+
     else{
       out_gt_prediction_file << gt[t].x << "," << gt[t].y << "," << gt[t].theta << ","
                              << best_particle.id << "," << best_particle.x << "," << best_particle.y << "," << best_particle.theta << ","

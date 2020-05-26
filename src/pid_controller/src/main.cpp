@@ -2,6 +2,7 @@
 #include <uWS/uWS.h>
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "json.hpp"
 #include "PID.h"
 
@@ -37,7 +38,12 @@ int main() {
   /**
    * TODO: Initialize the pid variable.
    */
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
+
+  std::ofstream out_prediction_file;
+  out_prediction_file.open("../files/gt_prediction.txt");
+
+  out_prediction_file << "cte," << "steer_angle," << "kp," << "ki," << "kd," << "p_error,"  << "i_error," << "d_error," << "dkp," << "dki," << "dkd" << "\n";
+  h.onMessage([&pid, &out_prediction_file](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -55,20 +61,41 @@ int main() {
           double cte = std::stod(j[1]["cte"].get<string>());
           double speed = std::stod(j[1]["speed"].get<string>());
           double angle = std::stod(j[1]["steering_angle"].get<string>());
-          double steer_value = 0.0;
+          double steer_angle = 0.0;
+          double throttle_value;
           /**
            * TODO: Calculate steering value here, remember the steering value is
            *   [-1, 1].
            * NOTE: Feel free to play around with the throttle and speed.
            *   Maybe use another PID controller to control the speed!
            */
-           pid.UpdateError(cte);
-           steer_value = pid.calculateSteeringValue();
-          std::cout <<" cte "<< cte << " speed " << speed << "angle " << angle << "steer_value " << steer_value << "\n";
+           vector<double> params = pid.getParams();
+           double kp = params[0];
+           double ki = params[1];
+           double kd = params[2];
+           double p_error = params[3];
+           double i_error = params[4];
+           double d_error = params[5];
+           double dkp = params[6];
+           double dki = params[7];
+           double dkd = params[8];
 
-          json msgJson;
-          msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+           steer_angle = pid.calculateSteeringValue();
+           pid.UpdateError(cte);
+
+           throttle_value = 0.75 - kp * p_error - kd * d_error - ki * i_error;
+           std::cout <<" cte = "<< cte << " speed = " << speed << " angle = "
+           << angle << " steer_angle = " << steer_angle << " throttle_value = "<< throttle_value << "\n";
+
+           json msgJson;
+           msgJson["steering_angle"] = steer_angle;
+           msgJson["throttle"] = 0.3;
+
+           out_prediction_file << cte << "," << steer_angle << ","
+           << kp << "," << ki << "," << kd << ","
+           << p_error << "," << i_error << "," << d_error << ","
+           << dkp << "," << dki << "," << dkd << "\n";
+
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
@@ -81,6 +108,7 @@ int main() {
     }  // end websocket message if
   }); // end h.onMessage
 
+  out_prediction_file.close();
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
     std::cout << "Connected!!!" << std::endl;
   });
